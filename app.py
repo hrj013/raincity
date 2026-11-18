@@ -1,528 +1,769 @@
 import streamlit as st
-import pandas as pd
-import numpy as np
-import random
+import streamlit.components.v1 as components
 
-# 페이지 기본 설정
 st.set_page_config(
-    page_title="레인시티 (Rain City) - 환경 경영 시뮬레이션",
+    page_title="Rain City",
     page_icon="🌧️",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="collapsed"
 )
 
-# --- 게임 상수 및 데이터 정의 ---
-ZONES = [
-    {"id": "공업지역", "icon": "🏭", "type": "emission"},
-    {"id": "발전소", "icon": "⚡", "type": "emission"},
-    {"id": "도로망", "icon": "🚗", "type": "emission"},
-    {"id": "주거지역", "icon": "🏘️", "type": "urban"},
-    {"id": "농경지", "icon": "🌾", "type": "eco"},
-    {"id": "산림", "icon": "🌲", "type": "eco"},
-    {"id": "호수/하천", "icon": "🏞️", "type": "water"},
-    {"id": "중앙공원", "icon": "🌳", "type": "eco"},
-    {"id": "기상관측소", "icon": "📡", "type": "infra"},
-]
+# Streamlit 기본 여백 및 헤더 숨김 처리 (풀스크린 게임 몰입감 확보)
+st.markdown("""
+    <style>
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+        header {visibility: hidden;}
+        .block-container {
+            padding-top: 0rem;
+            padding-bottom: 0rem;
+            padding-left: 0rem;
+            padding-right: 0rem;
+            max-width: 100%;
+        }
+        iframe {
+            border: none;
+            display: block;
+        }
+    </style>
+""", unsafe_allow_html=True)
 
-TECH_LIST = {
-    "desulfurization": {
-        "name": "배연탈황설비 (FGD)",
-        "cost": 35,
-        "ap": 1,
-        "max_lv": 3,
-        "desc": "공장·발전소의 SO₂ 배출량을 대폭 저감하여 산성비 원인 물질을 차단합니다."
-    },
-    "precipitator": {
-        "name": "전기집진기 (ESP)",
-        "cost": 30,
-        "ap": 1,
-        "max_lv": 3,
-        "desc": "미세먼지(PM2.5)와 황산염 에어로졸 입자를 포집합니다."
-    },
-    "sensor": {
-        "name": "고정밀 대기질 센서망",
-        "cost": 20,
-        "ap": 1,
-        "max_lv": 2,
-        "desc": "다음 턴의 예상 강수 pH와 오염 확산 위험도를 사전에 정밀 예측합니다."
-    },
-    "green_infra": {
-        "name": "빗물정원 & 투수성 포장",
-        "cost": 25,
-        "ap": 1,
-        "max_lv": 3,
-        "desc": "빗물의 토양 침투를 도와 폭우 시 홍수 피해와 비점오염원 유출을 줄입니다."
-    },
-    "reservoir": {
-        "name": "지하 빗물저류조",
-        "cost": 30,
-        "ap": 1,
-        "max_lv": 3,
-        "desc": "최대 물 저장 한도를 늘리고 폭우 시 빗물을 저장해 가뭄에 대비합니다."
-    },
-    "traffic_policy": {
-        "name": "친환경 교통·차량 2부제",
-        "cost": 15,
-        "ap": 1,
-        "max_lv": 3,
-        "desc": "도로망의 NOₓ와 미세먼지 배출량을 줄입니다 (시민 만족도 소폭 감소 가능)."
-    }
+game_html = """
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Rain City</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@300;400;600&display=swap');
+
+  * {
+    box-sizing: border-box;
+    user-select: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  body, html {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #0d0f14;
+    font-family: 'Noto Sans KR', sans-serif;
+    color: #f0ece1;
+  }
+
+  #game-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: #141218;
+  }
+
+  canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  /* 레이튼 + 할로우 나이트 감성 UI 테두리 */
+  .hollow-panel {
+    background: rgba(18, 20, 28, 0.94);
+    border: 2px solid #8c7a5b;
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.85), inset 0 0 15px rgba(140, 122, 91, 0.25);
+    border-radius: 12px;
+    padding: 24px;
+    position: relative;
+  }
+
+  .hollow-panel::before {
+    content: "✧";
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #12141c;
+    padding: 0 10px;
+    color: #d4bc8b;
+    font-size: 16px;
+  }
+
+  /* 타이틀 화면 오버레이 */
+  #title-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+    transition: opacity 1.2s ease, transform 2.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+
+  #title-overlay.zooming {
+    transform: scale(4.5) translate(5%, -5%);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .title-logo {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(3.5rem, 7vw, 6rem);
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    color: #f7eedc;
+    text-shadow: 0 4px 20px rgba(0,0,0,0.8), 0 0 40px rgba(212, 188, 139, 0.4);
+    margin-bottom: 10px;
+  }
+
+  .title-sub {
+    font-family: 'Gowun Batang', serif;
+    font-size: 1.15rem;
+    letter-spacing: 0.25em;
+    color: #d6c5a7;
+    margin-bottom: 45px;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.9);
+  }
+
+  .start-btn {
+    font-family: 'Cinzel', serif;
+    font-size: 1.3rem;
+    letter-spacing: 0.2em;
+    padding: 14px 48px;
+    background: rgba(20, 22, 30, 0.75);
+    color: #f5ebd6;
+    border: 1.5px solid #c9b182;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: all 0.35s ease;
+    box-shadow: 0 0 20px rgba(0,0,0,0.6);
+  }
+
+  .start-btn:hover {
+    background: #c9b182;
+    color: #14151c;
+    box-shadow: 0 0 30px rgba(201, 177, 130, 0.7);
+    transform: translateY(-2px);
+  }
+
+  /* 우측 상단 시계 HUD (좋은 피자, 위대한 피자 스타일) */
+  #hud-clock {
+    position: absolute;
+    top: 22px;
+    right: 26px;
+    z-index: 15;
+    background: linear-gradient(135deg, #2b241d 0%, #1a1715 100%);
+    border: 2px solid #b89f74;
+    border-radius: 14px;
+    padding: 12px 22px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.65);
+    display: none;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .clock-day {
+    font-family: 'Gowun Batang', serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #f3d59b;
+  }
+
+  .clock-time {
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #ffffff;
+    background: rgba(255,255,255,0.08);
+    padding: 4px 10px;
+    border-radius: 8px;
+  }
+
+  /* 좌측 상단 간략 기상/환경 배지 */
+  #hud-weather {
+    position: absolute;
+    top: 22px;
+    left: 26px;
+    z-index: 15;
+    background: rgba(22, 24, 33, 0.85);
+    border: 1.5px solid #7d7365;
+    border-radius: 12px;
+    padding: 10px 18px;
+    display: none;
+    font-size: 0.92rem;
+    line-height: 1.5;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+  }
+
+  /* 하단 대화창 (레이튼 스타일) */
+  #dialogue-box {
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(820px, 90vw);
+    z-index: 25;
+    background: linear-gradient(180deg, rgba(28, 25, 23, 0.96) 0%, rgba(17, 16, 18, 0.98) 100%);
+    border: 2px solid #c7ae80;
+    border-radius: 14px;
+    padding: 18px 26px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.85);
+    display: none;
+    cursor: pointer;
+  }
+
+  .speaker-tag {
+    display: inline-block;
+    background: #8f7449;
+    color: #fff9ed;
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 3px 14px;
+    border-radius: 20px;
+    margin-bottom: 8px;
+    letter-spacing: 0.05em;
+  }
+
+  .dialogue-text {
+    font-family: 'Gowun Batang', serif;
+    font-size: 1.12rem;
+    line-height: 1.65;
+    color: #f5efe2;
+  }
+
+  .dialogue-next {
+    text-align: right;
+    font-size: 0.82rem;
+    color: #c7ae80;
+    margin-top: 6px;
+    animation: pulse 1.4s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+
+  /* 모달 오버레이 (신문, 서류더미, 노트북, 공장정보, 엔딩) */
+  #modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(8, 10, 14, 0.72);
+    backdrop-filter: blur(4px);
+    z-index: 30;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-card {
+    width: min(760px, 92vw);
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(201, 177, 130, 0.35);
+    padding-bottom: 12px;
+    margin-bottom: 18px;
+  }
+
+  .modal-title {
+    font-family: 'Gowun Batang', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #f2dfb8;
+  }
+
+  .close-btn {
+    background: none;
+    border: 1px solid #8c7a5b;
+    color: #d6c5a7;
+    font-size: 1rem;
+    padding: 4px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  .close-btn:hover {
+    background: #8c7a5b;
+    color: #12141c;
+  }
+
+  /* 신문 스타일 */
+  .newspaper-sheet {
+    background: #e8dec8;
+    color: #241f18;
+    padding: 28px;
+    border-radius: 6px;
+    font-family: 'Gowun Batang', serif;
+    box-shadow: inset 0 0 30px rgba(110, 88, 55, 0.35);
+  }
+
+  .news-head {
+    text-align: center;
+    border-top: 3px double #241f18;
+    border-bottom: 3px double #241f18;
+    padding: 10px 0;
+    margin-bottom: 16px;
+  }
+
+  /* 서류 더미 스타일 */
+  .dossier-box {
+    background: #f4efe4;
+    color: #222;
+    padding: 24px;
+    border-radius: 8px;
+    font-family: 'Gowun Batang', serif;
+  }
+
+  .check-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px;
+    margin: 10px 0;
+    background: #e6decb;
+    border-left: 5px solid #7d6844;
+    border-radius: 4px;
+    font-size: 1.08rem;
+    font-weight: 700;
+  }
+
+  /* 노트북 정책 UI */
+  .policy-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+    gap: 14px;
+  }
+
+  .policy-card {
+    background: rgba(32, 36, 48, 0.9);
+    border: 1px solid #695e4c;
+    border-radius: 10px;
+    padding: 15px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .policy-card:hover:not(.disabled) {
+    border-color: #e3c891;
+    transform: translateY(-2px);
+    background: rgba(45, 50, 66, 0.95);
+  }
+
+  .policy-card.disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .badge-status {
+    display: inline-block;
+    font-size: 0.78rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-top: 8px;
+  }
+
+  .badge-active { background: #2d6a4f; color: #d8f3dc; }
+  .badge-pending { background: #b58328; color: #fff3b0; }
+  .badge-ready { background: #3d405b; color: #e0e1dd; }
+
+  /* 확인 다이얼로그 */
+  .confirm-box {
+    text-align: center;
+    padding: 20px 10px;
+  }
+
+  .btn-group {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 24px;
+  }
+
+  .action-btn {
+    padding: 10px 28px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+  }
+
+  .btn-yes { background: #c9a66b; color: #161512; }
+  .btn-yes:hover { background: #e0be82; }
+  .btn-no { background: #3b3e4a; color: #e6e2d8; }
+  .btn-no:hover { background: #505463; }
+
+  /* 툴팁 (마우스 호버 시 오브젝트 이름 표시) */
+  #hover-tooltip {
+    position: absolute;
+    pointer-events: none;
+    background: rgba(18, 20, 28, 0.92);
+    border: 1px solid #d4bc8b;
+    color: #f7eedc;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.88rem;
+    z-index: 18;
+    display: none;
+    transform: translate(-50%, -140%);
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+  }
+</style>
+</head>
+<body>
+
+<div id="game-container">
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- 타이틀 화면 -->
+  <div id="title-overlay">
+    <div class="title-logo">RAIN CITY</div>
+    <div class="title-sub">사막 위에 내리는 첫 번째 비의 기록</div>
+    <button class="start-btn" onclick="startGame()">START</button>
+  </div>
+
+  <!-- 좌측 상단 기상 및 대기질 현황 -->
+  <div id="hud-weather"></div>
+
+  <!-- 우측 상단 시간 HUD -->
+  <div id="hud-clock">
+    <span class="clock-day" id="clock-day-text">1일차</span>
+    <span class="clock-time" id="clock-time-text">07시 00분</span>
+  </div>
+
+  <!-- 호버 툴팁 -->
+  <div id="hover-tooltip"></div>
+
+  <!-- 하단 대화창 -->
+  <div id="dialogue-box" onclick="closeDialogue()">
+    <div class="speaker-tag" id="dialogue-speaker">나</div>
+    <div class="dialogue-text" id="dialogue-text"></div>
+    <div class="dialogue-next">▼ 클릭하여 계속</div>
+  </div>
+
+  <!-- 모달 창 -->
+  <div id="modal-backdrop">
+    <div class="hollow-panel modal-card" id="modal-content"></div>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+let width, height;
+function resize() {
+  width = canvas.width = window.innerWidth;
+  height = canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+// --- 게임 상태 변수 ---
+let scene = 'TITLE'; // 'TITLE', 'ZOOMING', 'OFFICE', 'ENDING'
+let zoomProgress = 0;
+
+// 시간 시스템: 1일 = 07:00 ~ 21:00 (14시간 = 840분)
+// 현실 10분(600초) = 게임 1일(840분) => 현실 1초 = 게임 1.4분
+let day = 1;
+let month = 1;
+let gameMinutes = 7 * 60; // 07:00 시작 (420분)
+let lastTimestamp = 0;
+let isPaused = false;
+
+// 도시 환경 및 시뮬레이션 변수
+let budget = 250; // 초기 예산 (억 단위)
+let droughtLevel = 68; // 가뭄 진행도 (%) - 목표: 30% 미만
+let totalRainDays = 0;
+let acidRainDays = 0;
+
+// 대기질 및 기상 변수 (매일 변화)
+let weather = {
+  type: 'CLEAR', // 'CLEAR', 'DROUGHT', 'DUST', 'HEAVY_RAIN', 'RAIN'
+  windDir: '북서풍',
+  windSpeed: 3.2,
+  humidity: 28,
+  temp: 36,
+  rainProb: 15,
+  so2: 75,
+  nox: 65,
+  pm25: 80,
+  ph: 4.6,
+  ecoHealth: 45
+};
+
+// 정책 데이터 (선택 후 2일 뒤에 적용)
+const POLICIES = [
+  {
+    id: 'fgd',
+    name: '배연탈황설비 (FGD)',
+    cost: 45,
+    desc: '공장·발전소에서 배출되는 SO₂를 알칼리성 물질과 반응시켜 제거하여 산성비 위험을 크게 낮춥니다.',
+    status: 'READY', // READY, PENDING, ACTIVE
+    applyDay: null
+  },
+  {
+    id: 'esp',
+    name: '전기집진기 (ESP)',
+    cost: 40,
+    desc: '미세먼지(PM2.5)와 황산염 입자를 정전기로 포집하여 대기질을 획기적으로 개선합니다.',
+    status: 'READY',
+    applyDay: null
+  },
+  {
+    id: 'sensor',
+    name: '정밀 대기질 센서망',
+    cost: 25,
+    desc: 'SO₂, NOₓ, PM2.5, 강수 pH를 실시간 측정해 오염 확산과 산성비 위험을 정밀 분석합니다.',
+    status: 'READY',
+    applyDay: null
+  },
+  {
+    id: 'raingarden',
+    name: '빗물정원 조성',
+    cost: 30,
+    desc: '빗물이 토양으로 자연 침투하도록 유도해 홍수를 줄이고 오염물질의 하천 유입을 막습니다.',
+    status: 'READY',
+    applyDay: null
+  },
+  {
+    id: 'permeable',
+    name: '투수성 포장 도로',
+    cost: 35,
+    desc: '사막 도시의 아스팔트를 투수성 소재로 교체하여 빗물 흡수율과 지하수 함양을 높입니다.',
+    status: 'READY',
+    applyDay: null
+  },
+  {
+    id: 'reservoir',
+    name: '지하 빗물저류조',
+    cost: 50,
+    desc: '폭우 시 도심 침수를 막고, 저장된 빗물을 활용해 가뭄 진행도를 크게 낮춥니다.',
+    status: 'READY',
+    applyDay: null
+  },
+  {
+    id: 'seeding',
+    name: '인공강우 시딩 장비',
+    cost: 55,
+    desc: '구름에 흡습성 입자 및 빙정핵을 살포해 강수 확률과 강수량을 높여 가뭄을 해소합니다.',
+    status: 'READY',
+    applyDay: null
+  }
+];
+
+// 공장 데이터 (통유리창 너머 3개 공장)
+const FACTORIES = [
+  {
+    id: 'factory1',
+    name: '제1 화력·담수화 복합발전소',
+    role: '도시 전체의 전력 공급과 바닷물 담수화를 담당하는 핵심 에너지 시설입니다.',
+    pollutants: '아황산가스(SO₂), 질소산화물(NOₓ), 온배수',
+    relX: 0.22, relY: 0.42, relW: 0.13, relH: 0.16
+  },
+  {
+    id: 'factory2',
+    name: '제2 석유화학·정제 플랜트',
+    role: '사막 부자도시의 외화를 벌어들이는 주력 석유화학 제품 생산 공장입니다.',
+    pollutants: '휘발성유기화합물(VOCs), 아황산가스(SO₂), 초미세먼지(PM2.5)',
+    relX: 0.44, relY: 0.43, relW: 0.14, relH: 0.15
+  },
+  {
+    id: 'factory3',
+    name: '제3 시멘트·건설자재 제련소',
+    role: '마천루 건설에 필요한 시멘트와 금속 자재를 가공하는 중공업 시설입니다.',
+    pollutants: '고농도 미세먼지(PM10/PM2.5), 질소산화물(NOₓ), 중금속 분진',
+    relX: 0.68, relY: 0.41, relW: 0.13, relH: 0.17
+  }
+];
+
+// 책상 위 오브젝트 정의
+const DESK_ITEMS = [
+  { id: 'newspaper', name: '신문 기사', relX: 0.12, relY: 0.72, relW: 0.16, relH: 0.13 },
+  { id: 'documents', name: '서류 더미 (예산 & 체크리스트)', relX: 0.31, relY: 0.69, relW: 0.14, relH: 0.15 },
+  { id: 'laptop', name: '업무용 노트북 (환경 정책)', relX: 0.48, relY: 0.64, relW: 0.18, relH: 0.18 },
+  { id: 'photo', name: '고향의 가족사진', relX: 0.69, relY: 0.67, relW: 0.08, relH: 0.12 },
+  { id: 'penholder', name: '필기구 꽂이 (볼펜·샤프)', relX: 0.79, relY: 0.68, relW: 0.06, relH: 0.11 },
+  { id: 'calendar', name: '탁상 캘린더', relX: 0.87, relY: 0.69, relW: 0.09, relH: 0.12 }
+];
+
+// 파티클 (모래바람 & 빗방울)
+let particles = [];
+for (let i = 0; i < 120; i++) {
+  particles.push({
+    x: Math.random() * 2000,
+    y: Math.random() * 1200,
+    speedX: 2 + Math.random() * 5,
+    speedY: -0.5 + Math.random() * 1.5,
+    size: 1 + Math.random() * 2.5,
+    alpha: 0.2 + Math.random() * 0.5
+  });
 }
 
-# --- 게임 상태 초기화 함수 ---
-def init_game(max_turns=10):
-    st.session_state.initialized = True
-    st.session_state.max_turns = max_turns
-    st.session_state.turn = 1
-    st.session_state.game_over = False
-    st.session_state.victory = False
-    st.session_state.end_reason = ""
+// --- 시작 연출 ---
+function startGame() {
+  const overlay = document.getElementById('title-overlay');
+  overlay.classList.add('zooming');
+  scene = 'ZOOMING';
 
-    # 핵심 자원 및 지표
-    st.session_state.budget = 120
-    st.session_state.ap = 3
-    st.session_state.max_ap = 3
-    st.session_state.water = 55.0          # 물 저장량 (%)
-    st.session_state.max_water = 100.0
-    st.session_state.so2 = 55.0            # SO2 농도 (ppb)
-    st.session_state.nox = 50.0            # NOx 농도 (ppb)
-    st.session_state.pm25 = 45.0           # PM2.5 농도 (㎍/㎥)
-    st.session_state.avg_ph = 5.8          # 도시 평균 강수 pH
-    st.session_state.eco_health = 75.0     # 생태계 건강도 (0~100)
-    st.session_state.satisfaction = 70.0   # 시민 만족도 (0~100)
-    st.session_state.repair_cost_total = 0 # 누적 피해 복구 비용
+  setTimeout(() => {
+    overlay.style.display = 'none';
+    scene = 'OFFICE';
+    document.getElementById('hud-clock').style.display = 'flex';
+    document.getElementById('hud-weather').style.display = 'block';
+    updateWeatherHUD();
+    showDialogue('나', '드디어 이 사막의 거대 도시에 도착했어... 고향에 있는 가족들을 위해서라도, 반드시 이 도시의 가뭄과 산성비 문제를 해결하고 성공해야 해.');
+  }, 1800);
+}
 
-    # 기술 레벨
-    st.session_state.tech_levels = {k: 0 for k in TECH_LIST.keys()}
+// --- 대화창 제어 ---
+function showDialogue(speaker, text) {
+  isPaused = true;
+  document.getElementById('dialogue-speaker').innerText = speaker;
+  document.getElementById('dialogue-text').innerText = text;
+  document.getElementById('dialogue-box').style.display = 'block';
+}
 
-    # 구역별 상태 초기화 (pH, 생태/시설 건강도)
-    st.session_state.zone_status = {}
-    for z in ZONES:
-        st.session_state.zone_status[z["id"]] = {
-            "ph": 5.9 if z["type"] != "emission" else 5.5,
-            "health": 80.0
-        }
+function closeDialogue() {
+  document.getElementById('dialogue-box').style.display = 'none';
+  if (document.getElementById('modal-backdrop').style.display !== 'flex') {
+    isPaused = false;
+  }
+}
 
-    # 기상 예보 및 이벤트 생성
-    st.session_state.logs = ["🎮 레인시티 환경정책 담당관으로 부임했습니다. 물 부족과 산성비 위기로부터 도시를 지키세요!"]
-    generate_weather()
+// --- 모달 제어 ---
+function openModal(htmlContent) {
+  isPaused = true;
+  document.getElementById('modal-content').innerHTML = htmlContent;
+  document.getElementById('modal-backdrop').style.display = 'flex';
+}
 
-def generate_weather():
-    # 무작위 이벤트 결정 (1턴 제외)
-    events = [
-        ("평온한 기상", "특이 기상 이변이 없는 보통의 날씨입니다.", "normal"),
-        ("극심한 가뭄 경보", "고온 건조한 날씨가 이어져 물 증발량이 급증합니다!", "drought"),
-        ("대기 정체 & 고농도 스모그", "풍속이 약해져 SO₂, NOₓ, 미세먼지가 도시에 축적됩니다!", "smog"),
-        ("국지성 집중호우 전선", "강한 비구름이 접근 중입니다. 녹색 인프라가 부족하면 홍수 피해가 발생합니다!", "heavy_rain"),
-        ("황사 및 산불 연무 유입", "외부 미세먼지가 유입되고 구름응결핵 성질이 변해 인공강우 효율이 변합니다.", "dust")
-    ]
-    if st.session_state.turn == 1:
-        ev = events[0]
-    else:
-        ev = random.choices(events, weights=[0.4, 0.2, 0.15, 0.15, 0.1])[0]
+function closeModal() {
+  document.getElementById('modal-backdrop').style.display = 'none';
+  if (document.getElementById('dialogue-box').style.display !== 'block') {
+    isPaused = false;
+  }
+}
 
-    st.session_state.event = ev
+// --- 체크리스트 달성 판정 ---
+function getChecklistStatus() {
+  const acidFreq = totalRainDays === 0 ? 12.0 : (acidRainDays / Math.max(1, day)) * 100;
+  const check1 = droughtLevel < 30;
+  const check2 = acidFreq < 10;
+  return { check1, check2, acidFreq: acidFreq.toFixed(1) };
+}
 
-    # 구름 유형 (따뜻한 구름 vs 차가운 구름)
-    cloud_type = random.choice(["따뜻한 구름 (영상 기온, 0℃ 이상)", "차가운 구름 (과냉각 구름, 0℃ 미만)"])
-    cloud_amount = random.randint(25, 90)
-    humidity = random.randint(35, 90)
-    wind_speed = round(random.uniform(1.0, 9.5), 1)
-    natural_rain_prob = random.randint(10, 75)
+// --- 오브젝트 클릭 상호작용 ---
+function handleObjectClick(id) {
+  if (id === 'newspaper') {
+    openModal(`
+      <div class="modal-header">
+        <span class="modal-title">📰 레인 시티 조간신문</span>
+        <button class="close-btn" onclick="closeModal()">닫기</button>
+      </div>
+      <div class="newspaper-sheet">
+        <div class="news-head">
+          <div style="font-size:0.85rem; letter-spacing:0.2em;">THE RAIN CITY CHRONICLE</div>
+          <h2 style="font-size:1.6rem; margin-top:4px;">"비가 내리지 않는 황금의 도시에 희망의 단비를"</h2>
+        </div>
+        <p style="line-height:1.8; font-size:1.05rem;">
+          끝없는 모래바람과 극심한 가뭄, 그리고 무분별한 산업화로 인한 산성비 위협이 우리 도시를 덮치고 있다.
+          정부는 이 위기를 타개하기 위해 해외에서 초빙한 환경공학 전문가에게 도시의 미래를 맡겼다.
+          과연 30일 안에 사막의 하늘에서 맑은 비를 내리게 하고 생태계를 되살릴 수 있을 것인가...
+        </p>
+      </div>
+    `);
+    setTimeout(() => {
+      document.getElementById('dialogue-speaker').innerText = '나';
+      document.getElementById('dialogue-text').innerText = '이 도시를 살려야 한다.. 내 손에 이 도시의 하늘과 고향으로 돌아갈 미래가 달려 있어.';
+      document.getElementById('dialogue-box').style.display = 'block';
+    }, 300);
+  }
+  else if (id === 'documents') {
+    const status = getChecklistStatus();
+    openModal(`
+      <div class="modal-header">
+        <span class="modal-title">📁 환경정책국 기밀 서류 더미</span>
+        <button class="close-btn" onclick="closeModal()">닫기</button>
+      </div>
+      <div class="dossier-box">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #8c7a5b; padding-bottom:12px; margin-bottom:16px;">
+          <span style="font-size:1.15rem; font-weight:700;">💰 가용 도시 환경 예산</span>
+          <span style="font-size:1.5rem; font-weight:800; color:#1b4332;">${budget} 억 디르함</span>
+        </div>
+        <h3 style="margin-bottom:10px; color:#3d3122;">📋 30일차 최종 평가 체크리스트 (실시간 갱신)</h3>
+        <div class="check-item">
+          <span>1. 가뭄 진행도가 30% 미만인가? (현재: ${droughtLevel.toFixed(1)}%)</span>
+          <span style="font-size:1.3rem;">${status.check1 ? '✅ 달성' : '⬜ 미달성'}</span>
+        </div>
+        <div class="check-item">
+          <span>2. 산성비 발생 빈도가 10% 미만인가? (현재: ${status.acidFreq}%)</span>
+          <span style="font-size:1.3rem;">${status.check2 ? '✅ 달성' : '⬜ 미달성'}</span>
+        </div>
+        <p style="margin-top:16px; font-size:0.92rem; color:#555;">
+          * 30일차 종료 시 두 조건을 모두 달성하면 막대한 보너스와 함께 고향으로 귀국합니다.<br>
+          * 한 가지만 달성할 경우 계약이 1개월 연장되며, 모두 실패 시 해고됩니다.
+        </p>
+      </div>
+    `);
+  }
+  else if (id === 'laptop') {
+    renderLaptopModal();
+  }
+  else if (id === 'photo') {
+    showDialogue('나', '지갑 속 낡은 가족사진... 내가 타국에서 묵묵히 버티는 이유야. 꼭 부자가 되어서 당당하게 돌아갈게.');
+  }
+  else if (id === 'penholder') {
+    showDialogue('나', '볼펜, 샤프, 제도용 연필이 빽빽하게 꽂혀 있다. 매일 밤 대기 확산 수식을 계산하느라 닳아버린 흔적들이다.');
+  }
+  else if (id === 'calendar') {
+    const remain = 30 - day;
+    showDialogue('나', `오늘은 ${month}개월째 ${day}일차야. 이번 달 평가일까지 앞으로 ${remain}일 남았어.`);
+  }
+  else if (id.startsWith('factory')) {
+    const f = FACTORIES.find(item => item.id === id);
+    openModal(`
+      <div class="modal-header">
+        <span class="modal-title">🏭 ${f.name}</span>
+        <button class="close-btn" onclick="closeModal()">닫기</button>
+      </div>
+      <div style="line-height:1.8; font-size:1.05rem;">
+        <p><strong style="color:#e3c891;">[시설 역할]</strong><br>${f.role}</p>
+        <br>
+        <p><strong style="color:#ff8fa3;">[주요 배출 오염물질]</strong><br>${f.pollutants}</p>
+        <br>
+        <p style="font-size:0.92rem; color:#b8b0a2;">
+          ※ 배출된 SO₂와 NOₓ는 바람을 타고 확산되어 대기 중에서 황산과 질산으로 산화되며, 강수 시 산성비의 주원인이 됩니다.
+        </p>
+      </div>
+    `);
+  }
+}
 
-    if ev[2] == "drought":
-        cloud_amount = random.randint(15, 45)
-        humidity = random.randint(25, 50)
-        natural_rain_prob = random.randint(0, 15)
-    elif ev[2] == "heavy_rain":
-        cloud_amount = random.randint(75, 95)
-        humidity = random.randint(80, 95)
-        natural_rain_prob = random.randint(75, 95)
-    elif ev[2] == "smog":
-        wind_speed = round(random.uniform(0.5, 2.0), 1)
+// --- 노트북 정책 화면 & 확인 창 ---
+function renderLaptopModal() {
+  let cardsHtml = POLICIES.map(p => {
+    let badge = '';
+    let disabledClass = '';
+    let onClickAttr = `onclick="confirmPolicy('${p.id}')"`;
 
-    st.session_state.weather = {
-        "cloud_type": cloud_type,
-        "cloud_amount": cloud_amount,
-        "humidity": humidity,
-        "wind_speed": wind_speed,
-        "rain_prob": natural_rain_prob
-    }
-
-# --- pH 및 상태 색상 판별 함수 ---
-def get_ph_status(ph):
-    if ph >= 6.5:
-        return "안전 (정상)", "🟢"
-    elif ph >= 5.6:
-        return "주의 (약산성)", "🟡"
-    elif ph >= 4.5:
-        return "위험 (산성비)", "🟠"
-    else:
-        return "심각 (강산성 피해)", "🔴"
-
-def get_zone_color(health, ph):
-    if health < 40 or ph <= 4.4:
-        return "🔴 심각", "#ffcccc"
-    elif health < 60 or ph <= 5.5:
-        return "🟠 위험", "#ffe5cc"
-    elif health < 75 or ph <= 6.4:
-        return "🟡 주의", "#ffffcc"
-    else:
-        return "🟢 양호", "#d4edda"
-
-# --- 턴 시뮬레이션 실행 함수 ---
-def run_turn_simulation(seeding_choice):
-    w = st.session_state.weather
-    ev_type = st.session_state.event[2]
-    lv = st.session_state.tech_levels
-    turn_logs = [f"--- 📅 {st.session_state.turn}턴 시뮬레이션 결과 ---"]
-
-    # 1. 배출량 및 대기 확산 계산
-    so2_emit = max(4.0, 18.0 - lv["desulfurization"] * 4.5)
-    nox_emit = max(4.0, 16.0 - lv["traffic_policy"] * 3.5)
-    pm_emit = max(3.0, 14.0 - lv["precipitator"] * 3.5 - lv["traffic_policy"] * 1.5)
-
-    # 바람에 의한 자연 희석
-    dispersion = w["wind_speed"] * 1.8
-
-    if ev_type == "smog":
-        so2_emit += 12.0
-        nox_emit += 12.0
-        pm_emit += 15.0
-        turn_logs.append("⚠️ 대기 정체로 오염물질이 도시 상공에 고농도로 축적되었습니다.")
-    elif ev_type == "dust":
-        pm_emit += 22.0
-        turn_logs.append("🌪️ 황사·산불 연무 유입으로 미세먼지 농도가 급증했습니다.")
-
-    st.session_state.so2 = max(5.0, st.session_state.so2 + so2_emit - dispersion)
-    st.session_state.nox = max(5.0, st.session_state.nox + nox_emit - dispersion)
-    st.session_state.pm25 = max(5.0, st.session_state.pm25 + pm_emit - dispersion)
-
-    # 2. 인공강우 판정
-    rain_occurred = False
-    rain_amount = 0.0  # mm 환산 개념 (물 저장량 증가분)
-
-    if seeding_choice != "실시하지 않음":
-        if st.session_state.budget < 15:
-            turn_logs.append("❌ 예산이 부족하여 인공강우를 실행하지 못했습니다.")
-        else:
-            st.session_state.budget -= 15
-            # 시딩 적합성 판정
-            is_warm = "따뜻한 구름" in w["cloud_type"]
-            correct_seed = (is_warm and "흡습성" in seeding_choice) or (not is_warm and "빙정핵" in seeding_choice)
-
-            success_prob = (w["cloud_amount"] * 0.5) + (w["humidity"] * 0.4)
-            if correct_seed:
-                success_prob += 25
-            else:
-                success_prob -= 25
-                turn_logs.append("⚠️ 구름 온도에 맞지 않는 시딩 물질을 살포하여 응결 효율이 크게 떨어졌습니다!")
-
-            if w["wind_speed"] > 7.5:
-                success_prob -= 30
-                turn_logs.append("💨 강풍으로 인해 시딩 물질이 목표 구름층에서 흩어졌습니다.")
-
-            if ev_type == "dust":
-                success_prob -= 10
-
-            if random.uniform(0, 100) <= success_prob:
-                rain_occurred = True
-                rain_amount += random.uniform(14.0, 22.0) if correct_seed else random.uniform(6.0, 11.0)
-                turn_logs.append(f"🛩️ 인공강우 성공! ({seeding_choice}) 구름방울이 성장하여 비가 내립니다.")
-            else:
-                turn_logs.append(f"☁️ 인공강우 실패: 구름량과 습도 조건이 맞지 않아 강수로 이어지지 못했습니다.")
-
-    # 3. 자연 강수 판정
-    if random.randint(1, 100) <= w["rain_prob"] or ev_type == "heavy_rain":
-        rain_occurred = True
-        nat_rain = random.uniform(22.0, 32.0) if ev_type == "heavy_rain" else random.uniform(8.0, 16.0)
-        rain_amount += nat_rain
-        turn_logs.append(f"🌧️ 자연 강수가 발생했습니다. (강수량 지수: +{nat_rain:.1f})")
-
-    # 4. 강수에 따른 세정(Washout) 및 산성비(pH) 계산
-    repair_cost = 0
-    if rain_occurred:
-        # 대기 오염물질이 빗물에 녹아 황산/질산 형성 -> pH 저하
-        acid_load = (st.session_state.so2 * 0.022) + (st.session_state.nox * 0.016)
-        # 비가 많이 올수록 초기 세정 후 희석 효과 소폭 반영
-        dilution = min(0.4, rain_amount * 0.01)
-        calculated_ph = round(max(3.8, min(6.8, 6.6 - acid_load + dilution)), 2)
-        st.session_state.avg_ph = calculated_ph
-
-        # 세정 효과로 대기 농도 감소
-        st.session_state.so2 *= 0.65
-        st.session_state.nox *= 0.70
-        st.session_state.pm25 *= 0.65
-
-        # 물 저장량 증가 (저류조 레벨에 따라 저장 효율 증가)
-        capture_eff = 0.7 + (lv["reservoir"] * 0.1)
-        water_gain = rain_amount * capture_eff
-        st.session_state.water = min(st.session_state.max_water, st.session_state.water + water_gain)
-
-        ph_label, _ = get_ph_status(calculated_ph)
-        turn_logs.append(f"🧪 강수 평균 pH는 **{calculated_ph}** ({ph_label})로 측정되었습니다. (대기 오염물질 세정됨)")
-
-        # 산성비 피해 판정
-        if calculated_ph < 5.6:
-            severity = (5.6 - calculated_ph) * 12.0
-            st.session_state.eco_health = max(0.0, st.session_state.eco_health - severity)
-            st.session_state.satisfaction = max(0.0, st.session_state.satisfaction - severity * 0.6)
-            acid_repair = int(severity * 1.5)
-            repair_cost += acid_repair
-            turn_logs.append(f"🍂 산성비 침적으로 산림과 호수 생태계가 손상되었습니다! (생태계 -{severity:.1f}, 복구비 -{acid_repair})")
-        else:
-            st.session_state.eco_health = min(100.0, st.session_state.eco_health + 3.0)
-            turn_logs.append("🌿 깨끗한 단비가 내려 도시 생태계가 회복되었습니다!")
-
-        # 폭우 및 홍수 피해 판정
-        if rain_amount > 24.0:
-            flood_defense = (lv["green_infra"] * 6.0) + (lv["reservoir"] * 5.0)
-            flood_damage = max(0.0, (rain_amount - 24.0) * 1.5 - flood_defense)
-            if flood_damage > 0:
-                flood_repair = int(flood_damage * 2.0)
-                repair_cost += flood_repair
-                st.session_state.satisfaction = max(0.0, st.session_state.satisfaction - flood_damage)
-                turn_logs.append(f"🌊 폭우로 도로 침수 및 오염물질 하천 유출 발생! (녹색 인프라 부족, 복구비 -{flood_repair})")
-            else:
-                turn_logs.append("🛡️ 빗물정원과 빗물저류조가 폭우를 완벽히 흡수해 홍수를 막았습니다!")
-    else:
-        turn_logs.append("☀️ 이번 턴에는 비가 내리지 않아 대기 중 오염물질이 그대로 잔류했습니다.")
-        # 비가 안 오면 고농도 미세먼지로 시민 만족도 하락
-        if st.session_state.pm25 > 65:
-            st.session_state.satisfaction = max(0.0, st.session_state.satisfaction - 4.0)
-
-    # 5. 물 소비 및 증발 계산
-    water_loss = 13.0 if ev_type == "drought" else 8.0
-    st.session_state.water = max(0.0, st.session_state.water - water_loss)
-    if st.session_state.water < 25.0:
-        st.session_state.satisfaction = max(0.0, st.session_state.satisfaction - 6.0)
-        st.session_state.eco_health = max(0.0, st.session_state.eco_health - 4.0)
-        turn_logs.append("🚨 심각한 물 부족! 시민 불편과 생태계 건조 피해가 발생하고 있습니다.")
-
-    # 6. 구역별 상태 업데이트
-    for z in ZONES:
-        zid = z["id"]
-        offset = -0.3 if z["type"] == "emission" else (0.15 if z["type"] == "eco" else 0.0)
-        if rain_occurred:
-            st.session_state.zone_status[zid]["ph"] = round(max(3.8, min(7.0, st.session_state.avg_ph + offset + random.uniform(-0.1, 0.1))), 2)
-        z_ph = st.session_state.zone_status[zid]["ph"]
-        delta_h = (st.session_state.eco_health - st.session_state.zone_status[zid]["health"]) * 0.35
-        st.session_state.zone_status[zid]["health"] = max(0.0, min(100.0, st.session_state.zone_status[zid]["health"] + delta_h))
-
-    # 7. 예산 정산 (기본 세수 +25 - 복구비)
-    st.session_state.repair_cost_total += repair_cost
-    st.session_state.budget = max(0, st.session_state.budget + 25 - repair_cost)
-
-    # 8. 즉시 패배 조건 체크
-    lake_ph = st.session_state.zone_status["호수/하천"]["ph"]
-    forest_hp = st.session_state.zone_status["산림"]["health"]
-
-    if st.session_state.water <= 2.0:
-        st.session_state.game_over = True
-        st.session_state.victory = False
-        st.session_state.end_reason = "💧 패배: 극심한 물 부족으로 도시 기능이 완전히 마비되었습니다."
-    elif lake_ph <= 4.3:
-        st.session_state.game_over = True
-        st.session_state.victory = False
-        st.session_state.end_reason = f"🐟 패배: 호수/하천의 산성화(pH {lake_ph})가 임계치를 넘어 수생태계가 붕괴했습니다."
-    elif forest_hp <= 20.0 or st.session_state.eco_health <= 20.0:
-        st.session_state.game_over = True
-        st.session_state.victory = False
-        st.session_state.end_reason = "🌲 패배: 산림과 도시 생태계 건강도가 회복 불가능한 수준으로 파괴되었습니다."
-    elif st.session_state.turn >= st.session_state.max_turns:
-        # 최종 턴 종료 판정
-        st.session_state.game_over = True
-        env_score = calculate_env_score()
-        if (st.session_state.water >= 40.0 and st.session_state.avg_ph >= 5.6 and
-            st.session_state.eco_health >= 60.0 and st.session_state.satisfaction >= 55.0 and env_score >= 65):
-            st.session_state.victory = True
-            st.session_state.end_reason = "🏆 승리! 대기질 관리와 인공강우의 조화로 지속가능한 레인시티를 완성했습니다!"
-        else:
-            st.session_state.victory = False
-            st.session_state.end_reason = "📉 임기 종료 (목표 미달): 일부 환경·수자원 지표가 지속가능성 기준에 미치지 못했습니다."
-    else:
-        # 다음 턴 준비
-        st.session_state.turn += 1
-        st.session_state.ap = st.session_state.max_ap
-        generate_weather()
-
-    st.session_state.logs = turn_logs + [""] + st.session_state.logs
-
-def calculate_env_score():
-    air_score = max(0, 100 - (st.session_state.so2 * 0.5 + st.session_state.nox * 0.5 + st.session_state.pm25 * 0.4))
-    water_score = min(100, st.session_state.water * 1.2)
-    ph_score = max(0, min(100, (st.session_state.avg_ph - 4.0) * 35))
-    raw_total = (air_score * 0.25) + (water_score * 0.2) + (ph_score * 0.2) + (st.session_state.eco_health * 0.2) + (st.session_state.satisfaction * 0.15)
-    penalty = st.session_state.repair_cost_total * 0.15
-    return max(0, round(raw_total - penalty, 1))
-
-# --- 앱 실행 시작 ---
-if "initialized" not in st.session_state:
-    init_game(10)
-
-# 사이드바: 게임 설정 및 규칙 요약
-with st.sidebar:
-    st.title("🌧️ 레인시티 (Rain City)")
-    st.caption("환경공학 & 인공강우 의사결정 시뮬레이션")
-
-    turn_mode = st.radio("플레이 턴 수 선택", [10, 20], horizontal=True)
-    if st.button("🔄 새 게임 시작", use_container_width=True):
-        init_game(turn_mode)
-        st.rerun()
-
-    st.divider()
-    st.subheader("🎯 승리 조건 (종료 시점)")
-    st.markdown("""
-    - **물 저장량**: 40% 이상
-    - **평균 강수 pH**: 5.6 이상
-    - **생태계 건강도**: 60 이상
-    - **시민 만족도**: 55 이상
-    - **환경평가 점수**: 65점 이상
-    """)
-
-    st.divider()
-    st.subheader("🔬 핵심 학습 포인트")
-    st.info(
-        "대기 중 SO₂와 NOₓ가 높은 상태에서 무리하게 인공강우를 실행하면, "
-        "오염물질이 빗물에 용해되어 **산성비(황산·질산)**로 지표에 침적됩니다. "
-        "탈황설비와 대기질 관리를 병행해 깨끗한 비를 만드세요!"
-    )
-
-# --- 1. 상단 정보판 (HUD) ---
-env_score = calculate_env_score()
-ph_status_text, ph_icon = get_ph_status(st.session_state.avg_ph)
-
-st.markdown(f"### 📊 레인시티 종합 현황 — **{st.session_state.turn} / {st.session_state.max_turns} 턴**")
-
-m1, m2, m3, m4, m5, m6, m7 = st.columns(7)
-m1.metric("💰 예산", f"{st.session_state.budget} 억", delta="+25/턴")
-m2.metric("⚡ 행동력 (AP)", f"{st.session_state.ap} / {st.session_state.max_ap}")
-m3.metric("💧 물 저장량", f"{st.session_state.water:.1f}%", f"최대 {int(st.session_state.max_water)}%")
-m4.metric("🧪 평균 강수 pH", f"{st.session_state.avg_ph:.2f} {ph_icon}", ph_status_text)
-m5.metric("🌿 생태계 건강도", f"{st.session_state.eco_health:.1f} / 100")
-m6.metric("😊 시민 만족도", f"{st.session_state.satisfaction:.1f} / 100")
-m7.metric("🏅 환경평가 점수", f"{env_score} 점")
-
-# 대기질 세부 지표 바
-aq1, aq2, aq3 = st.columns(3)
-aq1.info(f"**SO₂ (아황산가스):** {st.session_state.so2:.1f} ppb  *(탈황설비 Lv.{st.session_state.tech_levels['desulfurization']})*")
-aq2.info(f"**NOₓ (질소산화물):** {st.session_state.nox:.1f} ppb  *(교통정책 Lv.{st.session_state.tech_levels['traffic_policy']})*")
-aq3.info(f"**PM2.5 (초미세먼지):** {st.session_state.pm25:.1f} ㎍/㎥  *(전기집진기 Lv.{st.session_state.tech_levels['precipitator']})*")
-
-st.divider()
-
-# 게임 종료 화면 처리
-if st.session_state.game_over:
-    if st.session_state.victory:
-        st.success(f"## {st.session_state.end_reason}")
-        st.balloons()
-    else:
-        st.error(f"## {st.session_state.end_reason}")
-
-    st.write(f"**최종 환경평가 점수:** {env_score}점 | **누적 피해 복구비:** {st.session_state.repair_cost_total}억")
-    if st.button("다시 도전하기", type="primary"):
-        init_game(st.session_state.max_turns)
-        st.rerun()
-    st.stop()
-
-# --- 2. 메인 영역: 좌측(도시 맵 & 기상 예보) / 우측(기술 카드 & 인공강우 실행) ---
-left_col, right_col = st.columns([1.35, 1.0])
-
-with left_col:
-    # 기상 예보 및 이벤트 패널
-    ev_title, ev_desc, ev_code = st.session_state.event
-    w = st.session_state.weather
-    st.subheader("🌤️ 기상 관측소 예보 & 도시 이벤트")
-
-    if ev_code != "normal":
-        st.warning(f"**[기상 특보] {ev_title}**: {ev_desc}")
-    else:
-        st.success(f"**[기상 양호] {ev_title}**: {ev_desc}")
-
-    w_col1, w_col2, w_col3, w_col4 = st.columns(4)
-    w_col1.metric("구름량", f"{w['cloud_amount']}%")
-    w_col2.metric("상대습도", f"{w['humidity']}%")
-    w_col3.metric("풍속", f"{w['wind_speed']} m/s")
-    w_col4.metric("자연 강수확률", f"{w['rain_prob']}%")
-    st.caption(f"☁️ 현재 상공 구름 특성: **{w['cloud_type']}**")
-
-    # 센서 레벨에 따른 사전 예측 기능 제공
-    if st.session_state.tech_levels["sensor"] >= 1:
-        est_acid = (st.session_state.so2 * 0.022) + (st.session_state.nox * 0.016)
-        est_ph = round(max(3.8, min(6.8, 6.6 - est_acid + 0.15)), 2)
-        st.info(f"📡 **[대기질 센서 예측]** 현 대기 농도에서 강수 발생 시 예상 강수 pH는 약 **{est_ph}** 입니다.")
-
-    st.divider()
-
-    # 도시 맵 (3x3 그리드 시각화)
-    st.subheader("🗺️ 레인시티 구역별 환경 상태 맵")
-    for row_idx in range(3):
-        cols = st.columns(3)
-        for col_idx in range(3):
-            z = ZONES[row_idx * 3 + col_idx]
-            z_stat = st.session_state.zone_status[z["id"]]
-            status_badge, bg_color = get_zone_color(z_stat["health"], z_stat["ph"])
-            with cols[col_idx]:
-                st.markdown(
-                    f"""
-                    <div style="background-color:{bg_color}; padding:12px; border-radius:10px; border:1px solid #ccc; margin-bottom:10px; color:#111;">
-                        <div style="font-size:1.1em; font-weight:bold;">{z['icon']} {z['id']}</div>
-                        <div style="font-size:0.9em; margin-top:4px;">상태: <b>{status_badge}</b></div>
-                        <div style="font-size:0.85em;">강수 pH: <b>{z_stat['ph']}</b> | 건강도: <b>{z_stat['health']:.0f}%</b></div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-
-    # 시뮬레이션 결과 로그
-    st.subheader("📜 시뮬레이션 및 정책 일지")
-    log_box = "\n\n".join(st.session_state.logs[:15])
-    st.text_area("기록", value=log_box, height=220, disabled=True, label_visibility="collapsed")
-
-with right_col:
-    # 환경공학 기술 카드창
-    st.subheader("🛠️ 환경공학 기술 & 정책 카드")
-    st.caption("행동력(AP)과 예산을 사용해 시설을 설치·업그레이드하세요.")
-
-    for key, tech in TECH_LIST.items():
-        cur_lv = st.session_state.tech_levels[key]
-        is_max = cur_lv >= tech["max_lv"]
-        with st.container(border=True):
-            c1, c2 = st.columns([2.3, 1])
-            with c1:
-                st.markdown(f"**{tech['name']}** `Lv.{cur_lv}/{tech['max_lv']}`")
-                st.caption(tech["desc"])
-            with c2:
-                btn_label = "최대 레벨" if is_max else f"설치 ({tech['cost']}억)"
-                disabled = is_max or (st.session_state.budget < tech["cost"]) or (st.session_state.ap < tech["ap"])
-                if st.button(btn_label, key=f"btn_{key}", disabled=disabled, use_container_width=True):
-                    st.session_state.budget -= tech["cost"]
-                    st.session_state.ap -= tech["ap"]
-                    st.session_state.tech_levels[key] += 1
-                    if key == "reservoir":
-                        st.session_state.max_water += 20.0
-                    elif key == "traffic_policy":
-                        st.session_state.satisfaction = max(0.0, st.session_state.satisfaction - 2.0)
-                    st.session_state.logs.insert(0, f"🔧 [{tech['name']}] Lv.{cur_lv + 1} 설치 완료!")
-                    st.rerun()
-
-    st.divider()
-
-    # 인공강우 의사결정 & 턴 진행 패널
-    st.subheader("🛩️ 인공강우 작전 및 턴 실행")
-    with st.container(border=True):
-        st.markdown("**시딩(Cloud Seeding) 방식 선택** *(실행 시 예산 15억 소모)*")
-        seeding_option = st.radio(
-            "구름 온도에 맞는 촉매제를 선택하세요:",
-            [
-                "실시하지 않음",
-                "흡습성 시딩 (염화나트륨·염화칼슘 입자 - 따뜻한 구름용)",
-                "빙정핵 시딩 (요오드화은 입자 - 차가운 과냉각 구름용)"
-            ],
-            label_visibility="collapsed"
-        )
-
-        st.caption("💡 팁: SO₂·NOₓ 농도가 높을 때 인공강우를 실행하면 산성비가 내릴 위험이 큽니다.")
-
-        if st.button("▶️ 시뮬레이션 실행 및 다음 턴으로", type="primary", use_container_width=True):
-            run_turn_simulation(seeding_option)
-            st.rerun()
+    if (p.status === 'ACTIVE') {
+      badge = `<span class="badge-status badge-active">✔ 가동 중</span>`;
+      disabledClass = 'disabled';
+      onClickAttr = '';
+    } else if (p.status === 'PENDING') {
+      badge = `<span class="badge-status badge-pending">⏳ 설치 중 (${p.applyDay}
