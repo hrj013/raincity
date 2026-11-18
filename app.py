@@ -517,7 +517,46 @@ game_html = """
     white-space: nowrap;
     box-shadow: 0 4px 12px rgba(0,0,0,0.6);
   }
-</style>
+
+  <!-- [1] Rain City 스타일 패치 CSS 블록 -->
+  <style id="rain-skin">
+    #game-container { background: #2b1580; }
+    .hollow-panel {
+      background: rgba(34, 18, 92, 0.97);
+      border: 3px solid #150b38;
+      border-radius: 16px;
+      box-shadow: 6px 6px 0 #ff8cc6, 0 0 0 3px #b69cff;
+    }
+    .hollow-panel::before { content: "★"; background: #2b1580; color: #ffd95e; top: -16px; border-radius: 10px; }
+    .title-logo { color: #fff4d6; text-shadow: 4px 4px 0 #ff8cc6, 8px 8px 0 #150b38; }
+    .title-sub { color: #d8c9ff; text-shadow: 2px 2px 0 #150b38; }
+    .start-btn {
+      background: #7bf0c8; color: #150b38; border: 3px solid #150b38;
+      border-radius: 14px; box-shadow: 5px 5px 0 #150b38;
+    }
+    .start-btn:hover { background: #ff8cc6; color: #150b38; box-shadow: 2px 2px 0 #150b38; transform: translate(3px, 3px); }
+    #hud-clock { background: #fff4d6; border: 3px solid #150b38; box-shadow: 4px 4px 0 #ff8cc6; }
+    .clock-day { color: #150b38; }
+    .clock-time { color: #150b38; background: #7bf0c8; }
+    .speed-btn { background: #fff; color: #150b38; border: 2px solid #150b38; }
+    .speed-btn.active { background: #ffd95e; color: #150b38; }
+    #hud-weather { background: rgba(34, 18, 92, 0.95); border: 3px solid #150b38; box-shadow: 4px 4px 0 #59d2ff; }
+    .alert-pill { background: #ff5fa2; border: 2px solid #150b38; box-shadow: 3px 3px 0 #150b38; }
+    #dialogue-box { background: #2b1580; border: 3px solid #150b38; box-shadow: 6px 6px 0 #ff8cc6; }
+    .speaker-tag { background: #ff8cc6; color: #150b38; border: 2px solid #150b38; }
+    .dialogue-next { color: #7bf0c8; }
+    .policy-card { background: rgba(60, 35, 150, 0.95); border: 2px solid #150b38; box-shadow: 3px 3px 0 #b69cff; }
+    .policy-card:hover:not(.disabled) { border-color: #7bf0c8; background: rgba(80, 50, 190, 0.95); }
+    .choice-btn { background: #3c2399; border: 2px solid #150b38; box-shadow: 3px 3px 0 #ff8cc6; }
+    .choice-btn:hover { background: #5a3ad8; border-color: #7bf0c8; }
+    .btn-yes { background: #7bf0c8; color: #150b38; border: 2px solid #150b38; }
+    .btn-no { background: #ff8cc6; color: #150b38; border: 2px solid #150b38; }
+    .radar-bar { background: #150b38; border: 3px solid #150b38; }
+    .sensor-node { border: 2px solid #150b38; }
+    #hover-tooltip { background: #fff4d6; color: #150b38; border: 2px solid #150b38; }
+    .close-btn { color: #fff4d6; border: 2px solid #b69cff; }
+    .close-btn:hover { background: #ff8cc6; color: #150b38; }
+  </style>
 </head>
 <body>
 
@@ -1318,55 +1357,93 @@ function checkMonthEnd() {
   }
 }
 
-// --- 그래픽 렌더링 ---
-function drawTitleBackground() {
-  const grad = ctx.createLinearGradient(0, 0, 0, height);
-  grad.addColorStop(0, '#181424');
-  grad.addColorStop(0.45, '#4a3238');
-  grad.addColorStop(0.8, '#9e6b43');
-  grad.addColorStop(1, '#2b1d16');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, width, height);
+// --- 그래픽 렌더링 (Rain City 패치 적용) ---
+const PAL = { ink: '#150b38', violet: '#6a3df0', deep: '#2b1580', mint: '#7bf0c8', pink: '#ff8cc6', sky: '#59d2ff', cream: '#fff4d6', yellow: '#ffd95e' };
 
+function rr(x, y, w, h, fill, r, lw) {
+  ctx.beginPath();
+  if (ctx.roundRect) {
+    ctx.roundRect(x, y, w, h, r === undefined ? 8 : r);
+  } else {
+    ctx.rect(x, y, w, h);
+  }
+  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+  ctx.lineWidth = lw || 3;
+  ctx.strokeStyle = PAL.ink;
+  ctx.stroke();
+}
+
+function star(x, y, r, col) {
+  ctx.fillStyle = col;
+  ctx.beginPath();
+  for (let i = 0; i < 8; i++) {
+    const a = i * Math.PI / 4, rad = i % 2 ? r * 0.4 : r;
+    ctx.lineTo(x + Math.cos(a) * rad, y + Math.sin(a) * rad);
+  }
+  ctx.closePath();
+  ctx.fill();
+}
+
+function planet(x, y, r, col, ring) {
+  if (ring) {
+    ctx.strokeStyle = PAL.cream; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.ellipse(x, y, r * 1.7, r * 0.5, -0.4, 0, Math.PI * 2); ctx.stroke();
+  }
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fillStyle = col; ctx.fill();
+  ctx.lineWidth = 3; ctx.strokeStyle = PAL.ink; ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  ctx.beginPath(); ctx.arc(x - r * 0.3, y - r * 0.3, r * 0.28, 0, Math.PI * 2); ctx.fill();
+}
+
+const DOODLES = [
+  [0.07, 0.14, 16, 's'], [0.20, 0.32, 22, 'm', 0], [0.33, 0.10, 12, 's'], [0.50, 0.22, 26, 'p', 1],
+  [0.62, 0.08, 14, 's'], [0.78, 0.28, 20, 'm', 0], [0.90, 0.12, 18, 's'], [0.14, 0.52, 10, 's'], [0.88, 0.48, 12, 's']
+];
+
+function drawDoodles(h, alpha) {
+  const t = Date.now() / 900;
   ctx.save();
-  ctx.beginPath();
-  ctx.arc(width * 0.5, height * 0.36, Math.min(width, height) * 0.22, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(247, 238, 220, 0.14)';
-  ctx.fill();
-  ctx.restore();
-
-  ctx.fillStyle = '#141118';
-  const baseY = height * 0.78;
-  const buildings = [
-    { x: 0.15, w: 0.04, h: 0.22 }, { x: 0.21, w: 0.05, h: 0.32 }, { x: 0.28, w: 0.03, h: 0.19 },
-    { x: 0.34, w: 0.06, h: 0.42 }, { x: 0.42, w: 0.04, h: 0.28 }, { x: 0.48, w: 0.05, h: 0.48 },
-    { x: 0.55, w: 0.06, h: 0.36 }, { x: 0.63, w: 0.04, h: 0.25 }, { x: 0.69, w: 0.05, h: 0.39 },
-    { x: 0.76, w: 0.04, h: 0.21 }
-  ];
-
-  buildings.forEach(b => {
-    const bx = width * b.x;
-    const bw = width * b.w;
-    const bh = height * b.h;
-    ctx.fillRect(bx, baseY - bh, bw, bh + 40);
-    ctx.beginPath();
-    ctx.moveTo(bx + bw * 0.5, baseY - bh - 35);
-    ctx.lineTo(bx + bw * 0.35, baseY - bh);
-    ctx.lineTo(bx + bw * 0.65, baseY - bh);
-    ctx.closePath();
-    ctx.fill();
+  ctx.globalAlpha = alpha;
+  DOODLES.forEach((d, i) => {
+    const x = width * d[0], y = h * d[1] + Math.sin(t + i * 1.7) * 4;
+    if (d[3] === 's') star(x, y, d[2], PAL.cream);
+    else planet(x, y, d[2], d[3] === 'm' ? PAL.mint : PAL.pink, d[4] === 1);
   });
+  ctx.restore();
+}
 
-  ctx.fillStyle = '#1c1412';
-  ctx.beginPath();
-  ctx.moveTo(0, height);
-  ctx.lineTo(0, height * 0.76);
-  ctx.quadraticCurveTo(width * 0.3, height * 0.71, width * 0.6, height * 0.78);
-  ctx.quadraticCurveTo(width * 0.85, height * 0.83, width, height * 0.74);
-  ctx.lineTo(width, height);
-  ctx.fill();
+function drawBushes(y, size) {
+  for (let x = -size * 0.4, i = 0; x < width + size; x += size * 0.85, i++) {
+    const cy = y + Math.sin(i * 2.3) * size * 0.12;
+    ctx.beginPath(); ctx.arc(x, cy, size * 0.55, 0, Math.PI * 2);
+    ctx.fillStyle = i % 3 === 0 ? PAL.sky : PAL.mint; ctx.fill();
+    ctx.lineWidth = 3; ctx.strokeStyle = PAL.ink; ctx.stroke();
+  }
+}
 
-  drawParticles('#e6c288', 6);
+function drawTitleBackground() {
+  const g = ctx.createLinearGradient(0, 0, 0, height);
+  g.addColorStop(0, '#7a4bff'); g.addColorStop(1, '#2a1480');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, width, height);
+
+  ctx.fillStyle = 'rgba(255,255,255,0.05)';
+  const s = 60;
+  for (let y = 0; y < height; y += s) for (let x = ((y / s) % 2) * s; x < width; x += s * 2) ctx.fillRect(x, y, s, s);
+
+  drawDoodles(height * 0.8, 1);
+
+  const base = height * 0.8;
+  for (let i = 0; i < 12; i++) {
+    const bw = width * 0.05, bx = width * (0.1 + i * 0.07), bh = height * (0.18 + ((i * 37) % 5) * 0.06);
+    rr(bx, base - bh, bw, bh + 60, i % 2 ? '#3a1fa0' : '#4b2cc4', 6);
+    for (let wy = base - bh + 14; wy < base - 8; wy += 22) {
+      ctx.fillStyle = (wy / 22 + i) % 3 < 1 ? PAL.yellow : 'rgba(255,244,214,0.25)';
+      ctx.fillRect(bx + bw * 0.3, wy, bw * 0.4, 8);
+    }
+  }
+  drawBushes(height * 0.9, 64);
+  drawParticles('#ffffff', 3);
 }
 
 function drawParticles(color, speedMult) {
@@ -1387,217 +1464,160 @@ function drawParticles(color, speedMult) {
 }
 
 function drawOfficeScene() {
-  const dayProgress = (gameMinutes - 420) / 840;
-  const skyGrad = ctx.createLinearGradient(0, 0, 0, height * 0.68);
+  const dp = (gameMinutes - 420) / 840, wh = height * 0.65;
+  let a, b;
+  if (weather.type === 'DUST') { a = '#b4579c'; b = '#ffb86b'; }
+  else if (weather.type === 'RAIN' || weather.type === 'HEAVY_RAIN') { a = '#2a2a7a'; b = '#5b7fe0'; }
+  else if (dp < 0.2) { a = '#5a3ad8'; b = '#ff9ec4'; }
+  else if (dp < 0.7) { a = '#6a3df0'; b = '#8fe3ff'; }
+  else if (dp < 0.88) { a = '#3a1d94'; b = '#ff7fb0'; }
+  else { a = '#150b48'; b = '#3a2a9a'; }
 
-  if (weather.type === 'DUST') {
-    skyGrad.addColorStop(0, '#8c6239');
-    skyGrad.addColorStop(1, '#c9965b');
-  } else if (weather.type === 'RAIN' || weather.type === 'HEAVY_RAIN') {
-    skyGrad.addColorStop(0, '#222b38');
-    skyGrad.addColorStop(1, '#4a5a6e');
-  } else if (dayProgress < 0.2) {
-    skyGrad.addColorStop(0, '#3a4f7a');
-    skyGrad.addColorStop(1, '#e8a87c');
-  } else if (dayProgress < 0.7) {
-    skyGrad.addColorStop(0, '#2b6cb0');
-    skyGrad.addColorStop(1, '#ebd5b3');
-  } else if (dayProgress < 0.88) {
-    skyGrad.addColorStop(0, '#2d1e3e');
-    skyGrad.addColorStop(0.6, '#b85d43');
-    skyGrad.addColorStop(1, '#f2b872');
-  } else {
-    skyGrad.addColorStop(0, '#0b0e17');
-    skyGrad.addColorStop(1, '#1d2436');
-  }
+  const g = ctx.createLinearGradient(0, 0, 0, wh);
+  g.addColorStop(0, a); g.addColorStop(1, b);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, width, wh);
+  if (weather.type !== 'DUST') drawDoodles(wh * 0.55, dp > 0.88 ? 1 : 0.8);
 
-  ctx.fillStyle = skyGrad;
-  ctx.fillRect(0, 0, width, height * 0.68);
+  const gr = Math.max(0, (100 - droughtLevel) / 100), gy = height * 0.56;
+  ctx.fillStyle = gr > 0.6 ? '#3fd6a4' : '#e9c7a0';
+  ctx.fillRect(0, gy, width, wh - gy);
+  ctx.fillStyle = PAL.ink; ctx.fillRect(0, gy, width, 3);
+  if (gr > 0.3) drawBushes(gy + 8, 30 + gr * 26);
 
-  const greenRatio = Math.max(0, (100 - droughtLevel) / 100);
-  ctx.fillStyle = greenRatio > 0.6 ? '#4a6b48' : '#b89468';
-  ctx.fillRect(0, height * 0.54, width, height * 0.14);
-
-  // 창밖 3개 공장
-  FACTORIES.forEach(f => {
-    const fx = width * f.relX;
-    const fy = height * f.relY;
-    const fw = width * f.relW;
-    const fh = height * f.relH;
-
-    ctx.fillStyle = '#2b2d38';
-    ctx.strokeStyle = '#121318';
-    ctx.lineWidth = 2.5;
-    ctx.fillRect(fx, fy + fh * 0.35, fw, fh * 0.65);
-    ctx.strokeRect(fx, fy + fh * 0.35, fw, fh * 0.65);
-
-    ctx.fillRect(fx + fw * 0.2, fy, fw * 0.14, fh * 0.35);
-    ctx.strokeRect(fx + fw * 0.2, fy, fw * 0.14, fh * 0.35);
-    ctx.fillRect(fx + fw * 0.65, fy + fh * 0.08, fw * 0.14, fh * 0.27);
-    ctx.strokeRect(fx + fw * 0.65, fy + fh * 0.08, fw * 0.14, fh * 0.27);
-
-    ctx.fillStyle = `rgba(90, 85, 80, ${Math.min(0.75, weather.so2 / 140)})`;
-    ctx.beginPath();
-    ctx.arc(fx + fw * 0.27, fy - 12, 16, 0, Math.PI * 2);
-    ctx.arc(fx + fw * 0.35, fy - 26, 22, 0, Math.PI * 2);
-    ctx.fill();
+  const t = Date.now() / 700;
+  FACTORIES.forEach((f, idx) => {
+    const fx = width * f.relX, fy = height * f.relY, fw = width * f.relW, fh = height * f.relH;
+    rr(fx + fw * 0.2, fy, fw * 0.16, fh * 0.4, '#a98bff', 4);
+    rr(fx + fw * 0.64, fy + fh * 0.1, fw * 0.16, fh * 0.3, '#a98bff', 4);
+    rr(fx, fy + fh * 0.35, fw, fh * 0.65, idx % 2 ? '#8a6bff' : '#6a4be0', 8);
+    for (let wx = 0; wx < 4; wx++) {
+      ctx.fillStyle = PAL.yellow;
+      ctx.fillRect(fx + fw * (0.1 + wx * 0.22), fy + fh * 0.55, fw * 0.12, fh * 0.14);
+    }
+    const sa = Math.min(0.85, weather.so2 / 140);
+    for (let k = 0; k < 3; k++) {
+      const sx = fx + fw * 0.28 + k * 7 + Math.sin(t + idx + k) * 5, sy = fy - 10 - k * 15;
+      ctx.beginPath(); ctx.arc(sx, sy, 12 + k * 5, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,244,214,' + sa + ')'; ctx.fill();
+      ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(21,11,56,' + sa + ')'; ctx.stroke();
+    }
   });
 
   if (weather.type === 'DUST') {
-    drawParticles('rgba(218, 165, 95, 0.65)', 12);
+    drawParticles('rgba(255,217,94,0.7)', 12);
   } else if (weather.type === 'RAIN' || weather.type === 'HEAVY_RAIN') {
-    ctx.strokeStyle = weather.ph < 5.6 ? 'rgba(180, 220, 160, 0.55)' : 'rgba(175, 215, 255, 0.6)';
-    ctx.lineWidth = weather.type === 'HEAVY_RAIN' ? 2.2 : 1.3;
-    const count = weather.type === 'HEAVY_RAIN' ? 140 : 65;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = weather.ph < 5.6 ? 'rgba(123,240,200,0.85)' : 'rgba(143,227,255,0.85)';
+    ctx.lineWidth = weather.type === 'HEAVY_RAIN' ? 3 : 2;
+    const count = weather.type === 'HEAVY_RAIN' ? 120 : 55;
     for (let i = 0; i < count; i++) {
-      const rx = Math.random() * width;
-      const ry = Math.random() * height * 0.65;
-      ctx.beginPath();
-      ctx.moveTo(rx, ry);
-      ctx.lineTo(rx - 6, ry + 18);
-      ctx.stroke();
+      const rx = Math.random() * width, ry = Math.random() * wh;
+      ctx.beginPath(); ctx.moveTo(rx, ry); ctx.lineTo(rx - 5, ry + 16); ctx.stroke();
     }
   }
 
-  // 통유리창 프레임
-  ctx.strokeStyle = '#181920';
-  ctx.lineWidth = 10;
-  ctx.strokeRect(0, 0, width, height * 0.65);
+  ctx.strokeStyle = PAL.ink; ctx.lineWidth = 12;
+  ctx.strokeRect(0, 0, width, wh);
   for (let i = 1; i <= 3; i++) {
-    ctx.beginPath();
-    ctx.moveTo((width / 4) * i, 0);
-    ctx.lineTo((width / 4) * i, height * 0.65);
-    ctx.stroke();
+    ctx.beginPath(); ctx.moveTo((width / 4) * i, 0); ctx.lineTo((width / 4) * i, wh); ctx.stroke();
   }
+  ctx.strokeStyle = PAL.pink; ctx.lineWidth = 3;
+  ctx.strokeRect(8, 8, width - 16, wh - 16);
 
-  // 원목 책상
-  const deskGrad = ctx.createLinearGradient(0, height * 0.63, 0, height);
-  deskGrad.addColorStop(0, '#59412e');
-  deskGrad.addColorStop(0.2, '#422f20');
-  deskGrad.addColorStop(1, '#241911');
-  ctx.fillStyle = deskGrad;
-  ctx.fillRect(0, height * 0.63, width, height * 0.37);
-
-  ctx.strokeStyle = '#1a110b';
-  ctx.lineWidth = 4;
-  ctx.beginPath();
-  ctx.moveTo(0, height * 0.63);
-  ctx.lineTo(width, height * 0.63);
-  ctx.stroke();
+  const dy = height * 0.63;
+  const dg = ctx.createLinearGradient(0, dy, 0, height);
+  dg.addColorStop(0, '#3c2399'); dg.addColorStop(1, '#1a0f55');
+  ctx.fillStyle = dg; ctx.fillRect(0, dy, width, height - dy);
+  const cols = [PAL.mint, PAL.pink, PAL.sky, PAL.yellow], cs = 26;
+  for (let x = 0, i = 0; x < width; x += cs, i++) {
+    ctx.fillStyle = cols[i % 4]; ctx.fillRect(x, dy, cs, cs);
+    ctx.fillStyle = 'rgba(21,11,56,0.18)'; if (i % 2) ctx.fillRect(x, dy, cs, cs);
+  }
+  ctx.fillStyle = PAL.ink; ctx.fillRect(0, dy - 2, width, 4); ctx.fillRect(0, dy + cs, width, 4);
 
   drawDeskObjects();
 }
 
 function drawDeskObjects() {
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = '#1c1815';
+  const I = id => DESK_ITEMS.find(o => o.id === id);
+  const X = o => width * o.relX, Y = o => height * o.relY, W = o => width * o.relW, H = o => height * o.relH;
   const blink = Math.floor(Date.now() / 400) % 2 === 0;
+  ctx.lineCap = 'round';
 
-  // 1. 인공강우 작전 무전기
-  const rad = DESK_ITEMS[0];
-  ctx.fillStyle = '#2b303a';
-  ctx.fillRect(width * rad.relX, height * rad.relY, width * rad.relW, height * rad.relH);
-  ctx.strokeRect(width * rad.relX, height * rad.relY, width * rad.relW, height * rad.relH);
-  // 안테나
-  ctx.beginPath();
-  ctx.moveTo(width * (rad.relX + 0.015), height * rad.relY);
-  ctx.lineTo(width * (rad.relX + 0.015), height * (rad.relY - 0.06));
-  ctx.stroke();
-  // 상태 LED
-  ctx.fillStyle = activeTasks.seedingReady ? '#52b788' : '#6c757d';
-  ctx.beginPath();
-  ctx.arc(width * (rad.relX + 0.035), height * (rad.relY + 0.03), 5, 0, Math.PI * 2);
-  ctx.fill();
+  // 무전기
+  let o = I('radio');
+  ctx.strokeStyle = PAL.ink; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(X(o) + W(o) * 0.3, Y(o)); ctx.lineTo(X(o) + W(o) * 0.3, Y(o) - H(o) * 0.55); ctx.stroke();
+  rr(X(o), Y(o), W(o), H(o), '#5a3ad8', 10);
+  for (let i = 0; i < 3; i++) { ctx.fillStyle = PAL.cream; ctx.beginPath(); ctx.arc(X(o) + W(o) * 0.3, Y(o) + H(o) * (0.45 + i * 0.16), 3.5, 0, Math.PI * 2); ctx.fill(); }
+  ctx.fillStyle = activeTasks.seedingReady ? PAL.mint : '#8479b8';
+  ctx.beginPath(); ctx.arc(X(o) + W(o) * 0.72, Y(o) + H(o) * 0.2, 6, 0, Math.PI * 2); ctx.fill();
+  ctx.lineWidth = 2; ctx.stroke();
 
-  // 2. 신문 기사
-  const news = DESK_ITEMS[1];
-  ctx.fillStyle = '#e6dcc5';
-  ctx.fillRect(width * news.relX, height * news.relY, width * news.relW, height * news.relH);
-  ctx.strokeRect(width * news.relX, height * news.relY, width * news.relW, height * news.relH);
-  ctx.fillStyle = '#3b332b';
-  ctx.fillRect(width * (news.relX + 0.015), height * (news.relY + 0.02), width * (news.relW - 0.03), 5);
+  // 신문
+  o = I('newspaper');
+  rr(X(o), Y(o), W(o), H(o), PAL.cream, 4);
+  ctx.fillStyle = PAL.ink; ctx.fillRect(X(o) + W(o) * 0.08, Y(o) + H(o) * 0.14, W(o) * 0.84, 6);
+  for (let i = 0; i < 3; i++) ctx.fillRect(X(o) + W(o) * 0.08, Y(o) + H(o) * (0.38 + i * 0.2), W(o) * (0.84 - i * 0.2), 3);
 
-  // 3. 서류 더미
-  const docs = DESK_ITEMS[2];
-  for (let i = 2; i >= 0; i--) {
-    ctx.fillStyle = i === 0 ? '#f7f3e8' : '#dcd3be';
-    ctx.fillRect(width * docs.relX + i * 4, height * docs.relY - i * 4, width * docs.relW, height * docs.relH);
-    ctx.strokeRect(width * docs.relX + i * 4, height * docs.relY - i * 4, width * docs.relW, height * docs.relH);
-  }
+  // 서류 더미
+  o = I('documents');
+  for (let i = 2; i >= 0; i--) rr(X(o) + i * 5, Y(o) - i * 5, W(o), H(o), i === 0 ? PAL.cream : (i === 1 ? '#ffd0e8' : '#bfeaff'), 4);
+  ctx.fillStyle = PAL.ink; ctx.fillRect(X(o) + W(o) * 0.12, Y(o) + H(o) * 0.25, W(o) * 0.5, 4);
+  ctx.fillRect(X(o) + W(o) * 0.12, Y(o) + H(o) * 0.5, W(o) * 0.7, 3);
 
-  // 4. 노트북
-  const lap = DESK_ITEMS[3];
-  ctx.fillStyle = '#252934';
-  ctx.fillRect(width * lap.relX, height * lap.relY, width * lap.relW, height * (lap.relH * 0.68));
-  ctx.strokeRect(width * lap.relX, height * lap.relY, width * lap.relW, height * (lap.relH * 0.68));
-  ctx.fillStyle = '#3b5266';
-  ctx.fillRect(width * (lap.relX + 0.01), height * (lap.relY + 0.012), width * (lap.relW - 0.02), height * (lap.relH * 0.52));
-  ctx.fillStyle = '#3a3f4d';
-  ctx.fillRect(width * (lap.relX - 0.01), height * (lap.relY + lap.relH * 0.68), width * (lap.relW + 0.02), height * (lap.relH * 0.32));
-  ctx.strokeRect(width * (lap.relX - 0.01), height * (lap.relY + lap.relH * 0.68), width * (lap.relW + 0.02), height * (lap.relH * 0.32));
+  // 노트북
+  o = I('laptop');
+  rr(X(o), Y(o), W(o), H(o) * 0.68, PAL.ink, 8);
+  rr(X(o) + 7, Y(o) + 7, W(o) - 14, H(o) * 0.68 - 14, PAL.sky, 4, 2);
+  star(X(o) + W(o) * 0.5, Y(o) + H(o) * 0.33, 11, PAL.cream);
+  rr(X(o) - W(o) * 0.06, Y(o) + H(o) * 0.68, W(o) * 1.12, H(o) * 0.3, PAL.pink, 6);
 
-  // 5. 대기질 센서 정비 단말기
-  const sen = DESK_ITEMS[4];
-  ctx.fillStyle = '#1e222b';
-  ctx.fillRect(width * sen.relX, height * sen.relY, width * sen.relW, height * sen.relH);
-  ctx.strokeRect(width * sen.relX, height * sen.relY, width * sen.relW, height * sen.relH);
-  ctx.fillStyle = (activeTasks.sensorDirty && blink) ? '#e09f3e' : '#2b9348';
-  ctx.fillRect(width * (sen.relX + 0.01), height * (sen.relY + 0.015), width * (sen.relW - 0.02), height * (sen.relH * 0.55));
+  // 센서 단말기
+  o = I('sensor_pad');
+  rr(X(o), Y(o), W(o), H(o), '#3c2399', 8);
+  rr(X(o) + 6, Y(o) + 6, W(o) - 12, H(o) * 0.55, (activeTasks.sensorDirty && blink) ? PAL.yellow : PAL.mint, 4, 2);
+  ctx.fillStyle = PAL.pink; ctx.beginPath(); ctx.arc(X(o) + W(o) * 0.5, Y(o) + H(o) * 0.82, 5, 0, Math.PI * 2); ctx.fill();
 
-  // 6. 수질·강수 pH 중화 실험 세트 (비커)
-  const bkr = DESK_ITEMS[5];
-  ctx.fillStyle = 'rgba(200, 230, 255, 0.35)';
-  ctx.fillRect(width * bkr.relX, height * bkr.relY, width * bkr.relW, height * bkr.relH);
-  ctx.strokeRect(width * bkr.relX, height * bkr.relY, width * bkr.relW, height * bkr.relH);
-  // 비커 속 용액 색상 (산성 경보 시 붉은빛 점멸)
-  ctx.fillStyle = (activeTasks.phAlert && blink) ? '#e63946' : '#4cc9f0';
-  ctx.fillRect(width * (bkr.relX + 0.005), height * (bkr.relY + bkr.relH * 0.45), width * (bkr.relW - 0.01), height * (bkr.relH * 0.5));
+  // 비커
+  o = I('beaker');
+  ctx.fillStyle = (activeTasks.phAlert && blink) ? '#ff5fa2' : PAL.sky;
+  ctx.fillRect(X(o) + 3, Y(o) + H(o) * 0.45, W(o) - 6, H(o) * 0.5);
+  rr(X(o), Y(o), W(o), H(o), 'rgba(255,244,214,0.25)', 6);
+  ctx.fillStyle = PAL.cream; ctx.beginPath(); ctx.arc(X(o) + W(o) * 0.35, Y(o) + H(o) * 0.65, 4, 0, Math.PI * 2); ctx.fill();
 
-  // 7. 가족사진
-  const pic = DESK_ITEMS[6];
-  ctx.fillStyle = '#8c6239';
-  ctx.fillRect(width * pic.relX, height * pic.relY, width * pic.relW, height * pic.relH);
-  ctx.strokeRect(width * pic.relX, height * pic.relY, width * pic.relW, height * pic.relH);
-  ctx.fillStyle = '#d9cbb8';
-  ctx.fillRect(width * (pic.relX + 0.008), height * (pic.relY + 0.012), width * (pic.relW - 0.016), height * (pic.relH - 0.024));
-
-  // 8. 펜꽂이
-  const pen = DESK_ITEMS[7];
-  const px = width * pen.relX;
-  const py = height * pen.relY;
-  const pw = width * pen.relW;
-  const ph = height * pen.relH;
-  ['#c94a4a', '#3b6ea5', '#e3b23c'].forEach((col, idx) => {
-    ctx.strokeStyle = col;
-    ctx.lineWidth = 2.5;
-    ctx.beginPath();
-    ctx.moveTo(px + pw * (0.25 + idx * 0.25), py + ph * 0.4);
-    ctx.lineTo(px + pw * (0.15 + idx * 0.3), py - 12);
-    ctx.stroke();
+  // 가족사진
+  o = I('photo');
+  rr(X(o), Y(o), W(o), H(o), PAL.yellow, 6);
+  rr(X(o) + 5, Y(o) + 5, W(o) - 10, H(o) - 10, '#9a7bff', 3, 2);
+  [0.32, 0.68].forEach((fx, k) => {
+    ctx.fillStyle = k ? PAL.pink : PAL.mint; ctx.beginPath(); ctx.arc(X(o) + W(o) * fx, Y(o) + H(o) * 0.5, W(o) * 0.17, 0, Math.PI * 2); ctx.fill();
+    ctx.lineWidth = 2; ctx.strokeStyle = PAL.ink; ctx.stroke();
   });
-  ctx.strokeStyle = '#1c1815';
-  ctx.lineWidth = 2;
-  ctx.fillStyle = '#4a4e59';
-  ctx.fillRect(px, py + ph * 0.35, pw, ph * 0.65);
-  ctx.strokeRect(px, py + ph * 0.35, pw, ph * 0.65);
 
-  // 9. 환경평가원 직통 전화기
-  const phn = DESK_ITEMS[8];
-  const shakeX = (activeTasks.phoneRinging && blink) ? 3 : 0;
-  ctx.fillStyle = activeTasks.phoneRinging ? '#9e2a2b' : '#2b2d42';
-  ctx.fillRect(width * phn.relX + shakeX, height * phn.relY, width * phn.relW, height * phn.relH);
-  ctx.strokeRect(width * phn.relX + shakeX, height * phn.relY, width * phn.relW, height * phn.relH);
+  // 펜꽂이
+  o = I('penholder');
+  ['#ff5fa2', PAL.sky, PAL.yellow].forEach((col, k) => {
+    ctx.strokeStyle = PAL.ink; ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.moveTo(X(o) + W(o) * (0.25 + k * 0.25), Y(o) + H(o) * 0.4); ctx.lineTo(X(o) + W(o) * (0.1 + k * 0.32), Y(o) - 12); ctx.stroke();
+    ctx.strokeStyle = col; ctx.lineWidth = 3; ctx.stroke();
+  });
+  rr(X(o), Y(o) + H(o) * 0.35, W(o), H(o) * 0.65, '#5a3ad8', 6);
 
-  // 10. 탁상 캘린더
-  const cal = DESK_ITEMS[9];
-  ctx.fillStyle = '#f5efe2';
-  ctx.fillRect(width * cal.relX, height * cal.relY, width * cal.relW, height * cal.relH);
-  ctx.strokeRect(width * cal.relX, height * cal.relY, width * cal.relW, height * cal.relH);
-  ctx.fillStyle = '#9e2a2b';
-  ctx.fillRect(width * cal.relX, height * cal.relY, width * cal.relW, height * (cal.relH * 0.28));
-  ctx.fillStyle = '#1c1815';
-  ctx.font = 'bold 14px Gowun Batang';
-  ctx.fillText(`${day}일`, width * (cal.relX + 0.015), height * (cal.relY + 0.075));
+  // 전화기
+  o = I('phone');
+  const sh = (activeTasks.phoneRinging && blink) ? 4 : 0;
+  rr(X(o) + sh, Y(o), W(o), H(o), activeTasks.phoneRinging ? '#ff5fa2' : PAL.mint, 10);
+  rr(X(o) + sh + W(o) * 0.1, Y(o) - H(o) * 0.2, W(o) * 0.8, H(o) * 0.3, PAL.cream, 8);
+  ctx.fillStyle = PAL.ink;
+  for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.arc(X(o) + sh + W(o) * (0.25 + i * 0.25), Y(o) + H(o) * 0.6, 3, 0, Math.PI * 2); ctx.fill(); }
+
+  // 캘린더
+  o = I('calendar');
+  rr(X(o), Y(o), W(o), H(o), PAL.cream, 5);
+  ctx.fillStyle = '#ff5fa2'; ctx.fillRect(X(o) + 2, Y(o) + 2, W(o) - 4, H(o) * 0.28);
+  ctx.fillStyle = PAL.ink; ctx.font = 'bold 15px Gowun Batang';
+  ctx.fillText(day + '일', X(o) + W(o) * 0.15, Y(o) + H(o) * 0.72);
 }
 
 // --- 마우스 호버 & 클릭 ---
