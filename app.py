@@ -766,4 +766,594 @@ function renderLaptopModal() {
       disabledClass = 'disabled';
       onClickAttr = '';
     } else if (p.status === 'PENDING') {
-      badge = `<span class="badge-status badge-pending">⏳ 설치 중 (${p.applyDay}
+      badge = `<span class="badge-status badge-pending">⏳ 설치 중 (${p.applyDay}일차 적용 예정)</span>`;
+      disabledClass = 'disabled';
+      onClickAttr = '';
+    } else if (budget < p.cost) {
+      badge = `<span class="badge-status badge-ready">예산 부족 (${p.cost}억 필요)</span>`;
+      disabledClass = 'disabled';
+      onClickAttr = '';
+    } else {
+      badge = `<span class="badge-status badge-ready">시행 가능 (비용: ${p.cost}억)</span>`;
+    }
+
+    return `
+      <div class="policy-card ${disabledClass}" ${onClickAttr}>
+        <div>
+          <div style="font-weight:700; font-size:1.08rem; color:#f5e6c8; margin-bottom:6px;">${p.name}</div>
+          <div style="font-size:0.88rem; color:#cfc9bc; line-height:1.5;">${p.desc}</div>
+        </div>
+        <div>${badge}</div>
+      </div>
+    `;
+  }).join('');
+
+  openModal(`
+    <div class="modal-header">
+      <span class="modal-title">💻 환경공학 정책 제어 터미널 (잔여 예산: ${budget}억)</span>
+      <button class="close-btn" onclick="closeModal()">닫기</button>
+    </div>
+    <p style="font-size:0.9rem; color:#c9b182; margin-bottom:14px;">
+      ※ 선택한 정책은 현장 시공 및 장비 반입을 거쳐 <strong>2일 후</strong>부터 도시에 적용됩니다.
+    </p>
+    <div class="policy-grid">${cardsHtml}</div>
+  `);
+}
+
+function confirmPolicy(policyId) {
+  const p = POLICIES.find(item => item.id === policyId);
+  openModal(`
+    <div class="confirm-box">
+      <h3 style="font-family:'Gowun Batang', serif; font-size:1.45rem; color:#f5e6c8; margin-bottom:12px;">
+        "${p.name}"을(를) 선택하시겠습니까?
+      </h3>
+      <p style="color:#cfc9bc; font-size:0.98rem;">
+        소요 예산: <strong>${p.cost}억</strong> | 적용 시점: <strong>${day + 2}일차 아침</strong>
+      </p>
+      <div class="btn-group">
+        <button class="action-btn btn-yes" onclick="executePolicy('${p.id}')">확인</button>
+        <button class="action-btn btn-no" onclick="renderLaptopModal()">아니오</button>
+      </div>
+    </div>
+  `);
+}
+
+function executePolicy(policyId) {
+  const p = POLICIES.find(item => item.id === policyId);
+  if (budget >= p.cost && p.status === 'READY') {
+    budget -= p.cost;
+    p.status = 'PENDING';
+    p.applyDay = day + 2;
+    renderLaptopModal();
+  }
+}
+
+// --- 일일 환경 & 대기화학 시뮬레이션 ---
+function simulateNewDay() {
+  // 1. 예약된 정책 적용 체크 (2일 후 적용)
+  let newlyApplied = [];
+  POLICIES.forEach(p => {
+    if (p.status === 'PENDING' && day >= p.applyDay) {
+      p.status = 'ACTIVE';
+      newlyApplied.push(p.name);
+    }
+  });
+
+  const activeIds = POLICIES.filter(p => p.status === 'ACTIVE').map(p => p.id);
+
+  // 2. 자연재해 확률 판정 (15% 가뭄, 2% 폭우, 30% 황사)
+  const roll = Math.random() * 100;
+  if (roll < 2) {
+    weather.type = 'HEAVY_RAIN';
+  } else if (roll < 17) {
+    weather.type = 'DROUGHT';
+  } else if (roll < 47) {
+    weather.type = 'DUST';
+  } else {
+    weather.type = 'CLEAR';
+  }
+
+  // 3. 바람, 습도, 기온, 강수 확률 갱신
+  const dirs = ['북풍', '북서풍', '서풍', '남서풍', '남동풍', '동풍'];
+  weather.windDir = dirs[Math.floor(Math.random() * dirs.length)];
+  weather.windSpeed = +(1.2 + Math.random() * 6.5).toFixed(1);
+  weather.temp = weather.type === 'DROUGHT' ? Math.floor(41 + Math.random() * 6) : Math.floor(29 + Math.random() * 9);
+  weather.humidity = weather.type === 'HEAVY_RAIN' ? 88 : (weather.type === 'DROUGHT' ? 16 : Math.floor(25 + Math.random() * 35));
+  if (activeIds.includes('seeding')) weather.humidity = Math.min(95, weather.humidity + 18);
+
+  // 4. 오염물질 배출 및 확산 계산
+  let so2Gen = activeIds.includes('fgd') ? 4 : 16;
+  let noxGen = 13;
+  let pmGen = activeIds.includes('esp') ? 4 : 15;
+  if (weather.type === 'DUST') pmGen += 28;
+
+  const dispersion = weather.windSpeed * 2.1;
+  weather.so2 = Math.max(8, Math.min(150, weather.so2 + so2Gen - dispersion));
+  weather.nox = Math.max(8, Math.min(140, weather.nox + noxGen - dispersion));
+  weather.pm25 = Math.max(10, Math.min(200, weather.pm25 + pmGen - dispersion));
+
+  // 5. 구름방울 형성 및 강수 시뮬레이션
+  let rainProb = (weather.humidity * 0.55) - (weather.temp * 0.3);
+  if (activeIds.includes('seeding')) rainProb += 28;
+  if (weather.type === 'HEAVY_RAIN') rainProb = 95;
+  if (weather.type === 'DROUGHT') rainProb = 3;
+  weather.rainProb = Math.max(2, Math.min(95, Math.round(rainProb)));
+
+  const didRain = (Math.random() * 100) < weather.rainProb;
+  if (didRain) {
+    if (weather.type !== 'HEAVY_RAIN') weather.type = 'RAIN';
+    totalRainDays++;
+
+    // 산화 반응 및 구름방울 흡수에 따른 강수 pH 계산
+    const acidLoad = (weather.so2 * 0.021) + (weather.nox * 0.015);
+    weather.ph = +(Math.max(3.9, Math.min(6.8, 6.5 - acidLoad))).toFixed(2);
+
+    // 대기 세정 효과
+    weather.so2 *= 0.65;
+    weather.nox *= 0.7;
+    weather.pm25 *= 0.6;
+
+    // 가뭄 완화 (빗물정원, 투수성 포장, 저류조 시너지)
+    let droughtReduce = 7;
+    if (activeIds.includes('raingarden')) droughtReduce += 4;
+    if (activeIds.includes('permeable')) droughtReduce += 4;
+    if (activeIds.includes('reservoir')) droughtReduce += 7;
+    if (weather.type === 'HEAVY_RAIN') droughtReduce += 6;
+    droughtLevel = Math.max(5, droughtLevel - droughtReduce);
+
+    if (weather.ph < 5.6) {
+      acidRainDays++;
+      weather.ecoHealth = Math.max(10, weather.ecoHealth - 6);
+    } else {
+      weather.ecoHealth = Math.min(100, weather.ecoHealth + 5);
+    }
+  } else {
+    // 비가 안 올 경우 가뭄 심화
+    let droughtInc = weather.type === 'DROUGHT' ? 5.5 : 2.2;
+    if (activeIds.includes('reservoir')) droughtInc *= 0.65;
+    droughtLevel = Math.min(100, droughtLevel + droughtInc);
+  }
+
+  updateWeatherHUD();
+
+  if (newlyApplied.length > 0) {
+    showDialogue('나', `오늘부터 [${newlyApplied.join(', ')}] 설비가 본격적으로 가동되기 시작했어! 도시의 공기가 달라질 거야.`);
+  }
+}
+
+function updateWeatherHUD() {
+  const hud = document.getElementById('hud-weather');
+  const weatherNames = {
+    'CLEAR': '☀️ 맑음 (사막 건조기후)',
+    'DROUGHT': '🔥 자연재해: 극심한 폭염·가뭄',
+    'DUST': '🌪️ 자연재해: 고농도 황사 발생',
+    'HEAVY_RAIN': '⛈️ 자연재해: 국지성 폭우',
+    'RAIN': '🌧️ 단비 내리는 중'
+  };
+  const hasSensor = POLICIES.find(p => p.id === 'sensor').status === 'ACTIVE';
+  const sensorInfo = hasSensor
+    ? `SO₂: ${weather.so2.toFixed(0)} | NOₓ: ${weather.nox.toFixed(0)} | PM2.5: ${weather.pm25.toFixed(0)} | 예상 pH: ${weather.ph}`
+    : `대기질 정밀 데이터: [센서 미설치]`;
+
+  hud.innerHTML = `
+    <div style="font-weight:700; color:#f3d59b;">${weatherNames[weather.type]}</div>
+    <div style="font-size:0.85rem; color:#ddd;">바람: ${weather.windDir} ${weather.windSpeed}m/s | 습도: ${weather.humidity}% | 강수확률: ${weather.rainProb}%</div>
+    <div style="font-size:0.82rem; color:#a8dadc; margin-top:2px;">${sensorInfo}</div>
+  `;
+}
+
+// --- 30일차 결산 및 엔딩 ---
+function checkMonthEnd() {
+  const status = getChecklistStatus();
+  if (status.check1 && status.check2) {
+    // 둘 다 달성 -> 부자가 되어 고향으로 가는 비행기 엔딩
+    scene = 'ENDING';
+    isPaused = true;
+    document.getElementById('hud-clock').style.display = 'none';
+    document.getElementById('hud-weather').style.display = 'none';
+    openModal(`
+      <div style="text-align:center; padding:15px;">
+        <h2 style="font-family:'Cinzel', serif; font-size:2rem; color:#f3d59b; margin-bottom:10px;">HAPPY ENDING : 푸른 하늘의 귀환</h2>
+        <p style="font-family:'Gowun Batang', serif; font-size:1.12rem; line-height:1.8; color:#f0ece1; margin-bottom:20px;">
+          가뭄 진행도 <strong>${droughtLevel.toFixed(1)}%</strong>, 산성비 빈도 <strong>${status.acidFreq}%</strong>!<br>
+          당신은 사막의 회색 도시에 맑은 비와 푸른 녹지를 되찾아주었습니다.<br>
+          두둑한 외화 보너스를 손에 쥔 채, 창밖으로 펼쳐진 푸른 도시를 내려다보며 고향행 비행기에 오릅니다.
+        </p>
+        <button class="start-btn" onclick="location.reload()">처음부터 다시하기</button>
+      </div>
+    `);
+  } else if (status.check1 || status.check2) {
+    // 둘 중 하나 달성 -> 2달째 이어서 진행
+    month++;
+    day = 1;
+    gameMinutes = 7 * 60;
+    budget += 120; // 추가 지원 예산
+    showDialogue('나', `목표 중 하나는 달성했지만 아직 도시를 완전히 살리지 못했어... 다행히 계약이 연장되어 ${month}개월째 임무를 이어가게 됐어! 추가 예산 120억이 지원되었으니 이번 달엔 꼭 끝내자.`);
+  } else {
+    // 둘 다 미달성 -> 해고 엔딩
+    scene = 'ENDING';
+    isPaused = true;
+    openModal(`
+      <div style="text-align:center; padding:15px;">
+        <h2 style="font-family:'Cinzel', serif; font-size:1.9rem; color:#ff8fa3; margin-bottom:10px;">BAD ENDING : 계약 해지</h2>
+        <p style="font-family:'Gowun Batang', serif; font-size:1.1rem; line-height:1.8; color:#f0ece1; margin-bottom:20px;">
+          가뭄 진행도 <strong>${droughtLevel.toFixed(1)}%</strong>, 산성비 빈도 <strong>${status.acidFreq}%</strong>...<br>
+          도시는 여전히 메마르고 산성비에 신음하고 있습니다.<br>
+          결국 환경정책국에서 해고 통지서를 받고 빈손으로 짐을 싸게 되었습니다.
+        </p>
+        <button class="start-btn" onclick="location.reload()">다시 도전하기</button>
+      </div>
+    `);
+  }
+}
+
+// --- 그래픽 렌더링 (레이튼 + 할로우 나이트 + 도넛홀 감성) ---
+function drawTitleBackground() {
+  // 몽환적인 황혼 사막 하늘 그라데이션
+  const grad = ctx.createLinearGradient(0, 0, 0, height);
+  grad.addColorStop(0, '#181424');
+  grad.addColorStop(0.45, '#4a3238');
+  grad.addColorStop(0.8, '#9e6b43');
+  grad.addColorStop(1, '#2b1d16');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, width, height);
+
+  // 거대한 창백한 달 (할로우 나이트 감성)
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(width * 0.5, height * 0.36, Math.min(width, height) * 0.22, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(247, 238, 220, 0.14)';
+  ctx.fill();
+  ctx.restore();
+
+  // 도넛홀 스타일의 섬세하고 고독한 사막 마천루 실루엣
+  ctx.fillStyle = '#141118';
+  const baseY = height * 0.78;
+  const buildings = [
+    { x: 0.15, w: 0.04, h: 0.22 },
+    { x: 0.21, w: 0.05, h: 0.32 },
+    { x: 0.28, w: 0.03, h: 0.19 },
+    { x: 0.34, w: 0.06, h: 0.42 },
+    { x: 0.42, w: 0.04, h: 0.28 },
+    { x: 0.48, w: 0.05, h: 0.48 }, // 주인공 사무실이 위치한 중앙 타워
+    { x: 0.55, w: 0.06, h: 0.36 },
+    { x: 0.63, w: 0.04, h: 0.25 },
+    { x: 0.69, w: 0.05, h: 0.39 },
+    { x: 0.76, w: 0.04, h: 0.21 }
+  ];
+
+  buildings.forEach(b => {
+    const bx = width * b.x;
+    const bw = width * b.w;
+    const bh = height * b.h;
+    ctx.fillRect(bx, baseY - bh, bw, bh + 40);
+    // 첨탑 디테일
+    ctx.beginPath();
+    ctx.moveTo(bx + bw * 0.5, baseY - bh - 35);
+    ctx.lineTo(bx + bw * 0.35, baseY - bh);
+    ctx.lineTo(bx + bw * 0.65, baseY - bh);
+    ctx.closePath();
+    ctx.fill();
+  });
+
+  // 완만한 사막 모래 언덕
+  ctx.fillStyle = '#1c1412';
+  ctx.beginPath();
+  ctx.moveTo(0, height);
+  ctx.lineTo(0, height * 0.76);
+  ctx.quadraticCurveTo(width * 0.3, height * 0.71, width * 0.6, height * 0.78);
+  ctx.quadraticCurveTo(width * 0.85, height * 0.83, width, height * 0.74);
+  ctx.lineTo(width, height);
+  ctx.fill();
+
+  // 날리는 모래바람 입자
+  drawParticles('#e6c288', 6);
+}
+
+function drawParticles(color, speedMult) {
+  ctx.fillStyle = color;
+  particles.forEach(p => {
+    p.x += p.speedX * speedMult * 0.3;
+    p.y += p.speedY;
+    if (p.x > width) p.x = 0;
+    if (p.y > height) p.y = 0;
+    if (p.y < 0) p.y = height;
+
+    ctx.globalAlpha = p.alpha;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.globalAlpha = 1.0;
+}
+
+function drawOfficeScene() {
+  // 1. 통유리창 밖 하늘색 (시간대: 07:00 ~ 21:00 및 날씨 반영)
+  const dayProgress = (gameMinutes - 420) / 840; // 0(아침 7시) ~ 1(밤 9시)
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, height * 0.68);
+
+  if (weather.type === 'DUST') {
+    skyGrad.addColorStop(0, '#8c6239');
+    skyGrad.addColorStop(1, '#c9965b');
+  } else if (weather.type === 'RAIN' || weather.type === 'HEAVY_RAIN') {
+    skyGrad.addColorStop(0, '#222b38');
+    skyGrad.addColorStop(1, '#4a5a6e');
+  } else if (dayProgress < 0.2) {
+    // 아침 7~9시 여명
+    skyGrad.addColorStop(0, '#3a4f7a');
+    skyGrad.addColorStop(1, '#e8a87c');
+  } else if (dayProgress < 0.7) {
+    // 낮 사막 하늘
+    skyGrad.addColorStop(0, '#2b6cb0');
+    skyGrad.addColorStop(1, '#ebd5b3');
+  } else if (dayProgress < 0.88) {
+    // 해질녘 노을
+    skyGrad.addColorStop(0, '#2d1e3e');
+    skyGrad.addColorStop(0.6, '#b85d43');
+    skyGrad.addColorStop(1, '#f2b872');
+  } else {
+    // 밤 8~9시
+    skyGrad.addColorStop(0, '#0b0e17');
+    skyGrad.addColorStop(1, '#1d2436');
+  }
+
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(0, 0, width, height * 0.68);
+
+  // 사막 지평선 & 녹지 변화 (가뭄 진행도가 낮아질수록 푸른 녹지가 넓어짐)
+  const greenRatio = Math.max(0, (100 - droughtLevel) / 100);
+  ctx.fillStyle = greenRatio > 0.6 ? '#4a6b48' : '#b89468';
+  ctx.fillRect(0, height * 0.54, width, height * 0.14);
+
+  // 통유리창 너머 3가지 공장 그리기 (레이튼 스타일 깔끔한 외곽선)
+  FACTORIES.forEach(f => {
+    const fx = width * f.relX;
+    const fy = height * f.relY;
+    const fw = width * f.relW;
+    const fh = height * f.relH;
+
+    // 공장 본체
+    ctx.fillStyle = '#2b2d38';
+    ctx.strokeStyle = '#121318';
+    ctx.lineWidth = 2.5;
+    ctx.fillRect(fx, fy + fh * 0.35, fw, fh * 0.65);
+    ctx.strokeRect(fx, fy + fh * 0.35, fw, fh * 0.65);
+
+    // 굴뚝 2개
+    ctx.fillRect(fx + fw * 0.2, fy, fw * 0.14, fh * 0.35);
+    ctx.strokeRect(fx + fw * 0.2, fy, fw * 0.14, fh * 0.35);
+    ctx.fillRect(fx + fw * 0.65, fy + fh * 0.08, fw * 0.14, fh * 0.27);
+    ctx.strokeRect(fx + fw * 0.65, fy + fh * 0.08, fw * 0.14, fh * 0.27);
+
+    // 굴뚝 연기 (대기질에 따라 농도 변화)
+    ctx.fillStyle = `rgba(90, 85, 80, ${Math.min(0.75, weather.so2 / 140)})`;
+    ctx.beginPath();
+    ctx.arc(fx + fw * 0.27, fy - 12, 16, 0, Math.PI * 2);
+    ctx.arc(fx + fw * 0.35, fy - 26, 22, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  // 창밖 날씨 이펙트 (황사 / 비 / 폭우)
+  if (weather.type === 'DUST') {
+    drawParticles('rgba(218, 165, 95, 0.65)', 12);
+  } else if (weather.type === 'RAIN' || weather.type === 'HEAVY_RAIN') {
+    ctx.strokeStyle = weather.ph < 5.6 ? 'rgba(180, 220, 160, 0.55)' : 'rgba(175, 215, 255, 0.6)';
+    ctx.lineWidth = weather.type === 'HEAVY_RAIN' ? 2.2 : 1.3;
+    const count = weather.type === 'HEAVY_RAIN' ? 140 : 65;
+    for (let i = 0; i < count; i++) {
+      const rx = (Math.random() * width);
+      const ry = (Math.random() * height * 0.65);
+      ctx.beginPath();
+      ctx.moveTo(rx, ry);
+      ctx.lineTo(rx - 6, ry + 18);
+      ctx.stroke();
+    }
+  }
+
+  // 통유리창 프레임 (할로우 나이트 + 레이튼풍 아치형 철제 창틀)
+  ctx.strokeStyle = '#181920';
+  ctx.lineWidth = 10;
+  ctx.strokeRect(0, 0, width, height * 0.65);
+  for (let i = 1; i <= 3; i++) {
+    ctx.beginPath();
+    ctx.moveTo((width / 4) * i, 0);
+    ctx.lineTo((width / 4) * i, height * 0.65);
+    ctx.stroke();
+  }
+
+  // 2. 사무실 긴 원목 책상 (전경)
+  const deskGrad = ctx.createLinearGradient(0, height * 0.63, 0, height);
+  deskGrad.addColorStop(0, '#59412e');
+  deskGrad.addColorStop(0.2, '#422f20');
+  deskGrad.addColorStop(1, '#241911');
+  ctx.fillStyle = deskGrad;
+  ctx.fillRect(0, height * 0.63, width, height * 0.37);
+
+  ctx.strokeStyle = '#1a110b';
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(0, height * 0.63);
+  ctx.lineTo(width, height * 0.63);
+  ctx.stroke();
+
+  // 3. 책상 위 오브젝트 그리기 (손그림 스타일)
+  drawDeskObjects();
+}
+
+function drawDeskObjects() {
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = '#1c1815';
+
+  // (1) 신문 기사
+  const news = DESK_ITEMS[0];
+  ctx.fillStyle = '#e6dcc5';
+  ctx.fillRect(width * news.relX, height * news.relY, width * news.relW, height * news.relH);
+  ctx.strokeRect(width * news.relX, height * news.relY, width * news.relW, height * news.relH);
+  ctx.fillStyle = '#3b332b';
+  ctx.fillRect(width * (news.relX + 0.015), height * (news.relY + 0.02), width * (news.relW - 0.03), 6);
+
+  // (2) 서류 더미
+  const docs = DESK_ITEMS[1];
+  for (let i = 2; i >= 0; i--) {
+    ctx.fillStyle = i === 0 ? '#f7f3e8' : '#dcd3be';
+    ctx.fillRect(width * docs.relX + i * 5, height * docs.relY - i * 5, width * docs.relW, height * docs.relH);
+    ctx.strokeRect(width * docs.relX + i * 5, height * docs.relY - i * 5, width * docs.relW, height * docs.relH);
+  }
+
+  // (3) 노트북
+  const lap = DESK_ITEMS[2];
+  // 모니터 부분
+  ctx.fillStyle = '#252934';
+  ctx.fillRect(width * lap.relX, height * lap.relY, width * lap.relW, height * (lap.relH * 0.68));
+  ctx.strokeRect(width * lap.relX, height * lap.relY, width * lap.relW, height * (lap.relH * 0.68));
+  // 화면 빛
+  ctx.fillStyle = '#3b5266';
+  ctx.fillRect(width * (lap.relX + 0.01), height * (lap.relY + 0.012), width * (lap.relW - 0.02), height * (lap.relH * 0.52));
+  // 키보드 하판
+  ctx.fillStyle = '#3a3f4d';
+  ctx.fillRect(width * (lap.relX - 0.01), height * (lap.relY + lap.relH * 0.68), width * (lap.relW + 0.02), height * (lap.relH * 0.32));
+  ctx.strokeRect(width * (lap.relX - 0.01), height * (lap.relY + lap.relH * 0.68), width * (lap.relW + 0.02), height * (lap.relH * 0.32));
+
+  // (4) 가족사진 액자
+  const pic = DESK_ITEMS[3];
+  ctx.fillStyle = '#8c6239';
+  ctx.fillRect(width * pic.relX, height * pic.relY, width * pic.relW, height * pic.relH);
+  ctx.strokeRect(width * pic.relX, height * pic.relY, width * pic.relW, height * pic.relH);
+  ctx.fillStyle = '#d9cbb8';
+  ctx.fillRect(width * (pic.relX + 0.01), height * (pic.relY + 0.015), width * (pic.relW - 0.02), height * (pic.relH - 0.03));
+
+  // (5) 펜꽂이 (볼펜, 샤프 다수)
+  const pen = DESK_ITEMS[4];
+  const px = width * pen.relX;
+  const py = height * pen.relY;
+  const pw = width * pen.relW;
+  const ph = height * pen.relH;
+  // 꽂힌 펜들
+  const penColors = ['#c94a4a', '#3b6ea5', '#e3b23c', '#2b2d42'];
+  penColors.forEach((col, idx) => {
+    ctx.strokeStyle = col;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(px + pw * (0.2 + idx * 0.2), py + ph * 0.4);
+    ctx.lineTo(px + pw * (0.1 + idx * 0.25), py - 14);
+    ctx.stroke();
+  });
+  ctx.strokeStyle = '#1c1815';
+  ctx.lineWidth = 2;
+  ctx.fillStyle = '#4a4e59';
+  ctx.fillRect(px, py + ph * 0.35, pw, ph * 0.65);
+  ctx.strokeRect(px, py + ph * 0.35, pw, ph * 0.65);
+
+  // (6) 탁상 캘린더
+  const cal = DESK_ITEMS[5];
+  ctx.fillStyle = '#f5efe2';
+  ctx.fillRect(width * cal.relX, height * cal.relY, width * cal.relW, height * cal.relH);
+  ctx.strokeRect(width * cal.relX, height * cal.relY, width * cal.relW, height * cal.relH);
+  ctx.fillStyle = '#9e2a2b';
+  ctx.fillRect(width * cal.relX, height * cal.relY, width * cal.relW, height * (cal.relH * 0.28));
+  ctx.fillStyle = '#1c1815';
+  ctx.font = 'bold 16px Gowun Batang';
+  ctx.fillText(`${day}일`, width * (cal.relX + 0.025), height * (cal.relY + 0.085));
+}
+
+// --- 마우스 호버 및 클릭 이벤트 ---
+canvas.addEventListener('mousemove', (e) => {
+  if (scene !== 'OFFICE' || isPaused) {
+    document.getElementById('hover-tooltip').style.display = 'none';
+    canvas.style.cursor = 'default';
+    return;
+  }
+
+  const mx = e.clientX;
+  const my = e.clientY;
+  let hovered = null;
+
+  [...DESK_ITEMS, ...FACTORIES].forEach(obj => {
+    const ox = width * obj.relX;
+    const oy = height * obj.relY;
+    const ow = width * obj.relW;
+    const oh = height * obj.relH;
+    if (mx >= ox && mx <= ox + ow && my >= oy && my <= oy + oh) {
+      hovered = obj;
+    }
+  });
+
+  const tooltip = document.getElementById('hover-tooltip');
+  if (hovered) {
+    canvas.style.cursor = 'pointer';
+    tooltip.style.display = 'block';
+    tooltip.style.left = `${mx}px`;
+    tooltip.style.top = `${my}px`;
+    tooltip.innerText = hovered.name;
+  } else {
+    canvas.style.cursor = 'default';
+    tooltip.style.display = 'none';
+  }
+});
+
+canvas.addEventListener('click', (e) => {
+  if (scene !== 'OFFICE' || isPaused) return;
+  const mx = e.clientX;
+  const my = e.clientY;
+
+  for (const obj of [...DESK_ITEMS, ...FACTORIES]) {
+    const ox = width * obj.relX;
+    const oy = height * obj.relY;
+    const ow = width * obj.relW;
+    const oh = height * obj.relH;
+    if (mx >= ox && mx <= ox + ow && my >= oy && my <= oy + oh) {
+      handleObjectClick(obj.id);
+      break;
+    }
+  }
+});
+
+// --- 메인 게임 루프 (10분 = 1일 시간 경과) ---
+function gameLoop(timestamp) {
+  if (!lastTimestamp) lastTimestamp = timestamp;
+  const deltaSec = (timestamp - lastTimestamp) / 1000;
+  lastTimestamp = timestamp;
+
+  ctx.clearRect(0, 0, width, height);
+
+  if (scene === 'TITLE' || scene === 'ZOOMING') {
+    drawTitleBackground();
+  } else if (scene === 'OFFICE' || scene === 'ENDING') {
+    drawOfficeScene();
+
+    if (scene === 'OFFICE' && !isPaused) {
+      // 현실 600초(10분) = 게임 840분(07:00 ~ 21:00) -> 초당 1.4분 진행
+      gameMinutes += deltaSec * 1.4;
+
+      if (gameMinutes >= 21 * 60) {
+        // 밤 9시 도달 -> 다음 날 아침 7시로 전환
+        if (day >= 30) {
+          checkMonthEnd();
+        } else {
+          day++;
+          gameMinutes = 7 * 60;
+          simulateNewDay();
+        }
+      }
+
+      // 우측 상단 시계 업데이트
+      const hrs = Math.floor(gameMinutes / 60);
+      const mins = Math.floor(gameMinutes % 60);
+      const padH = String(hrs).padStart(2, '0');
+      const padM = String(mins).padStart(2, '0');
+      const prefix = month > 1 ? `${month}개월째 ` : '';
+      document.getElementById('clock-day-text').innerText = `${prefix}${day}일차`;
+      document.getElementById('clock-time-text').innerText = `${padH}시 ${padM}분`;
+    }
+  }
+
+  requestAnimationFrame(gameLoop);
+}
+
+requestAnimationFrame(gameLoop);
+</script>
+</body>
+</html>
+"""
+
+components.html(game_html, height=900, scrolling=False)
