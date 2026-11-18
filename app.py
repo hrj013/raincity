@@ -44,7 +44,7 @@ game_html = """
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background-color: #150b38;
+    background-color: #0d0f14;
     font-family: 'Noto Sans KR', sans-serif;
     color: #f0ece1;
   }
@@ -54,7 +54,7 @@ game_html = """
     width: 100vw;
     height: 100vh;
     overflow: hidden;
-    background: #2b1580;
+    background: #141218;
   }
 
   canvas {
@@ -66,28 +66,26 @@ game_html = """
     display: block;
   }
 
-  /* 고감도 팝아트 네온 패널 */
+  /* 굿피자/할로우나이트 감성 웜톤 패널 */
   .hollow-panel {
-    background: rgba(34, 18, 92, 0.97);
-    border: 3px solid #150b38;
-    border-radius: 16px;
-    box-shadow: 6px 6px 0 #ff8cc6, 0 0 0 3px #b69cff, 0 15px 35px rgba(21, 11, 56, 0.6);
+    background: rgba(22, 24, 33, 0.96);
+    border: 2px solid #8c7a5b;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.9), inset 0 0 18px rgba(140, 122, 91, 0.25);
+    border-radius: 12px;
     padding: 24px;
     position: relative;
   }
 
   .hollow-panel::before {
-    content: "★";
+    content: "✧";
     position: absolute;
-    top: -16px;
+    top: -12px;
     left: 50%;
     transform: translateX(-50%);
-    background: #2b1580;
-    padding: 0 12px;
-    color: #ffd95e;
+    background: #12141c;
+    padding: 0 10px;
+    color: #d4bc8b;
     font-size: 16px;
-    border-radius: 10px;
-    border: 2px solid #150b38;
   }
 
   /* 타이틀 화면 */
@@ -113,8 +111,8 @@ game_html = """
     font-size: clamp(3.5rem, 7vw, 6rem);
     font-weight: 800;
     letter-spacing: 0.18em;
-    color: #fff4d6;
-    text-shadow: 4px 4px 0 #ff8cc6, 8px 8px 0 #150b38;
+    color: #f7eedc;
+    text-shadow: 0 4px 20px rgba(0,0,0,0.8), 0 0 40px rgba(212, 188, 139, 0.45);
     margin-bottom: 10px;
   }
 
@@ -122,9 +120,9 @@ game_html = """
     font-family: 'Gowun Batang', serif;
     font-size: 1.15rem;
     letter-spacing: 0.25em;
-    color: #d8c9ff;
+    color: #d6c5a7;
     margin-bottom: 45px;
-    text-shadow: 2px 2px 0 #150b38;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.9);
   }
 
   .start-btn {
@@ -132,21 +130,20 @@ game_html = """
     font-size: 1.3rem;
     letter-spacing: 0.2em;
     padding: 14px 48px;
-    background: #7bf0c8;
-    color: #150b38;
-    border: 3px solid #150b38;
-    border-radius: 14px;
+    background: rgba(20, 22, 30, 0.78);
+    color: #f5ebd6;
+    border: 1.5px solid #c9b182;
+    border-radius: 30px;
     cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 5px 5px 0 #150b38;
-    font-weight: 800;
+    transition: all 0.35s ease;
+    box-shadow: 0 0 20px rgba(0,0,0,0.6);
   }
 
   .start-btn:hover {
-    background: #ff8cc6;
-    color: #150b38;
-    box-shadow: 2px 2px 0 #150b38;
-    transform: translate(3px, 3px);
+    background: #c9b182;
+    color: #14151c;
+    box-shadow: 0 0 30px rgba(201, 177, 130, 0.7);
+    transform: translateY(-2px);
   }
 
   /* 우측 상단 시계 HUD */
@@ -155,11 +152,11 @@ game_html = """
     top: 20px;
     right: 24px;
     z-index: 15;
-    background: #fff4d6;
-    border: 3px solid #150b38;
+    background: linear-gradient(135deg, #2b241d 0%, #1a1715 100%);
+    border: 2px solid #b89f74;
     border-radius: 14px;
     padding: 10px 18px;
-    box-shadow: 4px 4px 0 #ff8cc6;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.65);
     display: none;
     align-items: center;
     gap: 12px;
@@ -169,33 +166,32 @@ game_html = """
     font-family: 'Gowun Batang', serif;
     font-size: 1.2rem;
     font-weight: 700;
-    color: #150b38;
+    color: #f3d59b;
   }
 
   .clock-time {
     font-size: 1.1rem;
-    font-weight: 800;
-    color: #150b38;
-    background: #7bf0c8;
+    font-weight: 600;
+    color: #ffffff;
+    background: rgba(255,255,255,0.08);
     padding: 4px 10px;
     border-radius: 8px;
-    border: 2px solid #150b38;
   }
 
   .speed-btn {
-    background: #fff;
-    border: 2px solid #150b38;
-    color: #150b38;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid #8c7a5b;
+    color: #e6d8be;
     font-size: 0.78rem;
     padding: 4px 8px;
     border-radius: 6px;
     cursor: pointer;
-    font-weight: 700;
   }
 
   .speed-btn.active {
-    background: #ffd95e;
-    color: #150b38;
+    background: #c9a66b;
+    color: #161512;
+    font-weight: 700;
   }
 
   /* 좌측 상단 기상 및 실시간 알림 배지 */
@@ -204,21 +200,20 @@ game_html = """
     top: 20px;
     left: 24px;
     z-index: 15;
-    background: rgba(34, 18, 92, 0.95);
-    border: 3px solid #150b38;
-    border-radius: 14px;
+    background: rgba(22, 24, 33, 0.88);
+    border: 1.5px solid #7d7365;
+    border-radius: 12px;
     padding: 10px 18px;
     display: none;
     font-size: 0.9rem;
     line-height: 1.55;
-    box-shadow: 4px 4px 0 #59d2ff;
-    color: #f0ece1;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.5);
   }
 
   /* 긴급 현장 작업 알림 배너 */
   #alert-strip {
     position: absolute;
-    top: 110px;
+    top: 105px;
     left: 24px;
     z-index: 15;
     display: none;
@@ -227,20 +222,20 @@ game_html = """
   }
 
   .alert-pill {
-    background: #ff5fa2;
-    border: 2px solid #150b38;
-    color: #150b38;
+    background: rgba(158, 42, 43, 0.9);
+    border: 1px solid #ffccd5;
+    color: #fff;
     padding: 7px 14px;
     border-radius: 20px;
     font-size: 0.85rem;
-    font-weight: 800;
+    font-weight: 600;
     cursor: pointer;
     animation: pulse 1.3s infinite;
-    box-shadow: 3px 3px 0 #150b38;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
   }
 
   @keyframes pulse {
-    0%, 100% { transform: scale(1); opacity: 0.9; }
+    0%, 100% { transform: scale(1); opacity: 0.88; }
     50% { transform: scale(1.03); opacity: 1; }
   }
 
@@ -252,25 +247,24 @@ game_html = """
     transform: translateX(-50%);
     width: min(820px, 90vw);
     z-index: 25;
-    background: #2b1580;
-    border: 3px solid #150b38;
-    border-radius: 16px;
+    background: linear-gradient(180deg, rgba(28, 25, 23, 0.96) 0%, rgba(17, 16, 18, 0.98) 100%);
+    border: 2px solid #c7ae80;
+    border-radius: 14px;
     padding: 18px 26px;
-    box-shadow: 6px 6px 0 #ff8cc6;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.85);
     display: none;
     cursor: pointer;
   }
 
   .speaker-tag {
     display: inline-block;
-    background: #ff8cc6;
-    color: #150b38;
-    font-weight: 800;
+    background: #8f7449;
+    color: #fff9ed;
+    font-weight: 700;
     font-size: 0.88rem;
     padding: 3px 14px;
     border-radius: 20px;
     margin-bottom: 8px;
-    border: 2px solid #150b38;
   }
 
   .dialogue-text {
@@ -283,17 +277,16 @@ game_html = """
   .dialogue-next {
     text-align: right;
     font-size: 0.8rem;
-    color: #7bf0c8;
+    color: #c7ae80;
     margin-top: 6px;
-    font-weight: 700;
   }
 
   /* 모달 오버레이 */
   #modal-backdrop {
     position: absolute;
     inset: 0;
-    background: rgba(21, 11, 56, 0.78);
-    backdrop-filter: blur(6px);
+    background: rgba(8, 10, 14, 0.76);
+    backdrop-filter: blur(4px);
     z-index: 30;
     display: none;
     align-items: center;
@@ -310,7 +303,7 @@ game_html = """
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 2px solid #b69cff;
+    border-bottom: 1px solid rgba(201, 177, 130, 0.35);
     padding-bottom: 12px;
     margin-bottom: 18px;
   }
@@ -319,50 +312,46 @@ game_html = """
     font-family: 'Gowun Batang', serif;
     font-size: 1.45rem;
     font-weight: 700;
-    color: #fff4d6;
+    color: #f2dfb8;
   }
 
   .close-btn {
     background: none;
-    border: 2px solid #b69cff;
-    color: #fff4d6;
+    border: 1px solid #8c7a5b;
+    color: #d6c5a7;
     font-size: 0.95rem;
     padding: 4px 12px;
-    border-radius: 8px;
+    border-radius: 6px;
     cursor: pointer;
-    font-weight: 700;
   }
 
   .close-btn:hover {
-    background: #ff8cc6;
-    color: #150b38;
+    background: #8c7a5b;
+    color: #12141c;
   }
 
-  /* 신문 & 서류 더미 */
   .newspaper-sheet {
-    background: #fff4d6;
-    color: #150b38;
+    background: #e8dec8;
+    color: #241f18;
     padding: 26px;
-    border-radius: 10px;
+    border-radius: 6px;
     font-family: 'Gowun Batang', serif;
-    border: 2px solid #150b38;
   }
 
   .news-head {
     text-align: center;
-    border-top: 3px double #150b38;
-    border-bottom: 3px double #150b38;
+    border-top: 3px double #241f18;
+    border-bottom: 3px double #241f18;
     padding: 10px 0;
     margin-bottom: 16px;
   }
 
   .dossier-box {
-    background: #fff4d6;
-    color: #150b38;
+    background: #f4efe4;
+    color: #222;
     padding: 22px;
-    border-radius: 10px;
+    border-radius: 8px;
     font-family: 'Gowun Batang', serif;
-    border: 2px solid #150b38;
   }
 
   .check-item {
@@ -371,14 +360,13 @@ game_html = """
     justify-content: space-between;
     padding: 13px;
     margin: 10px 0;
-    background: #e8deff;
-    border: 2px solid #150b38;
-    border-radius: 8px;
+    background: #e6decb;
+    border-left: 5px solid #7d6844;
+    border-radius: 4px;
     font-size: 1.05rem;
     font-weight: 700;
   }
 
-  /* 노트북 정책 카드 */
   .policy-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
@@ -386,22 +374,21 @@ game_html = """
   }
 
   .policy-card {
-    background: rgba(60, 35, 150, 0.95);
-    border: 2px solid #150b38;
-    box-shadow: 3px 3px 0 #b69cff;
-    border-radius: 12px;
+    background: rgba(32, 36, 48, 0.92);
+    border: 1px solid #695e4c;
+    border-radius: 10px;
     padding: 14px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.25s ease;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
   }
 
   .policy-card:hover:not(.disabled) {
-    border-color: #7bf0c8;
+    border-color: #e3c891;
     transform: translateY(-2px);
-    background: rgba(80, 50, 190, 0.95);
+    background: rgba(45, 50, 66, 0.95);
   }
 
   .policy-card.disabled {
@@ -412,23 +399,21 @@ game_html = """
   .badge-status {
     display: inline-block;
     font-size: 0.78rem;
-    padding: 3px 10px;
+    padding: 2px 8px;
     border-radius: 10px;
     margin-top: 8px;
-    font-weight: 700;
   }
 
-  .badge-active { background: #7bf0c8; color: #150b38; }
-  .badge-pending { background: #ffd95e; color: #150b38; }
-  .badge-ready { background: #b69cff; color: #150b38; }
+  .badge-active { background: #2d6a4f; color: #d8f3dc; }
+  .badge-pending { background: #b58328; color: #fff3b0; }
+  .badge-ready { background: #3d405b; color: #e0e1dd; }
 
-  /* 미니게임 UI 컴포넌트 */
   .radar-bar {
     position: relative;
     width: 100%;
     height: 36px;
-    background: #150b38;
-    border: 3px solid #150b38;
+    background: #1a1e29;
+    border: 2px solid #8c7a5b;
     border-radius: 18px;
     overflow: hidden;
     margin: 18px 0;
@@ -438,9 +423,9 @@ game_html = """
     position: absolute;
     top: 0;
     height: 100%;
-    background: rgba(123, 240, 200, 0.5);
-    border-left: 2px solid #7bf0c8;
-    border-right: 2px solid #7bf0c8;
+    background: rgba(64, 145, 108, 0.65);
+    border-left: 2px solid #95d5b2;
+    border-right: 2px solid #95d5b2;
   }
 
   .radar-cursor {
@@ -448,8 +433,8 @@ game_html = """
     top: 0;
     width: 8px;
     height: 100%;
-    background: #ffd95e;
-    box-shadow: 0 0 12px #ffd95e;
+    background: #ffd166;
+    box-shadow: 0 0 12px #ffd166;
   }
 
   .sensor-grid {
@@ -460,79 +445,73 @@ game_html = """
   }
 
   .sensor-node {
-    background: #3c2399;
-    border: 2px solid #150b38;
+    background: #232734;
+    border: 1.5px solid #6c757d;
     border-radius: 10px;
     padding: 16px;
     text-align: center;
     cursor: pointer;
     transition: all 0.2s;
-    font-weight: 700;
   }
 
   .sensor-node.dirty {
-    background: #5a1836;
-    color: #ffccde;
+    border-color: #e09f3e;
+    background: #3b2d1f;
   }
 
   .sensor-node.clean {
-    background: #1a4d3e;
-    color: #bbf7d0;
+    border-color: #52b788;
+    background: #1b3329;
   }
 
   .action-btn {
     padding: 10px 24px;
-    border-radius: 10px;
+    border-radius: 8px;
     font-size: 1rem;
-    font-weight: 800;
+    font-weight: 600;
     cursor: pointer;
-    border: 2px solid #150b38;
+    border: none;
     transition: 0.2s;
-    box-shadow: 3px 3px 0 #150b38;
   }
 
-  .btn-yes { background: #7bf0c8; color: #150b38; }
-  .btn-yes:hover { background: #9effdf; }
-  .btn-no { background: #ff8cc6; color: #150b38; }
-  .btn-no:hover { background: #ffb3d9; }
+  .btn-yes { background: #c9a66b; color: #161512; }
+  .btn-yes:hover { background: #e0be82; }
+  .btn-no { background: #3b3e4a; color: #e6e2d8; }
+  .btn-no:hover { background: #505463; }
 
   .choice-btn {
     display: block;
     width: 100%;
     text-align: left;
-    background: #3c2399;
-    border: 2px solid #150b38;
-    box-shadow: 3px 3px 0 #ff8cc6;
+    background: #252936;
+    border: 1px solid #8c7a5b;
     color: #f0ece1;
     padding: 14px 18px;
-    border-radius: 10px;
-    margin-bottom: 12px;
+    border-radius: 8px;
+    margin-bottom: 10px;
     cursor: pointer;
     font-size: 0.98rem;
-    font-weight: 600;
   }
 
   .choice-btn:hover {
-    background: #5a3ad8;
-    border-color: #7bf0c8;
+    background: #383e52;
+    border-color: #e3c891;
   }
 
-  /* 툴팁 */
   #hover-tooltip {
     position: absolute;
     pointer-events: none;
-    background: #fff4d6;
-    color: #150b38;
-    border: 2px solid #150b38;
-    padding: 6px 14px;
+    background: rgba(18, 20, 28, 0.94);
+    border: 1px solid #d4bc8b;
+    color: #f7eedc;
+    padding: 5px 12px;
     border-radius: 20px;
     font-size: 0.86rem;
-    font-weight: 700;
     z-index: 18;
     display: none;
     transform: translate(-50%, -140%);
     white-space: nowrap;
-    box-shadow: 3px 3px 0 #150b38;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.6);
   }
 </style>
 </head>
@@ -541,20 +520,15 @@ game_html = """
 <div id="game-container">
   <canvas id="gameCanvas"></canvas>
 
-  <!-- 타이틀 화면 -->
   <div id="title-overlay">
     <div class="title-logo">RAIN CITY</div>
     <div class="title-sub">사막 위에 내리는 첫 번째 비의 기록</div>
     <button class="start-btn" onclick="startGame()">START</button>
   </div>
 
-  <!-- 좌측 상단 기상 및 대기질 현황 -->
   <div id="hud-weather"></div>
-
-  <!-- 긴급 현장 작업 알림 배너 -->
   <div id="alert-strip"></div>
 
-  <!-- 우측 상단 시간 HUD -->
   <div id="hud-clock">
     <span class="clock-day" id="clock-day-text">1일차</span>
     <span class="clock-time" id="clock-time-text">07시 00분</span>
@@ -565,17 +539,14 @@ game_html = """
     </div>
   </div>
 
-  <!-- 호버 툴팁 -->
   <div id="hover-tooltip"></div>
 
-  <!-- 하단 대화창 -->
   <div id="dialogue-box" onclick="closeDialogue()">
     <div class="speaker-tag" id="dialogue-speaker">나</div>
     <div class="dialogue-text" id="dialogue-text"></div>
     <div class="dialogue-next">▼ 클릭하여 계속</div>
   </div>
 
-  <!-- 모달 창 -->
   <div id="modal-backdrop">
     <div class="hollow-panel modal-card" id="modal-content"></div>
   </div>
@@ -601,24 +572,22 @@ function resize() {
 window.addEventListener('resize', resize);
 resize();
 
-// --- 게임 상태 변수 ---
 let scene = 'TITLE';
 let day = 1;
 let month = 1;
-let gameMinutes = 7 * 60; // 07:00 시작
-let timeMultiplier = 1;   // 기본 1배속
+let gameMinutes = 7 * 60;
+let timeMultiplier = 1;
 let lastTimestamp = 0;
 let isPaused = false;
 
-// 도시 환경 및 시뮬레이션 지표
 let budget = 250;
-let droughtLevel = 68; // 목표: 30% 미만
+let droughtLevel = 68;
 let totalRainDays = 0;
 let acidRainDays = 0;
 
 let weather = {
   type: 'CLEAR',
-  cloudType: 'WARM', 
+  cloudType: 'WARM',
   windDir: '북서풍',
   windSpeed: 3.2,
   humidity: 32,
@@ -696,14 +665,14 @@ const AUDIT_SCENARIOS = [
 ];
 
 let particles = [];
-for (let i = 0; i < 120; i++) {
+for (let i = 0; i < 90; i++) {
   particles.push({
     x: Math.random() * 2000,
     y: Math.random() * 1200,
-    speedX: 2 + Math.random() * 5,
-    speedY: -0.5 + Math.random() * 1.5,
-    size: 1 + Math.random() * 3,
-    alpha: 0.3 + Math.random() * 0.6
+    speedX: 1 + Math.random() * 3,
+    speedY: 0.2 + Math.random() * 0.8,
+    size: 1.5 + Math.random() * 2.5,
+    alpha: 0.25 + Math.random() * 0.4
   });
 }
 
@@ -727,7 +696,7 @@ function startGame() {
     document.getElementById('hud-weather').style.display = 'block';
     updateWeatherHUD();
     updateAlertStrip();
-    showDialogue('나', '드디어 사막의 거대 도시에 부임했어... 책상 위의 노트북으로 환경 정책을 세우는 것뿐만 아니라, 무전기로 직접 인공강우 작전을 지휘하고 실험 세트로 산성비를 중화해야 해!');
+    showDialogue('나', '황금빛 사막의 거대 도시에 부임했다... 책상 위의 노트북으로 환경 정책을 입안하고, 무전기로 인공강우 작전을 지휘하며 산성비를 막아내자.');
   }, 1800);
 }
 
@@ -769,7 +738,7 @@ function updateAlertStrip() {
     alerts.push(`<div class="alert-pill" onclick="handleObjectClick('beaker')">🧪 경고: 강수 산성화 위험! [실험 세트]에서 pH 중화 필요</div>`);
   }
   if (activeTasks.sensorDirty) {
-    alerts.push(`<div class="alert-pill" onclick="handleObjectClick('sensor_pad')">📡 경고: 황사로 대기질 센서 오류 발생! [정비 단말기] 클릭</div>`);
+    alerts.push(`<div class="alert-pill" onclick="handleObjectClick('sensor_pad')">📡 경고: 모래바람으로 대기질 센서 오류 발생! [정비 단말기] 클릭</div>`);
   }
   if (activeTasks.phoneRinging) {
     alerts.push(`<div class="alert-pill" onclick="handleObjectClick('phone')">☎️ 수신 중: 긴급 환경 감사/민원 전화 도착! [전화기] 클릭</div>`);
@@ -795,23 +764,23 @@ function handleObjectClick(id) {
   if (id === 'newspaper') {
     openModal(`
       <div class="modal-header">
-        <span class="modal-title">📰 레인 시티 조간신문</span>
+        <span class="modal-title">📰 사막 타임즈 조간신문</span>
         <button class="close-btn" onclick="closeModal()">닫기</button>
       </div>
       <div class="newspaper-sheet">
         <div class="news-head">
-          <div style="font-size:0.85rem; letter-spacing:0.2em;">THE RAIN CITY CHRONICLE</div>
-          <h2 style="font-size:1.55rem; margin-top:4px;">"비가 내리지 않는 황금의 도시에 희망의 단비를"</h2>
+          <div style="font-size:0.85rem; letter-spacing:0.2em;">THE DESERT CHRONICLE</div>
+          <h2 style="font-size:1.55rem; margin-top:4px;">"작열하는 태양과 모래바람, 생명의 비를 기다리는 사막 도시"</h2>
         </div>
         <p style="line-height:1.8; font-size:1.05rem;">
-          끝없는 모래바람과 극심한 가뭄, 그리고 무분별한 산업화로 인한 산성비 위협이 우리 도시를 덮치고 있다.
-          정부는 이 위기를 타개하기 위해 해외에서 초빙한 환경공학 전문가에게 도시의 미래를 맡겼다.
+          끝없는 가뭄과 플랜트 가동으로 인한 대기 오염이 도시를 위협하고 있습니다.
+          신임 환경공학관의 손에 도시의 미래가 달려 있습니다.
         </p>
       </div>
     `);
     setTimeout(() => {
       document.getElementById('dialogue-speaker').innerText = '나';
-      document.getElementById('dialogue-text').innerText = '이 도시를 살려야 한다.. 내 기술과 판단으로 이 메마른 하늘에 맑은 비를 내리게 할 거야.';
+      document.getElementById('dialogue-text').innerText = '이 뜨거운 사막에 진정한 푸른 생명을 불어넣어 보겠어.';
       document.getElementById('dialogue-box').style.display = 'block';
     }, 250);
   }
@@ -823,11 +792,11 @@ function handleObjectClick(id) {
         <button class="close-btn" onclick="closeModal()">닫기</button>
       </div>
       <div class="dossier-box">
-        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #150b38; padding-bottom:12px; margin-bottom:16px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #8c7a5b; padding-bottom:12px; margin-bottom:16px;">
           <span style="font-size:1.15rem; font-weight:700;">💰 가용 도시 환경 예산</span>
           <span style="font-size:1.5rem; font-weight:800; color:#1b4332;">${budget} 억 디르함</span>
         </div>
-        <h3 style="margin-bottom:10px; color:#150b38;">📋 30일차 최종 평가 체크리스트 (실시간 갱신)</h3>
+        <h3 style="margin-bottom:10px; color:#3d3122;">📋 30일차 최종 평가 체크리스트 (실시간 갱신)</h3>
         <div class="check-item">
           <span>1. 가뭄 진행도가 30% 미만인가? (현재: ${droughtLevel.toFixed(1)}%)</span>
           <span style="font-size:1.25rem;">${status.check1 ? '✅ 달성' : '⬜ 미달성'}</span>
@@ -855,13 +824,13 @@ function handleObjectClick(id) {
     openAuditPhoneModal();
   }
   else if (id === 'photo') {
-    showDialogue('나', '지갑 속 낡은 가족사진... 내가 타국에서 묵묵히 버티는 이유야. 꼭 부자가 되어서 당당하게 돌아갈게.');
+    showDialogue('나', '지갑 속 가족사진. 언젠가 이 사막을 푸르게 만들고 웃으며 돌아갈 거야.');
   }
   else if (id === 'penholder') {
-    showDialogue('나', '볼펜, 샤프, 제도용 연필이 빽빽하게 꽂혀 있다. 매일 밤 대기 확산 수식을 계산하느라 닳아버린 흔적들이다.');
+    showDialogue('나', '필기구 꽂이. 대기 확산 모델을 계산하느라 볼펜 잉크가 닳아 있다.');
   }
   else if (id === 'calendar') {
-    showDialogue('나', `오늘은 ${month}개월째 ${day}일차야. 이번 달 평가일까지 앞으로 ${30 - day}일 남았어.`);
+    showDialogue('나', `오늘은 ${month}개월째 ${day}일차. 평가일까지 앞으로 ${30 - day}일 남았어.`);
   }
   else if (id.startsWith('factory')) {
     const f = FACTORIES.find(item => item.id === id);
@@ -871,8 +840,8 @@ function handleObjectClick(id) {
         <button class="close-btn" onclick="closeModal()">닫기</button>
       </div>
       <div style="line-height:1.8; font-size:1.05rem;">
-        <p><strong style="color:#ffd95e;">[시설 역할]</strong><br>${f.role}</p><br>
-        <p><strong style="color:#ff8cc6;">[주요 배출 오염물질]</strong><br>${f.pollutants}</p>
+        <p><strong style="color:#d4bc8b;">[시설 역할]</strong><br>${f.role}</p><br>
+        <p><strong style="color:#e09f3e;">[주요 배출 오염물질]</strong><br>${f.pollutants}</p>
       </div>
     `);
   }
@@ -880,23 +849,23 @@ function handleObjectClick(id) {
 
 function openSeedingMinigame() {
   if (!activeTasks.seedingReady) {
-    showDialogue('나', '오늘의 인공강우 시딩 항공기 출격은 이미 완료했어. 내일 기상 관측 데이터를 보고 다시 작전을 세우자.');
+    showDialogue('나', '오늘의 인공강우 시딩 항공기 출격은 완료했습니다. 내일 다시 도전합시다.');
     return;
   }
   const cloudDesc = weather.cloudType === 'WARM'
-    ? '따뜻한 구름층 (영상 기온 4℃) → 흡습성 입자 [염화나트륨] 적합'
-    : '차가운 과냉각 구름층 (영하 -8℃) → 빙정핵 입자 [요오드화은] 적합';
+    ? '따뜻한 구름층 (기온 28℃) → 흡습성 입자 [염화나트륨] 최적'
+    : '상층 과냉각 구름층 (저온) → 빙정핵 입자 [요오드화은] 최적';
 
   openModal(`
     <div class="modal-header">
       <span class="modal-title">🛩️ 인공강우 시딩(Cloud Seeding) 작전 통제</span>
       <button class="close-btn" onclick="closeModal()">닫기</button>
     </div>
-    <p style="font-size:0.95rem; color:#ffd95e; margin-bottom:8px;">📡 현재 상공 기상 레이더 분석: <strong>${cloudDesc}</strong></p>
-    <p style="font-size:0.88rem; color:#d8c9ff; margin-bottom:14px;">
-      1) 구름 온도에 맞는 촉매제를 선택한 뒤, 2) 레이더 커서가 <strong>초록색 응결 골든타임 구간</strong>에 들어왔을 때 살포 버튼을 누르세요! (작전 비용: 10억)
+    <p style="font-size:0.95rem; color:#d4bc8b; margin-bottom:8px;">📡 상공 기상 레이더: <strong>${cloudDesc}</strong></p>
+    <p style="font-size:0.88rem; color:#cfc9bc; margin-bottom:14px;">
+      구름 온도에 맞는 촉매제를 선택하고, 레이더 커서가 <strong>초록색 골든타임 구간</strong>에 들어왔을 때 살포 버튼을 누르세요! (비용: 10억)
     </p>
-    <div style="margin-bottom:12px; font-weight:700;">
+    <div style="margin-bottom:12px;">
       <label style="margin-right:16px; cursor:pointer;">
         <input type="radio" name="seedType" value="WARM" checked> 🧂 흡습성 시딩 입자
       </label>
@@ -909,25 +878,25 @@ function openSeedingMinigame() {
       <div class="radar-cursor" id="radar-cursor" style="left: 0%;"></div>
     </div>
     <div style="text-align:center; margin-top:16px;">
-      <button class="action-btn btn-yes" onclick="fireSeeding()">🚀 지금 촉매제 살포 실행! (10억)</button>
+      <button class="action-btn btn-yes" onclick="fireSeeding()">🚀 촉매제 살포 실행! (10억)</button>
     </div>
   `);
 
   let pos = 0;
   let dir = 1;
   radarInterval = setInterval(() => {
-    pos += dir * 3.2;
+    pos += dir * 2.8;
     if (pos >= 98) { pos = 98; dir = -1; }
     if (pos <= 0) { pos = 0; dir = 1; }
     const cursor = document.getElementById('radar-cursor');
     if (cursor) cursor.style.left = pos + '%';
-  }, 25);
+  }, 30);
 }
 
 function fireSeeding() {
   if (budget < 10) {
     closeModal();
-    showDialogue('나', '예산이 부족해서 항공기 출격 비용(10억)을 감당할 수 없어...');
+    showDialogue('나', '예산이 부족하여 출격 비용(10억)을 감당할 수 없습니다.');
     return;
   }
   const cursor = document.getElementById('radar-cursor');
@@ -953,15 +922,15 @@ function fireSeeding() {
     if (weather.ph < 5.6) {
       acidRainDays++;
       activeTasks.phAlert = true;
-      showDialogue('나', `인공강우 작전 대성공! 단비가 내렸지만 대기 오염물질로 인해 강수 pH가 ${weather.ph}로 산성화되었어. 책상 위 [실험 세트]에서 중화 작업을 해야 해!`);
+      showDialogue('나', `인공강우 성공으로 단비가 내렸으나 대기 오염으로 인해 강수 pH가 ${weather.ph}로 산성화되었습니다! [실험 세트]에서 중화 작업이 필요합니다.`);
     } else {
-      showDialogue('나', `완벽한 타이밍과 촉매제 선택! 깨끗한 단비(pH ${weather.ph})가 내리며 가뭄 해갈에 크게 기여했습니다!`);
+      showDialogue('나', `완벽한 타이밍과 시딩 성공! 깨끗한 단비(pH ${weather.ph})가 내려 가뭄이 크게 해갈되었습니다.`);
     }
   } else if (isTimingGood || isTypeCorrect) {
     droughtLevel = Math.max(5, droughtLevel - 4);
-    showDialogue('나', '조건이 일부만 맞아떨어져 약한 이슬비만 내렸습니다. 다음엔 더 정밀하게 맞춰보자.');
+    showDialogue('나', '일부 조건만 맞아떨어져 약한 이슬비가 내렸습니다.');
   } else {
-    showDialogue('나', '시딩 물질과 타이밍이 모두 빗나가 구름이 흩어져 버렸습니다... 예산만 낭비했군요.');
+    showDialogue('나', '조건과 타이밍이 모두 빗나가 구름이 소멸해 버렸습니다...');
   }
   updateWeatherHUD();
   updateAlertStrip();
@@ -969,31 +938,31 @@ function fireSeeding() {
 
 function openPhNeutralizeMinigame() {
   if (!activeTasks.phAlert && weather.ph >= 5.6) {
-    showDialogue('나', `현재 수질 및 강수 pH는 ${weather.ph}로 안전합니다. 산성비 경보 시 이곳에서 알칼리 중화제를 투입할 수 있습니다.`);
+    showDialogue('나', `현재 수질 pH는 ${weather.ph}로 양호합니다.`);
     return;
   }
 
   const currentPh = weather.ph;
   openModal(`
     <div class="modal-header">
-      <span class="modal-title">🧪 빗물저류조 및 강수 산성도(pH) 화학 중화 제어</span>
+      <span class="modal-title">🧪 강수 산성도(pH) 화학 중화 제어</span>
       <button class="close-btn" onclick="closeModal()">닫기</button>
     </div>
-    <p style="font-size:0.95rem; color:#ff8cc6; margin-bottom:10px;">
-      ⚠️ 현재 측정된 강수 산성도: <strong>pH ${currentPh}</strong> (황산·질산 성분 검출)
+    <p style="font-size:0.95rem; color:#ffccd5; margin-bottom:10px;">
+      ⚠️ 현재 강수 산성도: <strong>pH ${currentPh}</strong>
     </p>
-    <p style="font-size:0.9rem; color:#d8c9ff; margin-bottom:16px;">
+    <p style="font-size:0.9rem; color:#cfc9bc; margin-bottom:16px;">
       알칼리성 중화제를 투입하여 안전 범위인 <strong>pH 6.2 ~ 6.8</strong>로 맞추세요!
     </p>
-    <div style="background:#150b38; padding:18px; border-radius:12px; text-align:center; border:2px solid #b69cff;">
-      <label style="font-size:1.1rem; font-weight:800; color:#ffd95e;">
+    <div style="background:#1b1f2b; padding:16px; border-radius:10px; text-align:center;">
+      <label style="font-size:1.05rem; font-weight:700; color:#f3d59b;">
         중화제 투입량: <span id="alkali-val">150</span> kg
       </label><br><br>
-      <input type="range" id="alkali-slider" min="20" max="300" value="150" style="width:85%; accent-color:#7bf0c8;"
+      <input type="range" id="alkali-slider" min="20" max="300" value="150" style="width:85%;"
              oninput="document.getElementById('alkali-val').innerText = this.value">
     </div>
     <div style="text-align:center; margin-top:18px;">
-      <button class="action-btn btn-yes" onclick="executePhNeutralize()">⚗️ 중화 용액 살포 및 pH 측정</button>
+      <button class="action-btn btn-yes" onclick="executePhNeutralize()">⚗️ 중화 용액 살포</button>
     </div>
   `);
 }
@@ -1008,14 +977,14 @@ function executePhNeutralize() {
     activeTasks.phAlert = false;
     weather.ecoHealth = Math.min(100, weather.ecoHealth + 6);
     if (acidRainDays > 0) acidRainDays--;
-    showDialogue('나', `정확한 화학 당량 계산! 수질이 pH ${newPh}로 완벽하게 중화되어 생태계를 보호했습니다.`);
+    showDialogue('나', `수질이 pH ${newPh}로 완벽하게 중화되어 생태계를 보호했습니다.`);
   } else if (newPh < 6.2) {
     weather.ph = newPh;
-    showDialogue('나', `중화제가 부족하여 pH ${newPh}에 머물렀습니다. 산성도가 완전히 가시지 않았네요.`);
+    showDialogue('나', `중화제가 부족해 pH ${newPh}에 머물렀습니다.`);
   } else {
     weather.ph = 7.4;
     activeTasks.phAlert = false;
-    showDialogue('나', `중화제 과다 투입으로 수질이 pH ${newPh} 강알칼리성이 되어버렸습니다...`);
+    showDialogue('나', `중화제 과다 투입으로 pH ${newPh} 강알칼리성이 되었습니다.`);
   }
   updateWeatherHUD();
   updateAlertStrip();
@@ -1023,7 +992,7 @@ function executePhNeutralize() {
 
 function openSensorRepairMinigame() {
   if (!activeTasks.sensorDirty) {
-    showDialogue('나', '도심 4개 구역 대기질 센서망이 모두 정상 가동 중입니다.');
+    showDialogue('나', '도심 대기질 센서망이 모두 정상 가동 중입니다.');
     return;
   }
 
@@ -1032,13 +1001,13 @@ function openSensorRepairMinigame() {
       <span class="modal-title">📡 도심 대기질 센서망 원격 정비 단말기</span>
       <button class="close-btn" onclick="closeModal()">닫기</button>
     </div>
-    <p style="font-size:0.92rem; color:#d8c9ff; margin-bottom:12px;">
-      황사로 인해 센서가 오염되었습니다. <strong>4개의 오염된 센서 노드를 모두 클릭</strong>해 필터를 세척하세요!
+    <p style="font-size:0.92rem; color:#cfc9bc; margin-bottom:12px;">
+      모래바람으로 오염된 <strong>4개의 센서 노드를 모두 클릭</strong>해 세척하세요!
     </p>
     <div class="sensor-grid">
-      <div class="sensor-node dirty" id="node-1" onclick="cleanNode(1)">⚠️ 제1 발전소 구역 센서<br><small>[모래 막힘 - 클릭 세척]</small></div>
-      <div class="sensor-node dirty" id="node-2" onclick="cleanNode(2)">⚠️ 제2 석유화학 구역 센서<br><small>[모래 막힘 - 클릭 세척]</small></div>
-      <div class="sensor-node dirty" id="node-3" onclick="cleanNode(3)">⚠️ 제3 제련소 구역 센서<br><small>[모래 막힘 - 클릭 세척]</small></div>
+      <div class="sensor-node dirty" id="node-1" onclick="cleanNode(1)">⚠️ 제1 발전소 센서<br><small>[모래 막힘 - 클릭 세척]</small></div>
+      <div class="sensor-node dirty" id="node-2" onclick="cleanNode(2)">⚠️ 제2 석유화학 센서<br><small>[모래 막힘 - 클릭 세척]</small></div>
+      <div class="sensor-node dirty" id="node-3" onclick="cleanNode(3)">⚠️ 제3 제련소 센서<br><small>[모래 막힘 - 클릭 세척]</small></div>
       <div class="sensor-node dirty" id="node-4" onclick="cleanNode(4)">⚠️ 중앙 호수·주거지 센서<br><small>[모래 막힘 - 클릭 세척]</small></div>
     </div>
   `);
@@ -1059,7 +1028,7 @@ function cleanNode(idx) {
       setTimeout(() => {
         closeModal();
         updateAlertStrip();
-        showDialogue('나', '4개 구역 센서 복구 완료! 정확한 오염 데이터 확보 보상으로 10억의 연구 수당을 획득했습니다.');
+        showDialogue('나', '센서망 복구 완료! 연구 보상으로 10억이 지급되었습니다.');
       }, 350);
     }
   }
@@ -1067,7 +1036,7 @@ function cleanNode(idx) {
 
 function openAuditPhoneModal() {
   if (!activeTasks.phoneRinging || !activeTasks.currentAudit) {
-    showDialogue('나', '현재 걸려온 긴급 환경 감사나 민원 전화가 없습니다.');
+    showDialogue('나', '현재 걸려온 전화가 없습니다.');
     return;
   }
 
@@ -1120,8 +1089,8 @@ function renderLaptopModal() {
     return `
       <div class="policy-card ${disabledClass}" ${onClickAttr}>
         <div>
-          <div style="font-weight:800; font-size:1.05rem; color:#fff4d6; margin-bottom:5px;">${p.name}</div>
-          <div style="font-size:0.86rem; color:#d8c9ff; line-height:1.45;">${p.desc}</div>
+          <div style="font-weight:700; font-size:1.05rem; color:#f5e6c8; margin-bottom:5px;">${p.name}</div>
+          <div style="font-size:0.86rem; color:#cfc9bc; line-height:1.45;">${p.desc}</div>
         </div>
         <div>${badge}</div>
       </div>
@@ -1133,8 +1102,8 @@ function renderLaptopModal() {
       <span class="modal-title">💻 환경공학 정책 제어 터미널 (잔여 예산: ${budget}억)</span>
       <button class="close-btn" onclick="closeModal()">닫기</button>
     </div>
-    <p style="font-size:0.88rem; color:#ffd95e; margin-bottom:12px;">
-      ※ 선택한 정책은 현장 시공을 거쳐 <strong>2일 후</strong>부터 도시에 적용됩니다.
+    <p style="font-size:0.88rem; color:#c9b182; margin-bottom:12px;">
+      ※ 선택한 정책은 <strong>2일 후</strong>부터 도시에 적용됩니다.
     </p>
     <div class="policy-grid">${cardsHtml}</div>
   `);
@@ -1144,10 +1113,10 @@ function confirmPolicy(policyId) {
   const p = POLICIES.find(item => item.id === policyId);
   openModal(`
     <div style="text-align:center; padding:20px 10px;">
-      <h3 style="font-family:'Gowun Batang', serif; font-size:1.45rem; color:#fff4d6; margin-bottom:12px;">
+      <h3 style="font-family:'Gowun Batang', serif; font-size:1.45rem; color:#f5e6c8; margin-bottom:12px;">
         "${p.name}"을(를) 선택하시겠습니까?
       </h3>
-      <p style="color:#d8c9ff; font-size:0.98rem; margin-bottom:20px;">
+      <p style="color:#cfc9bc; font-size:0.98rem; margin-bottom:20px;">
         소요 예산: <strong>${p.cost}억</strong> | 적용 시점: <strong>${day + 2}일차 아침</strong>
       </p>
       <div style="display:flex; justify-content:center; gap:16px;">
@@ -1259,28 +1228,28 @@ function simulateNewDay() {
   updateAlertStrip();
 
   if (newlyApplied.length > 0) {
-    showDialogue('나', `오늘부터 [${newlyApplied.join(', ')}] 설비 가동 개시! 도시 환경이 개선되기 시작합니다.`);
+    showDialogue('나', `[${newlyApplied.join(', ')}] 설비 가동 개시!`);
   }
 }
 
 function updateWeatherHUD() {
   const hud = document.getElementById('hud-weather');
   const weatherNames = {
-    'CLEAR': '☀️ 맑음 (사막 건조기후)',
+    'CLEAR': '☀️ 사막 맑음 (작열하는 태양)',
     'DROUGHT': '🔥 자연재해: 극심한 폭염·가뭄',
-    'DUST': '🌪️ 자연재해: 고농도 황사 발생',
-    'HEAVY_RAIN': '⛈️ 자연재해: 국지성 폭우',
+    'DUST': '🌪️ 자연재해: 모래바람(황사) 발생',
+    'HEAVY_RAIN': '⛈️ 자연재해: 사막 국지성 폭우',
     'RAIN': '🌧️ 비 내리는 중'
   };
   const hasSensor = POLICIES.find(p => p.id === 'sensor').status === 'ACTIVE';
   const sensorInfo = (hasSensor && !activeTasks.sensorDirty)
     ? `SO₂: ${weather.so2.toFixed(0)} | NOₓ: ${weather.nox.toFixed(0)} | PM2.5: ${weather.pm25.toFixed(0)} | pH: ${weather.ph}`
-    : (activeTasks.sensorDirty ? `⚠️ 센서 오염됨 (정비 단말기 클릭)` : `대기질 데이터: [센서 미설치]`);
+    : (activeTasks.sensorDirty ? `⚠️ 센서 오염됨 (정비 필요)` : `대기질 데이터: [센서 미설치]`);
 
   hud.innerHTML = `
-    <div style="font-weight:800; color:#ffd95e; font-size:0.95rem;">${weatherNames[weather.type]}</div>
-    <div style="font-size:0.84rem; color:#fff4d6;">바람: ${weather.windDir} ${weather.windSpeed}m/s | 습도: ${weather.humidity}% | 강수확률: ${weather.rainProb}%</div>
-    <div style="font-size:0.82rem; color:#7bf0c8; margin-top:3px; font-weight:700;">${sensorInfo}</div>
+    <div style="font-weight:700; color:#f3d59b;">${weatherNames[weather.type]}</div>
+    <div style="font-size:0.84rem; color:#ddd;">바람: ${weather.windDir} ${weather.windSpeed}m/s | 습도: ${weather.humidity}% | 강수확률: ${weather.rainProb}%</div>
+    <div style="font-size:0.82rem; color:#a8dadc; margin-top:2px;">${sensorInfo}</div>
   `;
 }
 
@@ -1294,10 +1263,10 @@ function checkMonthEnd() {
     document.getElementById('alert-strip').style.display = 'none';
     openModal(`
       <div style="text-align:center; padding:15px;">
-        <h2 style="font-family:'Cinzel', serif; font-size:2rem; color:#ffd95e; margin-bottom:10px;">HAPPY ENDING : 푸른 하늘의 귀환</h2>
+        <h2 style="font-family:'Cinzel', serif; font-size:2rem; color:#f3d59b; margin-bottom:10px;">HAPPY ENDING : 사막의 오아시스</h2>
         <p style="font-family:'Gowun Batang', serif; font-size:1.12rem; line-height:1.8; color:#f0ece1; margin-bottom:20px;">
           가뭄 진행도 <strong>${droughtLevel.toFixed(1)}%</strong>, 산성비 빈도 <strong>${status.acidFreq}%</strong>!<br>
-          당신은 사막 도시에 맑은 비와 푸른 녹지를 되찾아주었습니다. 위대한 업적을 축하합니다!
+          당신은 메마른 사막 도시에 맑은 비와 푸른 생명을 되찾아주었습니다.
         </p>
         <button class="start-btn" onclick="location.reload()">다시 시작하기</button>
       </div>
@@ -1307,16 +1276,16 @@ function checkMonthEnd() {
     day = 1;
     gameMinutes = 7 * 60;
     budget += 120;
-    showDialogue('나', `목표 중 하나를 달성해 계약이 연장되었습니다! ${month}개월째 임무 개시 (추가 예산 120억 지원).`);
+    showDialogue('나', `목표 달성으로 계약이 연장되었습니다! ${month}개월째 임무 시작 (추가 예산 120억 지원).`);
   } else {
     scene = 'ENDING';
     isPaused = true;
     openModal(`
       <div style="text-align:center; padding:15px;">
-        <h2 style="font-family:'Cinzel', serif; font-size:1.9rem; color:#ff8cc6; margin-bottom:10px;">BAD ENDING : 계약 해지</h2>
+        <h2 style="font-family:'Cinzel', serif; font-size:1.9rem; color:#ff8fa3; margin-bottom:10px;">BAD ENDING : 계약 해지</h2>
         <p style="font-family:'Gowun Batang', serif; font-size:1.1rem; line-height:1.8; color:#f0ece1; margin-bottom:20px;">
           가뭄 진행도 <strong>${droughtLevel.toFixed(1)}%</strong>, 산성비 빈도 <strong>${status.acidFreq}%</strong>...<br>
-          도시는 여전히 메마르고 오염되어 결국 해고 통지서를 받게 되었습니다.
+          도시는 여전히 메마르고 오염되어 해고 통지서를 받게 되었습니다.
         </p>
         <button class="start-btn" onclick="location.reload()">재도전하기</button>
       </div>
@@ -1324,20 +1293,230 @@ function checkMonthEnd() {
   }
 }
 
-// --- 고해상도 벡터 일러스트 패치 ---
-const PAL = { ink: '#150b38', violet: '#6a3df0', deep: '#2b1580', mint: '#7bf0c8', pink: '#ff8cc6', sky: '#59d2ff', cream: '#fff4d6', yellow: '#ffd95e' };
+// --- 굿피자/할로우나이트 감성 웜톤 & 입체 디테일 렌더링 ---
+function drawTitleBackground() {
+  const g = ctx.createLinearGradient(0, 0, 0, height);
+  g.addColorStop(0, '#3a2e25'); g.addColorStop(1, '#141218');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, width, height);
+  drawDesertBackground(height * 0.8, 1);
+}
 
-function rr(x, y, w, h, fill, r, lw) {
+function drawDesertBackground(horizonY, alpha) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+
+  // 사막 하늘 그라데이션 (작열하는 태양과 노을빛)
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, horizonY);
+  skyGrad.addColorStop(0, '#d48344');
+  skyGrad.addColorStop(0.5, '#e8b87d');
+  skyGrad.addColorStop(1, '#f4e2bb');
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(0, 0, width, horizonY);
+
+  // 태양
+  ctx.fillStyle = '#fff3b0';
   ctx.beginPath();
-  if (ctx.roundRect) {
-    ctx.roundRect(x, y, w, h, r === undefined ? 8 : r);
-  } else {
-    ctx.rect(x, y, w, h);
+  ctx.arc(width * 0.75, horizonY * 0.35, 65, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.25)';
+  ctx.beginPath();
+  ctx.arc(width * 0.75, horizonY * 0.35, 95, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 사막 모래 언덕 (겹겹이 쌓인 곡선과 웜톤 셰이딩)
+  ctx.fillStyle = '#c29b61';
+  ctx.beginPath();
+  ctx.moveTo(0, horizonY);
+  ctx.bezierCurveTo(width * 0.3, horizonY - 45, width * 0.7, horizonY - 20, width, horizonY - 35);
+  ctx.lineTo(width, horizonY + 80);
+  ctx.lineTo(0, horizonY + 80);
+  ctx.fill();
+
+  ctx.fillStyle = '#a67c43';
+  ctx.beginPath();
+  ctx.moveTo(0, horizonY + 30);
+  ctx.bezierCurveTo(width * 0.4, horizonY + 70, width * 0.75, horizonY + 10, width, horizonY + 40);
+  ctx.lineTo(width, horizonY + 120);
+  ctx.lineTo(0, horizonY + 120);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+function drawOfficeScene() {
+  const dp = (gameMinutes - 420) / 840, wh = height * 0.65;
+  let skyTop, skyBottom;
+  if (weather.type === 'DUST') { skyTop = '#b87333'; skyBottom = '#d4a373'; }
+  else if (weather.type === 'RAIN' || weather.type === 'HEAVY_RAIN') { skyTop = '#4a5568'; skyBottom = '#718096'; }
+  else if (dp < 0.2) { skyTop = '#c67d47'; skyBottom = '#f4a261'; }
+  else if (dp < 0.7) { skyTop = '#d48344'; skyBottom = '#f4e2bb'; }
+  else if (dp < 0.88) { skyTop = '#8b4513'; skyBottom = '#d97706'; }
+  else { skyTop = '#1a1824'; skyBottom = '#3a2e25'; }
+
+  // 창밖 풍경 렌더링
+  const g = ctx.createLinearGradient(0, 0, 0, wh);
+  g.addColorStop(0, skyTop); g.addColorStop(1, skyBottom);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, width, wh);
+
+  // 사막 지면과 오아시스/가뭄 상태
+  const gr = Math.max(0, (100 - droughtLevel) / 100), gy = height * 0.56;
+  ctx.fillStyle = gr > 0.6 ? '#52b788' : '#c29b61';
+  ctx.fillRect(0, gy, width, wh - gy);
+  ctx.fillStyle = '#241f18'; ctx.fillRect(0, gy, width, 3);
+
+  // 공장 3개 (디테일과 입체감 부여)
+  const t = Date.now() / 700;
+  FACTORIES.forEach((f, idx) => {
+    const fx = width * f.relX, fy = height * f.relY, fw = width * f.relW, fh = height * f.relH;
+    // 공장 몸체
+    ctx.fillStyle = '#3b3e4a';
+    ctx.fillRect(fx, fy + fh * 0.35, fw, fh * 0.65);
+    ctx.strokeStyle = '#14151c'; ctx.lineWidth = 3;
+    ctx.strokeRect(fx, fy + fh * 0.35, fw, fh * 0.65);
+
+    // 굴뚝
+    ctx.fillStyle = '#555b6e';
+    ctx.fillRect(fx + fw * 0.2, fy, fw * 0.16, fh * 0.4);
+    ctx.strokeRect(fx + fw * 0.2, fy, fw * 0.16, fh * 0.4);
+    ctx.fillRect(fx + fw * 0.64, fy + fh * 0.1, fw * 0.16, fh * 0.3);
+    ctx.strokeRect(fx + fw * 0.64, fy + fh * 0.1, fw * 0.16, fh * 0.3);
+
+    // 창문 불빛
+    for (let wx = 0; wx < 4; wx++) {
+      ctx.fillStyle = '#ffd166';
+      ctx.fillRect(fx + fw * (0.1 + wx * 0.22), fy + fh * 0.55, fw * 0.12, fh * 0.14);
+    }
+
+    // 굴뚝 연기 (오염도 연동)
+    const sa = Math.min(0.85, weather.so2 / 140);
+    for (let k = 0; k < 3; k++) {
+      const sx = fx + fw * 0.28 + k * 7 + Math.sin(t + idx + k) * 5, sy = fy - 10 - k * 15;
+      ctx.beginPath(); ctx.arc(sx, sy, 12 + k * 5, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(220, 220, 220, ${sa})`; ctx.fill();
+      ctx.lineWidth = 2; ctx.strokeStyle = `rgba(20, 21, 28, ${sa})`; ctx.stroke();
+    }
+  });
+
+  if (weather.type === 'DUST') {
+    drawParticles('rgba(212, 163, 115, 0.75)', 10);
+  } else if (weather.type === 'RAIN' || weather.type === 'HEAVY_RAIN') {
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = weather.ph < 5.6 ? 'rgba(82, 183, 136, 0.85)' : 'rgba(143, 227, 255, 0.85)';
+    ctx.lineWidth = weather.type === 'HEAVY_RAIN' ? 3 : 2;
+    const count = weather.type === 'HEAVY_RAIN' ? 120 : 55;
+    for (let i = 0; i < count; i++) {
+      const rx = Math.random() * width, ry = Math.random() * wh;
+      ctx.beginPath(); ctx.moveTo(rx, ry); ctx.lineTo(rx - 5, ry + 16); ctx.stroke();
+    }
   }
-  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
-  ctx.lineWidth = lw || 3;
-  ctx.strokeStyle = PAL.ink;
-  ctx.stroke();
+
+  // 창틀 테두리
+  ctx.strokeStyle = '#14151c'; ctx.lineWidth = 12;
+  ctx.strokeRect(0, 0, width, wh);
+  for (let i = 1; i <= 3; i++) {
+    ctx.beginPath(); ctx.moveTo((width / 4) * i, 0); ctx.lineTo((width / 4) * i, wh); ctx.stroke();
+  }
+  ctx.strokeStyle = '#c9b182'; ctx.lineWidth = 3;
+  ctx.strokeRect(8, 8, width - 16, wh - 16);
+
+  // 책상 영역 (따뜻한 원목 및 가죽 질감)
+  const dy = height * 0.63;
+  const dg = ctx.createLinearGradient(0, dy, 0, height);
+  dg.addColorStop(0, '#3d3122'); dg.addColorStop(1, '#1f1912');
+  ctx.fillStyle = dg; ctx.fillRect(0, dy, width, height - dy);
+  ctx.fillStyle = '#14151c'; ctx.fillRect(0, dy, width, 4);
+
+  drawDeskObjects();
+}
+
+function drawDeskObjects() {
+  const I = id => DESK_ITEMS.find(o => o.id === id);
+  const X = o => width * o.relX, Y = o => height * o.relY, W = o => width * o.relW, H = o => height * o.relH;
+  const blink = Math.floor(Date.now() / 400) % 2 === 0;
+  ctx.lineCap = 'round';
+
+  // 무전기
+  let o = I('radio');
+  ctx.strokeStyle = '#14151c'; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(X(o) + W(o) * 0.3, Y(o)); ctx.lineTo(X(o) + W(o) * 0.3, Y(o) - H(o) * 0.55); ctx.stroke();
+  ctx.fillStyle = '#4a5568'; ctx.fillRect(X(o), Y(o), W(o), H(o));
+  ctx.strokeRect(X(o), Y(o), W(o), H(o));
+  for (let i = 0; i < 3; i++) { ctx.fillStyle = '#f5ebd6'; ctx.beginPath(); ctx.arc(X(o) + W(o) * 0.3, Y(o) + H(o) * (0.45 + i * 0.16), 3.5, 0, Math.PI * 2); ctx.fill(); }
+  ctx.fillStyle = activeTasks.seedingReady ? '#52b788' : '#718096';
+  ctx.beginPath(); ctx.arc(X(o) + W(o) * 0.72, Y(o) + H(o) * 0.2, 6, 0, Math.PI * 2); ctx.fill();
+  ctx.lineWidth = 2; ctx.stroke();
+
+  // 신문
+  o = I('newspaper');
+  ctx.fillStyle = '#e8dec8'; ctx.fillRect(X(o), Y(o), W(o), H(o));
+  ctx.strokeRect(X(o), Y(o), W(o), H(o));
+  ctx.fillStyle = '#14151c'; ctx.fillRect(X(o) + W(o) * 0.08, Y(o) + H(o) * 0.14, W(o) * 0.84, 6);
+  for (let i = 0; i < 3; i++) ctx.fillRect(X(o) + W(o) * 0.08, Y(o) + H(o) * (0.38 + i * 0.2), W(o) * (0.84 - i * 0.2), 3);
+
+  // 서류 더미
+  o = I('documents');
+  for (let i = 2; i >= 0; i--) {
+    ctx.fillStyle = i === 0 ? '#f5ebd6' : (i === 1 ? '#e2d3b5' : '#c9b182');
+    ctx.fillRect(X(o) + i * 5, Y(o) - i * 5, W(o), H(o));
+    ctx.strokeRect(X(o) + i * 5, Y(o) - i * 5, W(o), H(o));
+  }
+  ctx.fillStyle = '#14151c'; ctx.fillRect(X(o) + W(o) * 0.12, Y(o) + H(o) * 0.25, W(o) * 0.5, 4);
+  ctx.fillRect(X(o) + W(o) * 0.12, Y(o) + H(o) * 0.5, W(o) * 0.7, 3);
+
+  // 노트북
+  o = I('laptop');
+  ctx.fillStyle = '#2d3748'; ctx.fillRect(X(o), Y(o), W(o), H(o) * 0.68);
+  ctx.strokeRect(X(o), Y(o), W(o), H(o) * 0.68);
+  ctx.fillStyle = '#1a202c'; ctx.fillRect(X(o) + 7, Y(o) + 7, W(o) - 14, H(o) * 0.68 - 14);
+  star(X(o) + W(o) * 0.5, Y(o) + H(o) * 0.33, 10, '#f5ebd6');
+  ctx.fillStyle = '#4a5568'; ctx.fillRect(X(o) - W(o) * 0.06, Y(o) + H(o) * 0.68, W(o) * 1.12, H(o) * 0.3);
+  ctx.strokeRect(X(o) - W(o) * 0.06, Y(o) + H(o) * 0.68, W(o) * 1.12, H(o) * 0.3);
+
+  // 센서 단말기
+  o = I('sensor_pad');
+  ctx.fillStyle = '#232734'; ctx.fillRect(X(o), Y(o), W(o), H(o)); ctx.strokeRect(X(o), Y(o), W(o), H(o));
+  ctx.fillStyle = (activeTasks.sensorDirty && blink) ? '#e09f3e' : '#52b788';
+  ctx.fillRect(X(o) + 6, Y(o) + 6, W(o) - 12, H(o) * 0.55);
+  ctx.strokeRect(X(o) + 6, Y(o) + 6, W(o) - 12, H(o) * 0.55);
+
+  // 비커
+  o = I('beaker');
+  ctx.fillStyle = (activeTasks.phAlert && blink) ? '#9e2a2b' : 'rgba(143,227,255,0.7)';
+  ctx.fillRect(X(o) + 3, Y(o) + H(o) * 0.45, W(o) - 6, H(o) * 0.5);
+  ctx.strokeStyle = '#14151c'; ctx.lineWidth = 2; ctx.strokeRect(X(o), Y(o), W(o), H(o));
+
+  // 가족사진
+  o = I('photo');
+  ctx.fillStyle = '#c9b182'; ctx.fillRect(X(o), Y(o), W(o), H(o)); ctx.strokeRect(X(o), Y(o), W(o), H(o));
+  ctx.fillStyle = '#e2d3b5'; ctx.fillRect(X(o) + 5, Y(o) + 5, W(o) - 10, H(o) - 10);
+  [0.32, 0.68].forEach((fx, k) => {
+    ctx.fillStyle = k ? '#8f7449' : '#555b6e'; ctx.beginPath(); ctx.arc(X(o) + W(o) * fx, Y(o) + H(o) * 0.5, W(o) * 0.17, 0, Math.PI * 2); ctx.fill();
+    ctx.lineWidth = 2; ctx.strokeStyle = '#14151c'; ctx.stroke();
+  });
+
+  // 펜꽂이
+  o = I('penholder');
+  ['#e09f3e', '#52b788', '#ffd166'].forEach((col, k) => {
+    ctx.strokeStyle = '#14151c'; ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.moveTo(X(o) + W(o) * (0.25 + k * 0.25), Y(o) + H(o) * 0.4); ctx.lineTo(X(o) + W(o) * (0.1 + k * 0.32), Y(o) - 12); ctx.stroke();
+  });
+  ctx.fillStyle = '#555b6e'; ctx.fillRect(X(o), Y(o) + H(o) * 0.35, W(o), H(o) * 0.65);
+  ctx.strokeRect(X(o), Y(o) + H(o) * 0.35, W(o), H(o) * 0.65);
+
+  // 전화기
+  o = I('phone');
+  const sh = (activeTasks.phoneRinging && blink) ? 4 : 0;
+  ctx.fillStyle = activeTasks.phoneRinging ? '#9e2a2b' : '#3d405b';
+  ctx.fillRect(X(o) + sh, Y(o), W(o), H(o)); ctx.strokeRect(X(o) + sh, Y(o), W(o), H(o));
+  ctx.fillStyle = '#f5ebd6'; ctx.fillRect(X(o) + sh + W(o) * 0.1, Y(o) - H(o) * 0.2, W(o) * 0.8, H(o) * 0.3);
+  ctx.strokeRect(X(o) + sh + W(o) * 0.1, Y(o) - H(o) * 0.2, W(o) * 0.8, H(o) * 0.3);
+
+  // 캘린더
+  o = I('calendar');
+  ctx.fillStyle = '#f5ebd6'; ctx.fillRect(X(o), Y(o), W(o), H(o)); ctx.strokeRect(X(o), Y(o), W(o), H(o));
+  ctx.fillStyle = '#9e2a2b'; ctx.fillRect(X(o) + 2, Y(o) + 2, W(o) - 4, H(o) * 0.28);
+  ctx.fillStyle = '#14151c'; ctx.font = 'bold 15px Gowun Batang';
+  ctx.fillText(day + '일', X(o) + W(o) * 0.15, Y(o) + H(o) * 0.72);
 }
 
 function star(x, y, r, col) {
@@ -1349,68 +1528,6 @@ function star(x, y, r, col) {
   }
   ctx.closePath();
   ctx.fill();
-}
-
-function planet(x, y, r, col, ring) {
-  if (ring) {
-    ctx.strokeStyle = PAL.cream; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.ellipse(x, y, r * 1.7, r * 0.5, -0.4, 0, Math.PI * 2); ctx.stroke();
-  }
-  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
-  ctx.fillStyle = col; ctx.fill();
-  ctx.lineWidth = 3; ctx.strokeStyle = PAL.ink; ctx.stroke();
-  ctx.fillStyle = 'rgba(255,255,255,0.4)';
-  ctx.beginPath(); ctx.arc(x - r * 0.3, y - r * 0.3, r * 0.28, 0, Math.PI * 2); ctx.fill();
-}
-
-const DOODLES = [
-  [0.07, 0.14, 18, 's'], [0.20, 0.32, 24, 'm', 0], [0.33, 0.10, 14, 's'], [0.50, 0.22, 28, 'p', 1],
-  [0.62, 0.08, 16, 's'], [0.78, 0.28, 22, 'm', 0], [0.90, 0.12, 20, 's'], [0.14, 0.52, 12, 's'], [0.88, 0.48, 14, 's']
-];
-
-function drawDoodles(h, alpha) {
-  const t = Date.now() / 900;
-  ctx.save();
-  ctx.globalAlpha = alpha;
-  DOODLES.forEach((d, i) => {
-    const x = width * d[0], y = h * d[1] + Math.sin(t + i * 1.7) * 4;
-    if (d[3] === 's') star(x, y, d[2], PAL.cream);
-    else planet(x, y, d[2], d[3] === 'm' ? PAL.mint : PAL.pink, d[4] === 1);
-  });
-  ctx.restore();
-}
-
-function drawBushes(y, size) {
-  for (let x = -size * 0.4, i = 0; x < width + size; x += size * 0.85, i++) {
-    const cy = y + Math.sin(i * 2.3) * size * 0.12;
-    ctx.beginPath(); ctx.arc(x, cy, size * 0.55, 0, Math.PI * 2);
-    ctx.fillStyle = i % 3 === 0 ? PAL.sky : PAL.mint; ctx.fill();
-    ctx.lineWidth = 3; ctx.strokeStyle = PAL.ink; ctx.stroke();
-  }
-}
-
-function drawTitleBackground() {
-  const g = ctx.createLinearGradient(0, 0, 0, height);
-  g.addColorStop(0, '#7a4bff'); g.addColorStop(1, '#2a1480');
-  ctx.fillStyle = g; ctx.fillRect(0, 0, width, height);
-
-  ctx.fillStyle = 'rgba(255,255,255,0.05)';
-  const s = 60;
-  for (let y = 0; y < height; y += s) for (let x = ((y / s) % 2) * s; x < width; x += s * 2) ctx.fillRect(x, y, s, s);
-
-  drawDoodles(height * 0.8, 1);
-
-  const base = height * 0.8;
-  for (let i = 0; i < 12; i++) {
-    const bw = width * 0.05, bx = width * (0.1 + i * 0.07), bh = height * (0.18 + ((i * 37) % 5) * 0.06);
-    rr(bx, base - bh, bw, bh + 60, i % 2 ? '#3a1fa0' : '#4b2cc4', 6);
-    for (let wy = base - bh + 14; wy < base - 8; wy += 22) {
-      ctx.fillStyle = (wy / 22 + i) % 3 < 1 ? PAL.yellow : 'rgba(255,244,214,0.25)';
-      ctx.fillRect(bx + bw * 0.3, wy, bw * 0.4, 8);
-    }
-  }
-  drawBushes(height * 0.9, 64);
-  drawParticles('#ffffff', 3);
 }
 
 function drawParticles(color, speedMult) {
@@ -1428,165 +1545,6 @@ function drawParticles(color, speedMult) {
     ctx.fill();
   });
   ctx.globalAlpha = 1.0;
-}
-
-function drawOfficeScene() {
-  const dp = (gameMinutes - 420) / 840, wh = height * 0.65;
-  let a, b;
-  if (weather.type === 'DUST') { a = '#b4579c'; b = '#ffb86b'; }
-  else if (weather.type === 'RAIN' || weather.type === 'HEAVY_RAIN') { a = '#2a2a7a'; b = '#5b7fe0'; }
-  else if (dp < 0.2) { a = '#5a3ad8'; b = '#ff9ec4'; }
-  else if (dp < 0.7) { a = '#6a3df0'; b = '#8fe3ff'; }
-  else if (dp < 0.88) { a = '#3a1d94'; b = '#ff7fb0'; }
-  else { a = '#150b48'; b = '#3a2a9a'; }
-
-  const g = ctx.createLinearGradient(0, 0, 0, wh);
-  g.addColorStop(0, a); g.addColorStop(1, b);
-  ctx.fillStyle = g; ctx.fillRect(0, 0, width, wh);
-  if (weather.type !== 'DUST') drawDoodles(wh * 0.55, dp > 0.88 ? 1 : 0.8);
-
-  const gr = Math.max(0, (100 - droughtLevel) / 100), gy = height * 0.56;
-  ctx.fillStyle = gr > 0.6 ? '#3fd6a4' : '#e9c7a0';
-  ctx.fillRect(0, gy, width, wh - gy);
-  ctx.fillStyle = PAL.ink; ctx.fillRect(0, gy, width, 3);
-  if (gr > 0.3) drawBushes(gy + 8, 30 + gr * 26);
-
-  const t = Date.now() / 700;
-  FACTORIES.forEach((f, idx) => {
-    const fx = width * f.relX, fy = height * f.relY, fw = width * f.relW, fh = height * f.relH;
-    rr(fx + fw * 0.2, fy, fw * 0.16, fh * 0.4, '#a98bff', 4);
-    rr(fx + fw * 0.64, fy + fh * 0.1, fw * 0.16, fh * 0.3, '#a98bff', 4);
-    rr(fx, fy + fh * 0.35, fw, fh * 0.65, idx % 2 ? '#8a6bff' : '#6a4be0', 8);
-    for (let wx = 0; wx < 4; wx++) {
-      ctx.fillStyle = PAL.yellow;
-      ctx.fillRect(fx + fw * (0.1 + wx * 0.22), fy + fh * 0.55, fw * 0.12, fh * 0.14);
-    }
-    const sa = Math.min(0.85, weather.so2 / 140);
-    for (let k = 0; k < 3; k++) {
-      const sx = fx + fw * 0.28 + k * 7 + Math.sin(t + idx + k) * 5, sy = fy - 10 - k * 15;
-      ctx.beginPath(); ctx.arc(sx, sy, 12 + k * 5, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(255,244,214,' + sa + ')'; ctx.fill();
-      ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(21,11,56,' + sa + ')'; ctx.stroke();
-    }
-  });
-
-  if (weather.type === 'DUST') {
-    drawParticles('rgba(255,217,94,0.7)', 12);
-  } else if (weather.type === 'RAIN' || weather.type === 'HEAVY_RAIN') {
-    ctx.lineCap = 'round';
-    ctx.strokeStyle = weather.ph < 5.6 ? 'rgba(123,240,200,0.85)' : 'rgba(143,227,255,0.85)';
-    ctx.lineWidth = weather.type === 'HEAVY_RAIN' ? 3 : 2;
-    const count = weather.type === 'HEAVY_RAIN' ? 120 : 55;
-    for (let i = 0; i < count; i++) {
-      const rx = Math.random() * width, ry = Math.random() * wh;
-      ctx.beginPath(); ctx.moveTo(rx, ry); ctx.lineTo(rx - 5, ry + 16); ctx.stroke();
-    }
-  }
-
-  // 선명한 이중 창틀 프레임
-  ctx.strokeStyle = PAL.ink; ctx.lineWidth = 12;
-  ctx.strokeRect(0, 0, width, wh);
-  for (let i = 1; i <= 3; i++) {
-    ctx.beginPath(); ctx.moveTo((width / 4) * i, 0); ctx.lineTo((width / 4) * i, wh); ctx.stroke();
-  }
-  ctx.strokeStyle = PAL.pink; ctx.lineWidth = 3;
-  ctx.strokeRect(8, 8, width - 16, wh - 16);
-
-  // 책상 영역
-  const dy = height * 0.63;
-  const dg = ctx.createLinearGradient(0, dy, 0, height);
-  dg.addColorStop(0, '#3c2399'); dg.addColorStop(1, '#1a0f55');
-  ctx.fillStyle = dg; ctx.fillRect(0, dy, width, height - dy);
-  const cols = [PAL.mint, PAL.pink, PAL.sky, PAL.yellow], cs = 26;
-  for (let x = 0, i = 0; x < width; x += cs, i++) {
-    ctx.fillStyle = cols[i % 4]; ctx.fillRect(x, dy, cs, cs);
-    ctx.fillStyle = 'rgba(21,11,56,0.18)'; if (i % 2) ctx.fillRect(x, dy, cs, cs);
-  }
-  ctx.fillStyle = PAL.ink; ctx.fillRect(0, dy - 2, width, 4); ctx.fillRect(0, dy + cs, width, 4);
-
-  drawDeskObjects();
-}
-
-function drawDeskObjects() {
-  const I = id => DESK_ITEMS.find(o => o.id === id);
-  const X = o => width * o.relX, Y = o => height * o.relY, W = o => width * o.relW, H = o => height * o.relH;
-  const blink = Math.floor(Date.now() / 400) % 2 === 0;
-  ctx.lineCap = 'round';
-
-  // 무전기
-  let o = I('radio');
-  ctx.strokeStyle = PAL.ink; ctx.lineWidth = 4;
-  ctx.beginPath(); ctx.moveTo(X(o) + W(o) * 0.3, Y(o)); ctx.lineTo(X(o) + W(o) * 0.3, Y(o) - H(o) * 0.55); ctx.stroke();
-  rr(X(o), Y(o), W(o), H(o), '#5a3ad8', 10);
-  for (let i = 0; i < 3; i++) { ctx.fillStyle = PAL.cream; ctx.beginPath(); ctx.arc(X(o) + W(o) * 0.3, Y(o) + H(o) * (0.45 + i * 0.16), 3.5, 0, Math.PI * 2); ctx.fill(); }
-  ctx.fillStyle = activeTasks.seedingReady ? PAL.mint : '#8479b8';
-  ctx.beginPath(); ctx.arc(X(o) + W(o) * 0.72, Y(o) + H(o) * 0.2, 6, 0, Math.PI * 2); ctx.fill();
-  ctx.lineWidth = 2; ctx.stroke();
-
-  // 신문
-  o = I('newspaper');
-  rr(X(o), Y(o), W(o), H(o), PAL.cream, 4);
-  ctx.fillStyle = PAL.ink; ctx.fillRect(X(o) + W(o) * 0.08, Y(o) + H(o) * 0.14, W(o) * 0.84, 6);
-  for (let i = 0; i < 3; i++) ctx.fillRect(X(o) + W(o) * 0.08, Y(o) + H(o) * (0.38 + i * 0.2), W(o) * (0.84 - i * 0.2), 3);
-
-  // 서류 더미
-  o = I('documents');
-  for (let i = 2; i >= 0; i--) rr(X(o) + i * 5, Y(o) - i * 5, W(o), H(o), i === 0 ? PAL.cream : (i === 1 ? '#ffd0e8' : '#bfeaff'), 4);
-  ctx.fillStyle = PAL.ink; ctx.fillRect(X(o) + W(o) * 0.12, Y(o) + H(o) * 0.25, W(o) * 0.5, 4);
-  ctx.fillRect(X(o) + W(o) * 0.12, Y(o) + H(o) * 0.5, W(o) * 0.7, 3);
-
-  // 노트북
-  o = I('laptop');
-  rr(X(o), Y(o), W(o), H(o) * 0.68, PAL.ink, 8);
-  rr(X(o) + 7, Y(o) + 7, W(o) - 14, H(o) * 0.68 - 14, PAL.sky, 4, 2);
-  star(X(o) + W(o) * 0.5, Y(o) + H(o) * 0.33, 11, PAL.cream);
-  rr(X(o) - W(o) * 0.06, Y(o) + H(o) * 0.68, W(o) * 1.12, H(o) * 0.3, PAL.pink, 6);
-
-  // 센서 단말기
-  o = I('sensor_pad');
-  rr(X(o), Y(o), W(o), H(o), '#3c2399', 8);
-  rr(X(o) + 6, Y(o) + 6, W(o) - 12, H(o) * 0.55, (activeTasks.sensorDirty && blink) ? PAL.yellow : PAL.mint, 4, 2);
-  ctx.fillStyle = PAL.pink; ctx.beginPath(); ctx.arc(X(o) + W(o) * 0.5, Y(o) + H(o) * 0.82, 5, 0, Math.PI * 2); ctx.fill();
-
-  // 비커
-  o = I('beaker');
-  ctx.fillStyle = (activeTasks.phAlert && blink) ? '#ff5fa2' : PAL.sky;
-  ctx.fillRect(X(o) + 3, Y(o) + H(o) * 0.45, W(o) - 6, H(o) * 0.5);
-  rr(X(o), Y(o), W(o), H(o), 'rgba(255,244,214,0.25)', 6);
-  ctx.fillStyle = PAL.cream; ctx.beginPath(); ctx.arc(X(o) + W(o) * 0.35, Y(o) + H(o) * 0.65, 4, 0, Math.PI * 2); ctx.fill();
-
-  // 가족사진
-  o = I('photo');
-  rr(X(o), Y(o), W(o), H(o), PAL.yellow, 6);
-  rr(X(o) + 5, Y(o) + 5, W(o) - 10, H(o) - 10, '#9a7bff', 3, 2);
-  [0.32, 0.68].forEach((fx, k) => {
-    ctx.fillStyle = k ? PAL.pink : PAL.mint; ctx.beginPath(); ctx.arc(X(o) + W(o) * fx, Y(o) + H(o) * 0.5, W(o) * 0.17, 0, Math.PI * 2); ctx.fill();
-    ctx.lineWidth = 2; ctx.strokeStyle = PAL.ink; ctx.stroke();
-  });
-
-  // 펜꽂이
-  o = I('penholder');
-  ['#ff5fa2', PAL.sky, PAL.yellow].forEach((col, k) => {
-    ctx.strokeStyle = PAL.ink; ctx.lineWidth = 6;
-    ctx.beginPath(); ctx.moveTo(X(o) + W(o) * (0.25 + k * 0.25), Y(o) + H(o) * 0.4); ctx.lineTo(X(o) + W(o) * (0.1 + k * 0.32), Y(o) - 12); ctx.stroke();
-    ctx.strokeStyle = col; ctx.lineWidth = 3; ctx.stroke();
-  });
-  rr(X(o), Y(o) + H(o) * 0.35, W(o), H(o) * 0.65, '#5a3ad8', 6);
-
-  // 전화기
-  o = I('phone');
-  const sh = (activeTasks.phoneRinging && blink) ? 4 : 0;
-  rr(X(o) + sh, Y(o), W(o), H(o), activeTasks.phoneRinging ? '#ff5fa2' : PAL.mint, 10);
-  rr(X(o) + sh + W(o) * 0.1, Y(o) - H(o) * 0.2, W(o) * 0.8, H(o) * 0.3, PAL.cream, 8);
-  ctx.fillStyle = PAL.ink;
-  for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.arc(X(o) + sh + W(o) * (0.25 + i * 0.25), Y(o) + H(o) * 0.6, 3, 0, Math.PI * 2); ctx.fill(); }
-
-  // 캘린더
-  o = I('calendar');
-  rr(X(o), Y(o), W(o), H(o), PAL.cream, 5);
-  ctx.fillStyle = '#ff5fa2'; ctx.fillRect(X(o) + 2, Y(o) + 2, W(o) - 4, H(o) * 0.28);
-  ctx.fillStyle = PAL.ink; ctx.font = 'bold 15px Gowun Batang';
-  ctx.fillText(day + '일', X(o) + W(o) * 0.15, Y(o) + H(o) * 0.72);
 }
 
 canvas.addEventListener('mousemove', (e) => {
