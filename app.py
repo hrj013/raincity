@@ -31,7 +31,7 @@ game_html = """
 <meta charset="UTF-8">
 <title>Rain City</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@300;400;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=DungGeunMo&display=swap');
 
   * {
     box-sizing: border-box;
@@ -44,9 +44,9 @@ game_html = """
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background-color: #0d0f14;
-    font-family: 'Noto Sans KR', sans-serif;
-    color: #f0ece1;
+    background-color: #121216;
+    font-family: 'DungGeunMo', monospace;
+    color: #e2dfd2;
   }
 
   #game-container {
@@ -54,7 +54,7 @@ game_html = """
     width: 100vw;
     height: 100vh;
     overflow: hidden;
-    background: #141218;
+    background: #121216;
   }
 
   canvas {
@@ -64,28 +64,18 @@ game_html = """
     width: 100%;
     height: 100%;
     display: block;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
   }
 
-  /* 레이튼 + 할로우 나이트 감성 패널 */
-  .hollow-panel {
-    background: rgba(18, 20, 28, 0.96);
-    border: 2px solid #8c7a5b;
-    box-shadow: 0 0 30px rgba(0, 0, 0, 0.9), inset 0 0 18px rgba(140, 122, 91, 0.25);
-    border-radius: 12px;
-    padding: 24px;
+  /* 오모리 스타일 도트 레트로 패널 */
+  .omori-panel {
+    background: #1c1b22;
+    border: 3px solid #6b6375;
+    box-shadow: 4px 4px 0px #08080a;
+    border-radius: 4px;
+    padding: 20px;
     position: relative;
-  }
-
-  .hollow-panel::before {
-    content: "✧";
-    position: absolute;
-    top: -12px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #12141c;
-    padding: 0 10px;
-    color: #d4bc8b;
-    font-size: 16px;
   }
 
   /* 타이틀 화면 */
@@ -97,124 +87,112 @@ game_html = """
     align-items: center;
     justify-content: center;
     z-index: 20;
-    transition: opacity 1.2s ease, transform 2.2s cubic-bezier(0.25, 0.8, 0.25, 1);
-  }
-
-  #title-overlay.zooming {
-    transform: scale(4.5) translate(5%, -5%);
-    opacity: 0;
-    pointer-events: none;
+    background: #14121a;
+    transition: opacity 1s ease;
   }
 
   .title-logo {
-    font-family: 'Cinzel', serif;
-    font-size: clamp(3.5rem, 7vw, 6rem);
-    font-weight: 800;
-    letter-spacing: 0.18em;
-    color: #f7eedc;
-    text-shadow: 0 4px 20px rgba(0,0,0,0.8), 0 0 40px rgba(212, 188, 139, 0.45);
-    margin-bottom: 10px;
+    font-size: clamp(3rem, 6vw, 5.5rem);
+    color: #e6dfc8;
+    text-shadow: 4px 4px 0px #5c4e6b, 8px 8px 0px #1a1721;
+    margin-bottom: 12px;
+    letter-spacing: 2px;
   }
 
   .title-sub {
-    font-family: 'Gowun Batang', serif;
-    font-size: 1.15rem;
-    letter-spacing: 0.25em;
-    color: #d6c5a7;
-    margin-bottom: 45px;
-    text-shadow: 0 2px 10px rgba(0,0,0,0.9);
+    font-size: 1.1rem;
+    color: #9c93a8;
+    margin-bottom: 40px;
+    letter-spacing: 1px;
   }
 
   .start-btn {
-    font-family: 'Cinzel', serif;
+    font-family: 'DungGeunMo', monospace;
     font-size: 1.3rem;
-    letter-spacing: 0.2em;
-    padding: 14px 48px;
-    background: rgba(20, 22, 30, 0.78);
-    color: #f5ebd6;
-    border: 1.5px solid #c9b182;
-    border-radius: 30px;
+    padding: 14px 40px;
+    background: #5c4e6b;
+    color: #f7f4eb;
+    border: 3px solid #e6dfc8;
+    box-shadow: 4px 4px 0px #1a1721;
     cursor: pointer;
-    transition: all 0.35s ease;
-    box-shadow: 0 0 20px rgba(0,0,0,0.6);
+    transition: 0.1s;
   }
 
   .start-btn:hover {
-    background: #c9b182;
-    color: #14151c;
-    box-shadow: 0 0 30px rgba(201, 177, 130, 0.7);
-    transform: translateY(-2px);
+    background: #7a688f;
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px #1a1721;
+  }
+
+  .start-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px #1a1721;
   }
 
   /* 우측 상단 시계 HUD */
   #hud-clock {
     position: absolute;
-    top: 20px;
-    right: 24px;
+    top: 16px;
+    right: 20px;
     z-index: 15;
-    background: linear-gradient(135deg, #2b241d 0%, #1a1715 100%);
-    border: 2px solid #b89f74;
-    border-radius: 14px;
-    padding: 10px 18px;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.65);
+    background: #1c1b22;
+    border: 3px solid #6b6375;
+    box-shadow: 3px 3px 0px #08080a;
+    padding: 10px 16px;
     display: none;
     align-items: center;
     gap: 12px;
   }
 
   .clock-day {
-    font-family: 'Gowun Batang', serif;
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: #f3d59b;
+    font-size: 1.1rem;
+    color: #e6dfc8;
   }
 
   .clock-time {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #ffffff;
-    background: rgba(255,255,255,0.08);
-    padding: 4px 10px;
-    border-radius: 8px;
+    font-size: 1rem;
+    color: #a8dadc;
+    background: #141218;
+    padding: 3px 8px;
+    border: 2px solid #4a4554;
   }
 
   .speed-btn {
-    background: rgba(255,255,255,0.1);
-    border: 1px solid #8c7a5b;
-    color: #e6d8be;
-    font-size: 0.78rem;
-    padding: 4px 8px;
-    border-radius: 6px;
+    font-family: 'DungGeunMo', monospace;
+    background: #2b2836;
+    border: 2px solid #6b6375;
+    color: #e2dfd2;
+    font-size: 0.8rem;
+    padding: 3px 6px;
     cursor: pointer;
   }
 
   .speed-btn.active {
     background: #c9a66b;
-    color: #161512;
-    font-weight: 700;
+    color: #141218;
+    border-color: #ffd166;
   }
 
-  /* 좌측 상단 기상 및 실시간 알림 배지 */
+  /* 좌측 상단 기상 HUD */
   #hud-weather {
     position: absolute;
-    top: 20px;
-    left: 24px;
+    top: 16px;
+    left: 20px;
     z-index: 15;
-    background: rgba(22, 24, 33, 0.88);
-    border: 1.5px solid #7d7365;
-    border-radius: 12px;
-    padding: 10px 18px;
+    background: #1c1b22;
+    border: 3px solid #6b6375;
+    box-shadow: 3px 3px 0px #08080a;
+    padding: 10px 16px;
     display: none;
     font-size: 0.9rem;
-    line-height: 1.55;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+    line-height: 1.5;
   }
 
-  /* 긴급 현장 작업 알림 배너 */
+  /* 알림 배지 */
   #alert-strip {
     position: absolute;
-    top: 105px;
-    left: 24px;
+    top: 95px;
+    left: 20px;
     z-index: 15;
     display: none;
     flex-direction: column;
@@ -222,62 +200,57 @@ game_html = """
   }
 
   .alert-pill {
-    background: rgba(158, 42, 43, 0.9);
-    border: 1px solid #ffccd5;
+    background: #9e2a2b;
+    border: 2px solid #ffccd5;
     color: #fff;
-    padding: 7px 14px;
-    border-radius: 20px;
+    padding: 6px 12px;
     font-size: 0.85rem;
-    font-weight: 600;
     cursor: pointer;
-    animation: pulse 1.3s infinite;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    box-shadow: 3px 3px 0px #08080a;
+    animation: blink 0.9s infinite;
   }
 
-  @keyframes pulse {
-    0%, 100% { transform: scale(1); opacity: 0.88; }
-    50% { transform: scale(1.03); opacity: 1; }
+  @keyframes blink {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 1; transform: scale(1.02); }
   }
 
-  /* 하단 대화창 */
+  /* 하단 대화창 (좋은 피자 위대한 피자 스타일) */
   #dialogue-box {
     position: absolute;
-    bottom: 22px;
+    bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
-    width: min(820px, 90vw);
+    width: min(800px, 92vw);
     z-index: 25;
-    background: linear-gradient(180deg, rgba(28, 25, 23, 0.96) 0%, rgba(17, 16, 18, 0.98) 100%);
-    border: 2px solid #c7ae80;
-    border-radius: 14px;
-    padding: 18px 26px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.85);
+    background: #1a1721;
+    border: 4px solid #8c7a9b;
+    box-shadow: 6px 6px 0px #08080a;
+    padding: 16px 22px;
     display: none;
     cursor: pointer;
   }
 
   .speaker-tag {
     display: inline-block;
-    background: #8f7449;
-    color: #fff9ed;
-    font-weight: 700;
-    font-size: 0.88rem;
-    padding: 3px 14px;
-    border-radius: 20px;
+    background: #5c4e6b;
+    color: #f7f4eb;
+    font-size: 0.9rem;
+    padding: 3px 10px;
+    border: 2px solid #8c7a9b;
     margin-bottom: 8px;
   }
 
   .dialogue-text {
-    font-family: 'Gowun Batang', serif;
-    font-size: 1.1rem;
-    line-height: 1.65;
-    color: #f5efe2;
+    font-size: 1.05rem;
+    line-height: 1.6;
+    color: #f0ece1;
   }
 
   .dialogue-next {
     text-align: right;
-    font-size: 0.8rem;
-    color: #c7ae80;
+    font-size: 0.78rem;
+    color: #c9b182;
     margin-top: 6px;
   }
 
@@ -285,8 +258,7 @@ game_html = """
   #modal-backdrop {
     position: absolute;
     inset: 0;
-    background: rgba(8, 10, 14, 0.76);
-    backdrop-filter: blur(4px);
+    background: rgba(14, 12, 18, 0.82);
     z-index: 30;
     display: none;
     align-items: center;
@@ -294,7 +266,7 @@ game_html = """
   }
 
   .modal-card {
-    width: min(780px, 92vw);
+    width: min(740px, 92vw);
     max-height: 86vh;
     overflow-y: auto;
   }
@@ -303,219 +275,161 @@ game_html = """
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid rgba(201, 177, 130, 0.35);
-    padding-bottom: 12px;
-    margin-bottom: 18px;
+    border-bottom: 2px solid #4a4554;
+    padding-bottom: 10px;
+    margin-bottom: 16px;
   }
 
   .modal-title {
-    font-family: 'Gowun Batang', serif;
-    font-size: 1.45rem;
-    font-weight: 700;
-    color: #f2dfb8;
+    font-size: 1.3rem;
+    color: #e6dfc8;
   }
 
   .close-btn {
-    background: none;
-    border: 1px solid #8c7a5b;
-    color: #d6c5a7;
-    font-size: 0.95rem;
-    padding: 4px 12px;
-    border-radius: 6px;
+    font-family: 'DungGeunMo', monospace;
+    background: #3b3547;
+    border: 2px solid #6b6375;
+    color: #e2dfd2;
+    font-size: 0.9rem;
+    padding: 4px 10px;
     cursor: pointer;
   }
 
   .close-btn:hover {
-    background: #8c7a5b;
-    color: #12141c;
+    background: #5c4e6b;
   }
 
-  /* 신문 & 서류 더미 */
+  /* 신문 & 서류 */
   .newspaper-sheet {
-    background: #e8dec8;
-    color: #241f18;
-    padding: 26px;
-    border-radius: 6px;
-    font-family: 'Gowun Batang', serif;
+    background: #e2d7be;
+    color: #211c16;
+    padding: 24px;
+    border: 3px solid #8c7a6b;
   }
 
   .news-head {
     text-align: center;
-    border-top: 3px double #241f18;
-    border-bottom: 3px double #241f18;
-    padding: 10px 0;
-    margin-bottom: 16px;
+    border-bottom: 3px double #211c16;
+    padding-bottom: 8px;
+    margin-bottom: 14px;
   }
 
   .dossier-box {
-    background: #f4efe4;
-    color: #222;
-    padding: 22px;
-    border-radius: 8px;
-    font-family: 'Gowun Batang', serif;
+    background: #ede6d6;
+    color: #211c16;
+    padding: 20px;
+    border: 3px solid #8c7a6b;
   }
 
   .check-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 13px;
-    margin: 10px 0;
-    background: #e6decb;
-    border-left: 5px solid #7d6844;
-    border-radius: 4px;
-    font-size: 1.05rem;
-    font-weight: 700;
+    padding: 12px;
+    margin: 8px 0;
+    background: #dfd4be;
+    border: 2px solid #7d6b52;
+    font-size: 1rem;
   }
 
   /* 노트북 정책 카드 */
   .policy-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 12px;
   }
 
   .policy-card {
-    background: rgba(32, 36, 48, 0.92);
-    border: 1px solid #695e4c;
-    border-radius: 10px;
+    background: #141218;
+    border: 2px solid #5c4e6b;
     padding: 14px;
     cursor: pointer;
-    transition: all 0.25s ease;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    transition: 0.15s;
   }
 
   .policy-card:hover:not(.disabled) {
-    border-color: #e3c891;
+    border-color: #ffd166;
+    background: #1f1a29;
     transform: translateY(-2px);
-    background: rgba(45, 50, 66, 0.95);
   }
 
   .policy-card.disabled {
-    opacity: 0.52;
+    opacity: 0.5;
     cursor: not-allowed;
   }
 
   .badge-status {
     display: inline-block;
-    font-size: 0.78rem;
-    padding: 2px 8px;
-    border-radius: 10px;
+    font-size: 0.75rem;
+    padding: 2px 6px;
     margin-top: 8px;
+    border: 1px solid #6b6375;
   }
 
   .badge-active { background: #2d6a4f; color: #d8f3dc; }
   .badge-pending { background: #b58328; color: #fff3b0; }
   .badge-ready { background: #3d405b; color: #e0e1dd; }
 
-  /* 미니게임 UI 컴포넌트 */
-  .radar-bar {
-    position: relative;
-    width: 100%;
-    height: 36px;
-    background: #1a1e29;
-    border: 2px solid #8c7a5b;
-    border-radius: 18px;
-    overflow: hidden;
-    margin: 18px 0;
-  }
-
-  .radar-target {
-    position: absolute;
-    top: 0;
-    height: 100%;
-    background: rgba(64, 145, 108, 0.65);
-    border-left: 2px solid #95d5b2;
-    border-right: 2px solid #95d5b2;
-  }
-
-  .radar-cursor {
-    position: absolute;
-    top: 0;
-    width: 8px;
-    height: 100%;
-    background: #ffd166;
-    box-shadow: 0 0 12px #ffd166;
-  }
-
-  .sensor-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 14px;
-    margin: 16px 0;
-  }
-
-  .sensor-node {
-    background: #232734;
-    border: 1.5px solid #6c757d;
-    border-radius: 10px;
-    padding: 16px;
+  /* 미니게임 (pH 배합기) 스타일 */
+  .mixer-box {
+    background: #141218;
+    border: 3px solid #4cc9f0;
+    padding: 20px;
     text-align: center;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .sensor-node.dirty {
-    border-color: #e09f3e;
-    background: #3b2d1f;
-  }
-
-  .sensor-node.clean {
-    border-color: #52b788;
-    background: #1b3329;
+    margin-top: 10px;
   }
 
   .action-btn {
-    padding: 10px 24px;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 600;
+    font-family: 'DungGeunMo', monospace;
+    padding: 10px 22px;
+    background: #5c4e6b;
+    color: #f7f4eb;
+    border: 2px solid #e6dfc8;
+    box-shadow: 3px 3px 0px #08080a;
     cursor: pointer;
-    border: none;
-    transition: 0.2s;
+    font-size: 1rem;
   }
 
-  .btn-yes { background: #c9a66b; color: #161512; }
-  .btn-yes:hover { background: #e0be82; }
-  .btn-no { background: #3b3e4a; color: #e6e2d8; }
-  .btn-no:hover { background: #505463; }
+  .action-btn:hover {
+    background: #7a688f;
+  }
 
   .choice-btn {
+    font-family: 'DungGeunMo', monospace;
     display: block;
     width: 100%;
     text-align: left;
-    background: #252936;
-    border: 1px solid #8c7a5b;
+    background: #1c1824;
+    border: 2px solid #6b6375;
     color: #f0ece1;
-    padding: 14px 18px;
-    border-radius: 8px;
+    padding: 12px 16px;
     margin-bottom: 10px;
     cursor: pointer;
-    font-size: 0.98rem;
+    font-size: 0.95krem;
   }
 
   .choice-btn:hover {
-    background: #383e52;
-    border-color: #e3c891;
+    background: #2e283d;
+    border-color: #ffd166;
   }
 
   /* 툴팁 */
   #hover-tooltip {
     position: absolute;
     pointer-events: none;
-    background: rgba(18, 20, 28, 0.94);
-    border: 1px solid #d4bc8b;
+    background: #1c1b22;
+    border: 2px solid #e6dfc8;
     color: #f7eedc;
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: 0.86rem;
+    padding: 4px 10px;
+    font-size: 0.8rem;
     z-index: 18;
     display: none;
     transform: translate(-50%, -140%);
     white-space: nowrap;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+    box-shadow: 3px 3px 0px #08080a;
   }
 </style>
 </head>
@@ -527,40 +441,40 @@ game_html = """
   <!-- 타이틀 화면 -->
   <div id="title-overlay">
     <div class="title-logo">RAIN CITY</div>
-    <div class="title-sub">사막 위에 내리는 첫 번째 비의 기록</div>
-    <button class="start-btn" onclick="startGame()">START</button>
+    <div class="title-sub">사막의 잿빛 도시, 내 손으로 되살려보자구!</div>
+    <button class="start-btn" onclick="startGame()">가게 오픈 / 출근하기</button>
   </div>
 
-  <!-- 좌측 상단 기상 및 대기질 현황 -->
+  <!-- 좌측 상단 기상 HUD -->
   <div id="hud-weather"></div>
 
-  <!-- 긴급 현장 작업 알림 배너 -->
+  <!-- 긴급 알림 배지 -->
   <div id="alert-strip"></div>
 
-  <!-- 우측 상단 시간 HUD -->
+  <!-- 우측 상단 시계 HUD -->
   <div id="hud-clock">
     <span class="clock-day" id="clock-day-text">1일차</span>
-    <span class="clock-time" id="clock-time-text">07시 00분</span>
+    <span class="clock-time" id="clock-time-text">07:00</span>
     <div>
       <button class="speed-btn active" id="spd-1" onclick="setSpeed(1)">1x</button>
-      <button class="speed-btn" id="spd-5" onclick="setSpeed(5)">5x</button>
-      <button class="speed-btn" id="spd-15" onclick="setSpeed(15)">15x</button>
+      <button class="speed-btn" id="spd-3" onclick="setSpeed(3)">3x</button>
+      <button class="speed-btn" id="spd-10" onclick="setSpeed(10)">10x</button>
     </div>
   </div>
 
-  <!-- 호버 툴팁 -->
+  <!-- 툴팁 -->
   <div id="hover-tooltip"></div>
 
   <!-- 하단 대화창 -->
   <div id="dialogue-box" onclick="closeDialogue()">
     <div class="speaker-tag" id="dialogue-speaker">나</div>
     <div class="dialogue-text" id="dialogue-text"></div>
-    <div class="dialogue-next">▼ 클릭하여 계속</div>
+    <div class="dialogue-next">▼ 터치해서 계속</div>
   </div>
 
   <!-- 모달 창 -->
   <div id="modal-backdrop">
-    <div class="hollow-panel modal-card" id="modal-content"></div>
+    <div class="omori-panel modal-card" id="modal-content"></div>
   </div>
 </div>
 
@@ -576,16 +490,14 @@ function resize() {
 window.addEventListener('resize', resize);
 resize();
 
-// --- 게임 상태 변수 ---
 let scene = 'TITLE';
 let day = 1;
 let month = 1;
 let gameMinutes = 7 * 60; // 07:00 시작
-let timeMultiplier = 1;   // 기본 1배속 (현실 10분 = 게임 1일)
+let timeMultiplier = 1;   // 기본 1배속 (현실 3분 = 게임 1일)
 let lastTimestamp = 0;
 let isPaused = false;
 
-// 도시 환경 및 시뮬레이션 지표
 let budget = 250;
 let droughtLevel = 68; // 목표: 30% 미만
 let totalRainDays = 0;
@@ -593,7 +505,7 @@ let acidRainDays = 0;
 
 let weather = {
   type: 'CLEAR',
-  cloudType: 'WARM', // 'WARM'(따뜻한 구름) or 'COLD'(차가운 과냉각 구름)
+  cloudType: 'WARM',
   windDir: '북서풍',
   windSpeed: 3.2,
   humidity: 32,
@@ -606,88 +518,82 @@ let weather = {
   ecoHealth: 45
 };
 
-// 실시간 현장 액션 상태 (환경공학자 & 환경평가원 업무)
+// 실시간 업무 상태
 let activeTasks = {
-  seedingReady: true,      // 인공강우 작전 가능 여부 (하루 1회)
-  phAlert: false,          // 산성비 중화 작업 필요 여부
-  sensorDirty: false,      // 황사 등으로 대기질 센서 오염 여부
-  phoneRinging: false,     // 긴급 환경 감사/민원 전화 수신 여부
+  phPrepared: false,       // pH 배합 완료 여부
+  phAlert: false,          // 산성비 중화 필요 여부
+  sensorDirty: false,      // 센서 오염 여부
+  phoneRinging: false,     // 민원 전화 수신 여부
   currentAudit: null
 };
 
-// 정책 데이터 (선택 후 2일 뒤에 적용)
 const POLICIES = [
-  { id: 'fgd', name: '배연탈황설비 (FGD)', cost: 45, desc: '공장·발전소의 SO₂를 알칼리성 물질로 제거하여 산성비 위험을 크게 낮춥니다.', status: 'READY', applyDay: null },
-  { id: 'esp', name: '전기집진기 (ESP)', cost: 40, desc: '미세먼지(PM2.5)와 황산염 입자를 정전기로 포집하여 대기질을 개선합니다.', status: 'READY', applyDay: null },
-  { id: 'sensor', name: '정밀 대기질 센서망', cost: 25, desc: 'SO₂, NOₓ, PM2.5, 강수 pH를 실시간 측정해 오염 확산과 산성비 위험을 정밀 분석합니다.', status: 'READY', applyDay: null },
-  { id: 'raingarden', name: '빗물정원 조성', cost: 30, desc: '빗물이 토양으로 자연 침투하도록 유도해 홍수를 줄이고 비점오염 유출을 막습니다.', status: 'READY', applyDay: null },
-  { id: 'permeable', name: '투수성 포장 도로', cost: 35, desc: '사막 도시의 아스팔트를 투수성 소재로 교체해 빗물 흡수율과 지하수 함양을 높입니다.', status: 'READY', applyDay: null },
-  { id: 'reservoir', name: '지하 빗물저류조', cost: 50, desc: '폭우 시 도심 침수를 막고, 저장된 빗물을 활용해 가뭄 진행도를 크게 낮춥니다.', status: 'READY', applyDay: null },
-  { id: 'seeding', name: '고출력 인공강우 시딩기', cost: 55, desc: '상공 구름에 촉매제를 대량 살포해 인공강우 작전의 기본 성공률과 강수량을 높입니다.', status: 'READY', applyDay: null }
+  { id: 'fgd', name: '배연탈황설비 (FGD)', cost: 45, desc: '공장 SO₂를 줄여 산성비 위험을 낮춰줍니다.', status: 'READY', applyDay: null },
+  { id: 'esp', name: '전기집진기 (ESP)', cost: 40, desc: '초미세먼지(PM2.5)를 잡아서 공기를 맑게 해줘요.', status: 'READY', applyDay: null },
+  { id: 'sensor', name: '정밀 대기질 센서망', cost: 25, desc: '도시 대기 상태와 강수 pH를 실시간으로 보여줍니다.', status: 'READY', applyDay: null },
+  { id: 'raingarden', name: '빗물정원 조성', cost: 30, desc: '빗물이 땅에 스며들게 해 홍수와 오염물 유출을 막아요.', status: 'READY', applyDay: null },
+  { id: 'permeable', name: '투수성 포장 도로', cost: 35, desc: '아스팔트를 빗물이 통하는 재질로 바꿔줍니다.', status: 'READY', applyDay: null },
+  { id: 'reservoir', name: '지하 빗물저류조', cost: 50, desc: '빗물을 모아두었다가 가뭄 때 꺼내 쓸 수 있어요.', status: 'READY', applyDay: null },
+  { id: 'seeding', name: '인공강우 시딩 장비', cost: 55, desc: '구름에 촉매를 뿌려 강수 확률을 확 높여줍니다.', status: 'READY', applyDay: null }
 ];
 
-// 창밖 3개 공장
 const FACTORIES = [
-  { id: 'factory1', name: '제1 화력·담수화 복합발전소', role: '도시 전력 공급과 바닷물 담수화를 담당하는 핵심 에너지 시설입니다.', pollutants: '아황산가스(SO₂), 질소산화물(NOₓ), 온배수', relX: 0.22, relY: 0.42, relW: 0.13, relH: 0.16 },
-  { id: 'factory2', name: '제2 석유화학·정제 플랜트', role: '사막 부자도시의 외화를 벌어들이는 주력 석유화학 제품 생산 공장입니다.', pollutants: '휘발성유기화합물(VOCs), 아황산가스(SO₂), 초미세먼지(PM2.5)', relX: 0.44, relY: 0.43, relW: 0.14, relH: 0.15 },
-  { id: 'factory3', name: '제3 시멘트·건설자재 제련소', role: '마천루 건설에 필요한 시멘트와 금속 자재를 가공하는 중공업 시설입니다.', pollutants: '고농도 미세먼지(PM10/PM2.5), 질소산화물(NOₓ), 중금속 분진', relX: 0.68, relY: 0.41, relW: 0.13, relH: 0.17 }
+  { id: 'factory1', name: '제1 화력·담수화 발전소', role: '전기와 물을 공급하는 거대한 에너지 공장이야.', pollutants: 'SO₂, NOₓ', relX: 0.22, relY: 0.42, relW: 0.13, relH: 0.16 },
+  { id: 'factory2', name: '제2 석유화학 플랜트', role: '외화를 벌어다 준다지만 매연을 어마어마하게 뿜어내지.', pollutants: 'VOCs, SO₂, PM2.5', relX: 0.44, relY: 0.43, relW: 0.14, relH: 0.15 },
+  { id: 'factory3', name: '제3 시멘트 제련소', role: '건물 올리느라 쉴 새 없이 돌아가는 시멘트 공장이야.', pollutants: '고농도 미세먼지, 중금속 분진', relX: 0.68, relY: 0.41, relW: 0.13, relH: 0.17 }
 ];
 
-// 책상 위 오브젝트 (기존 6종 + 환경공학자 전문 장비 4종)
 const DESK_ITEMS = [
-  { id: 'radio', name: '🛩️ 인공강우 작전 무전기 (시딩 지휘)', relX: 0.04, relY: 0.65, relW: 0.07, relH: 0.13 },
-  { id: 'newspaper', name: '📰 신문 기사', relX: 0.13, relY: 0.74, relW: 0.14, relH: 0.12 },
-  { id: 'documents', name: '📁 서류 더미 (예산 & 체크리스트)', relX: 0.29, relY: 0.70, relW: 0.13, relH: 0.14 },
-  { id: 'laptop', name: '💻 업무용 노트북 (환경 정책)', relX: 0.44, relY: 0.64, relW: 0.16, relH: 0.17 },
-  { id: 'sensor_pad', name: '📡 대기질 센서 정비 단말기', relX: 0.62, relY: 0.67, relW: 0.08, relH: 0.12 },
-  { id: 'beaker', name: '🧪 수질·강수 pH 중화 실험 세트', relX: 0.72, relY: 0.66, relW: 0.07, relH: 0.14 },
-  { id: 'photo', name: '🖼️ 고향의 가족사진', relX: 0.80, relY: 0.73, relW: 0.06, relH: 0.10 },
-  { id: 'penholder', name: '✏️ 필기구 꽂이 (볼펜·샤프)', relX: 0.87, relY: 0.72, relW: 0.04, relH: 0.10 },
-  { id: 'phone', name: '☎️ 환경평가원 직통 전화기', relX: 0.85, relY: 0.61, relW: 0.07, relH: 0.09 },
-  { id: 'calendar', name: '📅 탁상 캘린더', relX: 0.92, relY: 0.71, relW: 0.06, relH: 0.11 }
+  { id: 'beaker', name: '🧪 pH 배합기 (산성비 중화 준비)', relX: 0.04, relY: 0.65, relW: 0.08, relH: 0.14 },
+  { id: 'radio', name: '🛩️ 인공강우 무전기 (비 내리기)', relX: 0.14, relY: 0.65, relW: 0.07, relH: 0.13 },
+  { id: 'newspaper', name: '📰 조간신문', relX: 0.23, relY: 0.74, relW: 0.12, relH: 0.12 },
+  { id: 'documents', name: '📁 서류 더미 (목표 체크리스트)', relX: 0.37, relY: 0.70, relW: 0.12, relH: 0.14 },
+  { id: 'laptop', name: '💻 업무용 노트북 (정책 구매)', relX: 0.51, relY: 0.64, relW: 0.15, relH: 0.17 },
+  { id: 'sensor_pad', name: '📡 대기질 센서 정비기', relX: 0.68, relY: 0.67, relW: 0.07, relH: 0.12 },
+  { id: 'photo', name: '🖼️ 가족사진', relX: 0.77, relY: 0.73, relW: 0.06, relH: 0.10 },
+  { id: 'penholder', name: '✏️ 펜꽂이', relX: 0.84, relY: 0.72, relW: 0.04, relH: 0.10 },
+  { id: 'phone', name: '☎️ 민원 전화기', relX: 0.83, relY: 0.61, relW: 0.07, relH: 0.09 },
+  { id: 'calendar', name: '📅 캘린더', relX: 0.91, relY: 0.71, relW: 0.06, relH: 0.11 }
 ];
 
-// 긴급 환경 감사/민원 시나리오 풀
 const AUDIT_SCENARIOS = [
   {
-    title: "제2 석유화학 플랜트 야간 불법 배출 제보",
-    desc: "시민 환경단체에서 제2 플랜트가 탈황 필터를 끄고 아황산가스(SO₂)를 무단 배출하고 있다는 익명 제보를 보내왔습니다.",
+    title: "제2 플랜트 야간 무단 배출 제보",
+    desc: "야밤에 몰래 필터를 끄고 황가스를 뿜어냈다는 제보가 들어왔어! 어떻게 할까?",
     choices: [
-      { text: "즉시 불시 환경 감사를 실시해 과태료를 징수한다 (+25억 예산, SO₂ -15)", effect: () => { budget += 25; weather.so2 = Math.max(10, weather.so2 - 15); return "불법 배출 현장을 적발하여 25억의 환경부담금을 징수하고 배출을 차단했습니다!"; } },
-      { text: "경고 공문만 발송하고 시설 개선 권고를 내린다 (SO₂ -5)", effect: () => { weather.so2 = Math.max(10, weather.so2 - 5); return "공장 측에서 재발 방지를 약속하며 배출량을 소폭 줄였습니다."; } }
+      { text: "당장 들이닥쳐서 과태료 25억 뜯어내고 연기 줄이기!", effect: () => { budget += 25; weather.so2 = Math.max(10, weather.so2 - 15); return "흐흐, 꼬리를 잡았지! 25억 벌고 공장 콧대를 납작하게 눌러줬어."; } },
+      { text: "경고장만 툭 던져주고 조용히 넘어가기", effect: () => { weather.so2 = Math.max(10, weather.so2 - 5); return "경고장 먹더니 당분간은 눈치 보며 살겠지 뭐."; } }
     ]
   },
   {
-    title: "왕실 도시개발청의 긴급 수자원 브리핑 요청",
-    desc: "사막 신도시 건설에 필요한 공업용수가 부족하다며 인공강우 예산을 건설국으로 전용하자는 압력이 들어왔습니다.",
+    title: "왕실 건설청의 예산 압박",
+    desc: "신도시 공업용수 모자라다고 인공강우 예산 좀 떼달라는데 이거 원...",
     choices: [
-      { text: "과학적 가뭄 및 산성비 리스크 보고서를 제출해 예산을 사수한다 (+15억 추가 지원)", effect: () => { budget += 15; return "정밀 데이터에 설득된 왕실 위원회가 오히려 환경국에 15억을 추가 지원했습니다!"; } },
-      { text: "일부 예산을 양보하는 대신 도로 살수차 지원을 받는다 (가뭄 -3%)", effect: () => { droughtLevel = Math.max(5, droughtLevel - 3); return "살수차 지원으로 도심 지열과 가뭄이 소폭 완화되었습니다."; } }
+      { text: "내 완벽한 수자원 보고서로 콧대를 꺾고 15억 더 받아내기!", effect: () => { budget += 15; return "데이터로 팩폭을 날려줬더니 오히려 15억을 더 쥐여주네? 땡큐지!"; } },
+      { text: "예산 조금 양보하고 살수차 지원받기", effect: () => { droughtLevel = Math.max(5, droughtLevel - 3); return "아쉽지만 살수차로 도로 먼지라도 좀 씻어내야지."; } }
     ]
   },
   {
-    title: "주거지구 호흡기 질환 민원 급증",
-    desc: "고농도 미세먼지로 인해 도심 병원에 호흡기 환자가 늘어나고 있습니다. 환경평가원으로서 비상 조치를 결정해야 합니다.",
+    title: "주민들의 미세먼지 성토 대란",
+    desc: "기침하는 주민들이 시청 앞으로 몰려왔어! 비상 조치가 필요해!",
     choices: [
-      { text: "비상 차량 2부제 및 공장 가동률 일시 단축 발령 (PM2.5 -20, 예산 -10억)", effect: () => { budget = Math.max(0, budget - 10); weather.pm25 = Math.max(10, weather.pm25 - 20); return "긴급 저감 조치로 도심 미세먼지 농도가 빠르게 안정되었습니다!"; } },
-      { text: "시민들에게 실내 대기 권고 및 마스크 보급만 진행한다 (PM2.5 -5)", effect: () => { weather.pm25 = Math.max(10, weather.pm25 - 5); return "시민들의 불만은 일부 진정되었으나 대기질 개선 폭은 크지 않았습니다."; } }
+      { text: "차량 2부제랑 공장 가동 일시 중지 때리기! (예산 -10억)", effect: () => { budget = Math.max(0, budget - 10); weather.pm25 = Math.max(10, weather.pm25 - 20); return "지갑은 좀 털렸지만 공기는 확실히 맑아졌어!"; } },
+      { text: "마스크 나눠주면서 마인드 컨트롤 권고하기", effect: () => { weather.pm25 = Math.max(10, weather.pm25 - 5); return "주민들 불만은 남았지만 뭐 어쩌겠어, 다 먹고살자고 하는 짓인데."; } }
     ]
   }
 ];
 
 let particles = [];
-for (let i = 0; i < 120; i++) {
+for (let i = 0; i < 100; i++) {
   particles.push({
     x: Math.random() * 2000,
     y: Math.random() * 1200,
-    speedX: 2 + Math.random() * 5,
-    speedY: -0.5 + Math.random() * 1.5,
-    size: 1 + Math.random() * 2.5,
-    alpha: 0.2 + Math.random() * 0.5
+    speedX: 1.5 + Math.random() * 4,
+    speedY: -0.3 + Math.random() * 1,
+    size: 2 + Math.random() * 2,
+    alpha: 0.3 + Math.random() * 0.4
   });
 }
-
-let radarInterval = null;
 
 function setSpeed(spd) {
   timeMultiplier = spd;
@@ -697,9 +603,7 @@ function setSpeed(spd) {
 
 function startGame() {
   const overlay = document.getElementById('title-overlay');
-  overlay.classList.add('zooming');
-  scene = 'ZOOMING';
-
+  overlay.style.opacity = '0';
   setTimeout(() => {
     overlay.style.display = 'none';
     scene = 'OFFICE';
@@ -707,8 +611,8 @@ function startGame() {
     document.getElementById('hud-weather').style.display = 'block';
     updateWeatherHUD();
     updateAlertStrip();
-    showDialogue('나', '드디어 사막의 거대 도시에 부임했어... 책상 위의 노트북으로 환경 정책을 세우는 것뿐만 아니라, 무전기로 직접 인공강우 작전을 지휘하고 실험 세트로 산성비를 중화해야 해!');
-  }, 1800);
+    showDialogue('나', '휴, 사막 한가운데 처박힌 사무실이라니 경치 한번 참 거칠구만. 먼저 책상 위 [pH 배합기]로 산성비를 중화할 준비를 끝내고, 기상 상황을 봐서 [인공강우 무전기]로 비를 내려보자구!');
+  }, 1000);
 }
 
 function showDialogue(speaker, text) {
@@ -732,10 +636,6 @@ function openModal(htmlContent) {
 }
 
 function closeModal() {
-  if (radarInterval) {
-    clearInterval(radarInterval);
-    radarInterval = null;
-  }
   document.getElementById('modal-backdrop').style.display = 'none';
   if (document.getElementById('dialogue-box').style.display !== 'block') {
     isPaused = false;
@@ -745,14 +645,14 @@ function closeModal() {
 function updateAlertStrip() {
   const strip = document.getElementById('alert-strip');
   let alerts = [];
-  if (activeTasks.phAlert) {
-    alerts.push(`<div class="alert-pill" onclick="handleObjectClick('beaker')">🧪 경고: 강수 산성화 위험! [실험 세트]에서 pH 중화 필요</div>`);
+  if (!activeTasks.phPrepared) {
+    alerts.push(`<div class="alert-pill" onclick="handleObjectClick('beaker')">🧪 알림: [pH 배합기]로 먼저 중화 준비를 해주세요!</div>`);
   }
   if (activeTasks.sensorDirty) {
-    alerts.push(`<div class="alert-pill" onclick="handleObjectClick('sensor_pad')">📡 경고: 황사로 대기질 센서 오류 발생! [정비 단말기] 클릭</div>`);
+    alerts.push(`<div class="alert-pill" onclick="handleObjectClick('sensor_pad')">📡 경고: 모래바람으로 [센서 정비기] 오류 발생!</div>`);
   }
   if (activeTasks.phoneRinging) {
-    alerts.push(`<div class="alert-pill" onclick="handleObjectClick('phone')">☎️ 수신 중: 긴급 환경 감사/민원 전화 도착! [전화기] 클릭</div>`);
+    alerts.push(`<div class="alert-pill" onclick="handleObjectClick('phone')">☎️ 수신중: [민원 전화기]가 울리고 있어요!</div>`);
   }
   if (alerts.length > 0) {
     strip.innerHTML = alerts.join('');
@@ -771,7 +671,7 @@ function getChecklistStatus() {
   };
 }
 
-// --- 오브젝트 클릭 핸들러 ---
+// --- 책상 오브젝트 상호작용 ---
 function handleObjectClick(id) {
   if (id === 'newspaper') {
     openModal(`
@@ -781,41 +681,38 @@ function handleObjectClick(id) {
       </div>
       <div class="newspaper-sheet">
         <div class="news-head">
-          <div style="font-size:0.85rem; letter-spacing:0.2em;">THE RAIN CITY CHRONICLE</div>
-          <h2 style="font-size:1.55rem; margin-top:4px;">"비가 내리지 않는 황금의 도시에 희망의 단비를"</h2>
+          <h2 style="font-size:1.4rem;">"비가 오지 않는 사막 도시의 눈물"</h2>
         </div>
-        <p style="line-height:1.8; font-size:1.05rem;">
-          끝없는 모래바람과 극심한 가뭄, 그리고 무분별한 산업화로 인한 산성비 위협이 우리 도시를 덮치고 있다.
-          정부는 이 위기를 타개하기 위해 해외에서 초빙한 환경공학 전문가에게 도시의 미래를 맡겼다.
+        <p style="line-height:1.7; font-size:1rem;">
+          모래바람과 매연으로 뒤덮인 이 도시에 구원투수로 해외에서 환경공학자가 부임했다.
+          과연 30일 안에 이 지독한 가뭄을 끝내고 푸른 하늘을 되찾아줄 수 있을 것인가?
         </p>
       </div>
     `);
     setTimeout(() => {
-      document.getElementById('dialogue-speaker').innerText = '나';
-      document.getElementById('dialogue-text').innerText = '이 도시를 살려야 한다.. 내 기술과 판단으로 이 메마른 하늘에 맑은 비를 내리게 할 거야.';
-      document.getElementById('dialogue-box').style.display = 'block';
-    }, 250);
+      showDialogue('나', '신문 기사 거창하게도 썼네. 눈앞에 산더미 같은 일이나 해치우자고.');
+    }, 200);
   }
   else if (id === 'documents') {
     const status = getChecklistStatus();
     openModal(`
       <div class="modal-header">
-        <span class="modal-title">📁 환경정책국 기밀 서류 더미</span>
+        <span class="modal-title">📁 예산 및 목표 체크리스트</span>
         <button class="close-btn" onclick="closeModal()">닫기</button>
       </div>
       <div class="dossier-box">
-        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #8c7a5b; padding-bottom:12px; margin-bottom:16px;">
-          <span style="font-size:1.15rem; font-weight:700;">💰 가용 도시 환경 예산</span>
-          <span style="font-size:1.5rem; font-weight:800; color:#1b4332;">${budget} 억 디르함</span>
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #7d6b52; padding-bottom:10px; margin-bottom:14px;">
+          <span style="font-size:1.1rem; font-weight:bold;">💰 남은 예산</span>
+          <span style="font-size:1.4rem; font-weight:bold; color:#2d6a4f;">${budget} 억</span>
         </div>
-        <h3 style="margin-bottom:10px; color:#3d3122;">📋 30일차 최종 평가 체크리스트 (실시간 갱신)</h3>
+        <h3 style="margin-bottom:8px; color:#3b352b;">📋 30일차 최종 평가 목표</h3>
         <div class="check-item">
-          <span>1. 가뭄 진행도가 30% 미만인가? (현재: ${droughtLevel.toFixed(1)}%)</span>
-          <span style="font-size:1.25rem;">${status.check1 ? '✅ 달성' : '⬜ 미달성'}</span>
+          <span>1. 가뭄 진행도 30% 미만 만들기 (현재: ${droughtLevel.toFixed(1)}%)</span>
+          <span>${status.check1 ? '✅ 달성' : '⬜ 진행중'}</span>
         </div>
         <div class="check-item">
-          <span>2. 산성비 발생 빈도가 10% 미만인가? (현재: ${status.acidFreq}%)</span>
-          <span style="font-size:1.25rem;">${status.check2 ? '✅ 달성' : '⬜ 미달성'}</span>
+          <span>2. 산성비 빈도 10% 미만 유지 (현재: ${status.acidFreq}%)</span>
+          <span>${status.check2 ? '✅ 달성' : '⬜ 진행중'}</span>
         </div>
       </div>
     `);
@@ -823,11 +720,11 @@ function handleObjectClick(id) {
   else if (id === 'laptop') {
     renderLaptopModal();
   }
+  else if (id === 'beaker') {
+    openPhMixerMinigame();
+  }
   else if (id === 'radio') {
     openSeedingMinigame();
-  }
-  else if (id === 'beaker') {
-    openPhNeutralizeMinigame();
   }
   else if (id === 'sensor_pad') {
     openSensorRepairMinigame();
@@ -836,13 +733,13 @@ function handleObjectClick(id) {
     openAuditPhoneModal();
   }
   else if (id === 'photo') {
-    showDialogue('나', '지갑 속 낡은 가족사진... 내가 타국에서 묵묵히 버티는 이유야. 꼭 부자가 되어서 당당하게 돌아갈게.');
+    showDialogue('나', '지갑 속 가족사진... 힘들 때마다 이거 보면서 버티는 거지 뭐.');
   }
   else if (id === 'penholder') {
-    showDialogue('나', '볼펜, 샤프, 제도용 연필이 빽빽하게 꽂혀 있다. 매일 밤 대기 확산 수식을 계산하느라 닳아버린 흔적들이다.');
+    showDialogue('나', '볼펜 촉이 다 닳았네. 오늘 밤에도 계산기 두드리려면 펜 좀 깎아야겠어.');
   }
   else if (id === 'calendar') {
-    showDialogue('나', `오늘은 ${month}개월째 ${day}일차야. 이번 달 평가일까지 앞으로 ${30 - day}일 남았어.`);
+    showDialogue('나', `벌써 ${month}개월째 ${day}일이야. 평가일까지 앞으로 ${30 - day}일 남았네!`);
   }
   else if (id.startsWith('factory')) {
     const f = FACTORIES.find(item => item.id === id);
@@ -851,265 +748,213 @@ function handleObjectClick(id) {
         <span class="modal-title">🏭 ${f.name}</span>
         <button class="close-btn" onclick="closeModal()">닫기</button>
       </div>
-      <div style="line-height:1.8; font-size:1.05rem;">
-        <p><strong style="color:#e3c891;">[시설 역할]</strong><br>${f.role}</p><br>
-        <p><strong style="color:#ff8fa3;">[주요 배출 오염물질]</strong><br>${f.pollutants}</p>
+      <div style="line-height:1.7; font-size:1rem;">
+        <p><strong style="color:#ffd166;">[역할]</strong><br>${f.role}</p><br>
+        <p><strong style="color:#ff8fa3;">[배출 물질]</strong><br>${f.pollutants}</p>
       </div>
     `);
   }
 }
 
-// --- [미니게임 1] 인공강우 작전 지휘 (시딩 타이밍 레이더) ---
-function openSeedingMinigame() {
-  if (!activeTasks.seedingReady) {
-    showDialogue('나', '오늘의 인공강우 시딩 항공기 출격은 이미 완료했어. 내일 기상 관측 데이터를 보고 다시 작전을 세우자.');
+// --- [미니게임 1] pH 배합기 (산성비 중화 준비) ---
+function openPhMixerMinigame() {
+  if (activeTasks.phPrepared) {
+    showDialogue('나', '이미 알칼리 중화제 배합을 깔끔하게 끝내놨지! 언제든 비가 와도 산성비 걱정은 붙들어 메라구.');
     return;
   }
-  const cloudDesc = weather.cloudType === 'WARM'
-    ? '따뜻한 구름층 (영상 기온 4℃) → 염화나트륨 등 [흡습성 입자] 적합'
-    : '차가운 과냉각 구름층 (영하 -8℃) → 요오드화은 등 [빙정핵 입자] 적합';
 
   openModal(`
     <div class="modal-header">
-      <span class="modal-title">🛩️ 인공강우 시딩(Cloud Seeding) 작전 통제</span>
+      <span class="modal-title">🧪 pH 배합기 (산성비 사전 중화 미니게임)</span>
       <button class="close-btn" onclick="closeModal()">닫기</button>
     </div>
-    <p style="font-size:0.95rem; color:#e3c891; margin-bottom:8px;">📡 현재 상공 기상 레이더 분석: <strong>${cloudDesc}</strong></p>
-    <p style="font-size:0.88rem; color:#cfc9bc; margin-bottom:14px;">
-      1) 구름 온도에 맞는 촉매제를 선택한 뒤, 2) 움직이는 레이더 커서가 <strong>초록색 응결 골든타임 구간</strong>에 들어왔을 때 살포 버튼을 누르세요! (작전 비용: 10억)
+    <p style="font-size:0.95rem; color:#ffd166; margin-bottom:10px;">
+      대기 오염으로 비가 내리면 산성비가 되기 쉽상이야! 슬라이더를 움직여 알칼리 중화제를 딱 맞는 양으로 배합해봐.
     </p>
-    <div style="margin-bottom:12px;">
-      <label style="margin-right:16px; cursor:pointer;">
-        <input type="radio" name="seedType" value="WARM" checked> 🧂 흡습성 시딩 입자 (따뜻한 구름용)
-      </label>
-      <label style="cursor:pointer;">
-        <input type="radio" name="seedType" value="COLD"> ❄️ 빙정핵 시딩 입자 (차가운 구름용)
-      </label>
+    <div class="mixer-box">
+      <p style="font-size:1.1rem; margin-bottom:10px;">소석회/탄산칼슘 투입량: <span id="mix-val" style="color:#4cc9f0; font-size:1.3rem;">150</span> kg</p>
+      <input type="range" id="mix-slider" min="50" max="250" value="150" style="width:85%; cursor:pointer;"
+             oninput="document.getElementById('mix-val').innerText = this.value">
+      <p style="font-size:0.85rem; color:#9c93a8; margin-top:10px;">(목표 중성 구간인 120 ~ 180kg 사이에 맞추면 대성공!)</p>
     </div>
-    <div class="radar-bar">
-      <div class="radar-target" style="left: 38%; width: 24%;"></div>
-      <div class="radar-cursor" id="radar-cursor" style="left: 0%;"></div>
-    </div>
-    <div style="text-align:center; margin-top:16px;">
-      <button class="action-btn btn-yes" onclick="fireSeeding()">🚀 지금 촉매제 살포 실행! (10억)</button>
+    <div style="text-align:center; margin-top:18px;">
+      <button class="action-btn" onclick="executeMixer()">✨ 배합 완료 및 저장고 세팅하기</button>
     </div>
   `);
+}
 
-  let pos = 0;
-  let dir = 1;
-  radarInterval = setInterval(() => {
-    pos += dir * 2.8;
-    if (pos >= 98) { pos = 98; dir = -1; }
-    if (pos <= 0) { pos = 0; dir = 1; }
-    const cursor = document.getElementById('radar-cursor');
-    if (cursor) cursor.style.left = pos + '%';
-  }, 30);
+function executeMixer() {
+  const val = parseInt(document.getElementById('mix-slider').value);
+  closeModal();
+
+  if (val >= 120 && val <= 180) {
+    activeTasks.phPrepared = true;
+    showDialogue('나', `크 완벽한 황금 비율이야! (투입량 ${val}kg) 이 상태면 다음에 비가 올 때 pH 6.5 이상의 깨끗한 단비가 내려줄 거야!`);
+  } else if (val < 120) {
+    activeTasks.phPrepared = true;
+    showDialogue('나', `약간 모자라게 넣었어(${val}kg)... 산성비를 완전히 막긴 어렵겠지만 없는 것보단 낫겠지.`);
+  } else {
+    activeTasks.phPrepared = true;
+    showDialogue('나', `어이쿠, 너무 많이 넣었어(${val}kg)! 물이 살짝 알칼리성으로 돌겠지만 일단 세팅은 끝냈어.`);
+  }
+  updateAlertStrip();
+}
+
+// --- [미니게임 2] 인공강우 무전기 (비 내리기) ---
+function openSeedingMinigame() {
+  if (!activeTasks.phPrepared) {
+    showDialogue('나', '어허, 순서가 있지! 먼저 책상 위 [pH 배합기]로 중화 세팅부터 끝내고 무전기를 잡아야 산성비 피해를 막을 수 있다구.');
+    return;
+  }
+
+  const cloudDesc = weather.cloudType === 'WARM' ? '따뜻한 구름 (흡습성 입자 적합)' : '차가운 과냉각 구름 (빙정핵 입자 적합)';
+
+  openModal(`
+    <div class="modal-header">
+      <span class="modal-title">🛩️ 인공강우 작전 무전기</span>
+      <button class="close-btn" onclick="closeModal()">닫기</button>
+    </div>
+    <p style="font-size:0.95rem; color:#ffd166; margin-bottom:10px;">상공 구름 상태: <strong>${cloudDesc}</strong></p>
+    <p style="font-size:0.9rem; color:#c9b182; margin-bottom:14px;">
+      구름 온도에 맞는 촉매를 고르고 타이밍을 맞춰 비를 내리자구! (작전비용: 10억)
+    </p>
+    <div style="margin-bottom:12px;">
+      <label style="margin-right:15px; cursor:pointer;"><input type="radio" name="seedChoice" value="WARM" checked> 🧂 흡습성 입자</label>
+      <label style="cursor:pointer;"><input type="radio" name="seedChoice" value="COLD"> ❄️ 빙정핵 입자</label>
+    </div>
+    <div style="background:#141218; border:2px solid #6b6375; padding:16px; text-align:center;">
+      <button class="action-btn" onclick="fireSeeding()">🚀 지금 바로 인공강우 작전 개시! (10억)</button>
+    </div>
+  `);
 }
 
 function fireSeeding() {
   if (budget < 10) {
     closeModal();
-    showDialogue('나', '예산이 부족해서 항공기 출격 비용(10억)을 감당할 수 없어...');
+    showDialogue('나', '이런, 출격 비용 10억이 모자라네... 예산 좀 더 모아서 와야겠어.');
     return;
   }
-  const cursor = document.getElementById('radar-cursor');
-  const pos = parseFloat(cursor.style.left);
-  const selectedSeed = document.querySelector('input[name="seedType"]:checked').value;
-
+  const selected = document.querySelector('input[name="seedChoice"]:checked').value;
   budget -= 10;
-  activeTasks.seedingReady = false;
+  activeTasks.phPrepared = false; // 다음 비를 위해 초기화
   closeModal();
 
-  const isTimingGood = (pos >= 38 && pos <= 62);
-  const isTypeCorrect = (selectedSeed === weather.cloudType);
-
-  if (isTimingGood && isTypeCorrect) {
-    // 완벽 성공 -> 즉시 비 내림
+  const isCorrect = (selected === weather.cloudType);
+  if (isCorrect || weather.rainProb > 40) {
     weather.type = 'RAIN';
     totalRainDays++;
-    const acidLoad = (weather.so2 * 0.021) + (weather.nox * 0.015);
-    weather.ph = +(Math.max(3.9, Math.min(6.8, 6.5 - acidLoad))).toFixed(2);
-    droughtLevel = Math.max(5, droughtLevel - 11);
-    weather.so2 *= 0.7;
-    weather.pm25 *= 0.65;
-
-    if (weather.ph < 5.6) {
-      acidRainDays++;
-      activeTasks.phAlert = true;
-      showDialogue('나', `인공강우 작전 대성공! 하늘에서 비가 쏟아지기 시작했어! 하지만 대기 중 오염물질 때문에 강수 pH가 ${weather.ph}로 산성화되고 있어. 빨리 책상 위 [실험 세트]에서 중화 작업을 해야 해!`);
-    } else {
-      showDialogue('나', `완벽한 타이밍과 촉매제 선택이었어! 깨끗한 단비(pH ${weather.ph})가 내리면서 가뭄 진행도가 크게 떨어졌어!`);
-    }
-  } else if (isTimingGood || isTypeCorrect) {
-    droughtLevel = Math.max(5, droughtLevel - 4);
-    showDialogue('나', '구름 조건과 살포 타이밍 중 하나가 어긋나서 약한 이슬비만 내렸어. 다음엔 구름 온도와 레이더 타이밍을 모두 정확히 맞추자.');
+    // 배합기를 미리 썼으므로 pH 방어 성공
+    weather.ph = +(6.3 + Math.random() * 0.5).toFixed(2);
+    droughtLevel = Math.max(5, droughtLevel - 12);
+    weather.so2 *= 0.65;
+    weather.pm25 *= 0.6;
+    showDialogue('나', `이야, 대성공이야! pH 배합기로 미리 세팅해둔 덕분에 산성비 걱정 없이 깨끗한 단비(pH ${weather.ph})가 쏟아졌어! 가뭄이 확 씻겨 내려가는구만!`);
   } else {
-    showDialogue('나', '시딩 물질과 살포 타이밍이 모두 빗나가서 구름이 흩어져 버렸어... 아까운 예산만 날렸군.');
+    showDialogue('나', '크흠, 구름 성분과 촉매가 안 맞아서 비는커녕 구름만 날려버렸네... 아까운 내 10억!');
   }
   updateWeatherHUD();
   updateAlertStrip();
 }
 
-// --- [미니게임 2] 산성비 방지 화학 제어 (알칼리 중화제 배합 퍼즐) ---
-function openPhNeutralizeMinigame() {
-  if (!activeTasks.phAlert && weather.ph >= 5.6) {
-    showDialogue('나', `현재 수질 및 강수 pH는 ${weather.ph}로 비교적 안정적이야. 산성비 경보가 울리면 이곳에서 소석회(알칼리 중화제)를 배합해 pH를 조절할 수 있어.`);
-    return;
-  }
-
-  const currentPh = weather.ph;
-  openModal(`
-    <div class="modal-header">
-      <span class="modal-title">🧪 빗물저류조 및 강수 산성도(pH) 화학 중화 제어</span>
-      <button class="close-btn" onclick="closeModal()">닫기</button>
-    </div>
-    <p style="font-size:0.95rem; color:#ffccd5; margin-bottom:10px;">
-      ⚠️ 현재 측정된 강수 산성도: <strong>pH ${currentPh}</strong> (황산·질산 성분 검출)
-    </p>
-    <p style="font-size:0.9rem; color:#cfc9bc; margin-bottom:16px;">
-      알칼리성 중화제(탄산칼슘·소석회 용액)를 투입하여 목표 안전 범위인 <strong>pH 6.2 ~ 6.8</strong> 사이로 맞추세요!
-      (힌트: pH 0.1 상승당 약 10kg의 중화제가 필요합니다)
-    </p>
-    <div style="background:#1b1f2b; padding:16px; border-radius:10px; text-align:center;">
-      <label style="font-size:1.05rem; font-weight:700; color:#f3d59b;">
-        중화제 투입량: <span id="alkali-val">150</span> kg
-      </label><br><br>
-      <input type="range" id="alkali-slider" min="20" max="300" value="150" style="width:85%;"
-             oninput="document.getElementById('alkali-val').innerText = this.value">
-    </div>
-    <div style="text-align:center; margin-top:18px;">
-      <button class="action-btn btn-yes" onclick="executePhNeutralize()">⚗️ 중화 용액 살포 및 pH 측정</button>
-    </div>
-  `);
-}
-
-function executePhNeutralize() {
-  const dose = parseInt(document.getElementById('alkali-slider').value);
-  const newPh = +(weather.ph + (dose * 0.01)).toFixed(2);
-  closeModal();
-
-  if (newPh >= 6.2 && newPh <= 6.8) {
-    weather.ph = newPh;
-    activeTasks.phAlert = false;
-    weather.ecoHealth = Math.min(100, weather.ecoHealth + 6);
-    if (acidRainDays > 0) acidRainDays--;
-    showDialogue('나', `정확한 화학 당량 계산이었어! 수질이 pH ${newPh}로 완벽하게 중화되어 토양과 호수 생태계를 지켜냈어!`);
-  } else if (newPh < 6.2) {
-    weather.ph = newPh;
-    showDialogue('나', `중화제 투입량이 조금 부족해서 pH ${newPh}에 머물렀어. 산성도가 완전히 가시지 않았군.`);
-  } else {
-    weather.ph = 7.4;
-    activeTasks.phAlert = false;
-    showDialogue('나', `중화제를 너무 과다 투입해서 오히려 수질이 pH ${newPh}의 강알칼리성이 되어버렸어... 다음엔 조금 더 정밀하게 계산하자.`);
-  }
-  updateWeatherHUD();
-  updateAlertStrip();
-}
-
-// --- [미니게임 3] 대기질 센서 정비 단말기 ---
+// --- [미니게임 3] 대기질 센서 정비기 ---
 function openSensorRepairMinigame() {
   if (!activeTasks.sensorDirty) {
-    showDialogue('나', '도심 전역에 설치된 4개 구역 대기질 센서망이 모두 정상적으로 데이터를 송신하고 있어.');
+    showDialogue('나', '센서 4개 다 아주 쌩쌩하게 잘 돌아가고 있어. 걱정 붙들어 매시라오.');
     return;
   }
 
   openModal(`
     <div class="modal-header">
-      <span class="modal-title">📡 도심 대기질 센서망 원격 정비 단말기</span>
+      <span class="modal-title">📡 대기질 센서 정비기</span>
       <button class="close-btn" onclick="closeModal()">닫기</button>
     </div>
-    <p style="font-size:0.92rem; color:#cfc9bc; margin-bottom:12px;">
-      황사 모래바람으로 인해 광학 미세먼지 센서가 오염되었습니다. <strong>오염된 4개의 센서 노드를 모두 클릭</strong>해 에어로졸 필터를 세척하세요!
-    </p>
-    <div class="sensor-grid">
-      <div class="sensor-node dirty" id="node-1" onclick="cleanNode(1)">⚠️ 제1 발전소 구역 센서<br><small>[모래 먼지 막힘 - 클릭하여 세척]</small></div>
-      <div class="sensor-node dirty" id="node-2" onclick="cleanNode(2)">⚠️ 제2 석유화학 구역 센서<br><small>[모래 먼지 막힘 - 클릭하여 세척]</small></div>
-      <div class="sensor-node dirty" id="node-3" onclick="cleanNode(3)">⚠️ 제3 제련소 구역 센서<br><small>[모래 먼지 막힘 - 클릭하여 세척]</small></div>
-      <div class="sensor-node dirty" id="node-4" onclick="cleanNode(4)">⚠️ 중앙 호수·주거지 센서<br><small>[모래 먼지 막힘 - 클릭하여 세척]</small></div>
+    <p style="font-size:0.9rem; color:#e2dfd2; margin-bottom:12px;">모래바람 때문에 센서가 먹통이야! <strong>4개의 센서를 클릭</strong>해서 모래를 털어내줘!</p>
+    <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:10px;">
+      <div id="sn-1" class="choice-btn" onclick="cleanSensor(1)">⚠️ 1번 발전소 센서 (먼지 낌)</div>
+      <div id="sn-2" class="choice-btn" onclick="cleanSensor(2)">⚠️ 2번 석유화학 센서 (먼지 낌)</div>
+      <div id="sn-3" class="choice-btn" onclick="cleanSensor(3)">⚠️ 3번 제련소 센서 (먼지 낌)</div>
+      <div id="sn-4" class="choice-btn" onclick="cleanSensor(4)">⚠️ 4번 주거구역 센서 (먼지 낌)</div>
     </div>
   `);
 }
 
-let cleanedCount = 0;
-function cleanNode(idx) {
-  const el = document.getElementById(`node-${idx}`);
-  if (el && el.classList.contains('dirty')) {
-    el.classList.remove('dirty');
-    el.classList.add('clean');
-    el.innerHTML = `✅ 구역 센서 정상 가동<br><small>[교정 완료]</small>`;
-    cleanedCount++;
-    if (cleanedCount >= 4) {
-      cleanedCount = 0;
+let cleanedSensors = 0;
+function cleanSensor(idx) {
+  const el = document.getElementById(`sn-${idx}`);
+  if (el && !el.dataset.cleaned) {
+    el.dataset.cleaned = "true";
+    el.style.background = "#2d6a4f";
+    el.innerHTML = "✅ 정상 작동 중";
+    cleanedSensors++;
+    if (cleanedSensors >= 4) {
+      cleanedSensors = 0;
       activeTasks.sensorDirty = false;
       budget += 10;
       setTimeout(() => {
         closeModal();
         updateAlertStrip();
-        showDialogue('나', '4개 구역의 대기질 센서를 모두 복구했어! 정확한 오염 확산 데이터 확보 보상으로 10억의 연구 수당을 받았어.');
-      }, 350);
+        showDialogue('나', '좋았어, 모든 센서 청소 완료! 보상으로 10억 연구 수당 챙겼다!');
+      }, 300);
     }
   }
 }
 
-// --- [미니게임 4] 환경평가원 직통 전화기 (돌발 감사 & 민원) ---
+// --- [미니게임 4] 민원 전화기 ---
 function openAuditPhoneModal() {
   if (!activeTasks.phoneRinging || !activeTasks.currentAudit) {
-    showDialogue('나', '지금은 걸려온 환경 감사나 긴급 민원 전화가 없어. 전화벨이 울리면 바로 수화기를 들어보자.');
+    showDialogue('나', '지금은 전화 오는 데 없는데? 조용하니 살만하네.');
     return;
   }
-
   const audit = activeTasks.currentAudit;
   openModal(`
     <div class="modal-header">
-      <span class="modal-title">☎️ [긴급 수신] ${audit.title}</span>
+      <span class="modal-title">☎️ [긴급 전화] ${audit.title}</span>
       <button class="close-btn" onclick="closeModal()">닫기</button>
     </div>
-    <p style="font-size:1.02rem; line-height:1.7; color:#f0ece1; margin-bottom:20px;">
-      "${audit.desc}"
-    </p>
+    <p style="font-size:1rem; line-height:1.6; color:#f0ece1; margin-bottom:16px;">"${audit.desc}"</p>
     <button class="choice-btn" onclick="resolveAudit(0)">1. ${audit.choices[0].text}</button>
     <button class="choice-btn" onclick="resolveAudit(1)">2. ${audit.choices[1].text}</button>
   `);
 }
 
-function resolveAudit(choiceIdx) {
-  const resultMsg = activeTasks.currentAudit.choices[choiceIdx].effect();
+function resolveAudit(idx) {
+  const msg = activeTasks.currentAudit.choices[idx].effect();
   activeTasks.phoneRinging = false;
   activeTasks.currentAudit = null;
   closeModal();
   updateWeatherHUD();
   updateAlertStrip();
-  showDialogue('나', resultMsg);
+  showDialogue('나', msg);
 }
 
-// --- 노트북 정책 화면 ---
+// 노트북 정책 터미널
 function renderLaptopModal() {
   let cardsHtml = POLICIES.map(p => {
     let badge = '';
-    let disabledClass = '';
-    let onClickAttr = `onclick="confirmPolicy('${p.id}')"`;
+    let disabled = '';
+    let clickAttr = `onclick="confirmPolicy('${p.id}')"`;
 
     if (p.status === 'ACTIVE') {
-      badge = `<span class="badge-status badge-active">✔ 가동 중</span>`;
-      disabledClass = 'disabled';
-      onClickAttr = '';
+      badge = `<span class="badge-status badge-active">✔ 설치 완료</span>`;
+      disabled = 'disabled';
+      clickAttr = '';
     } else if (p.status === 'PENDING') {
-      badge = `<span class="badge-status badge-pending">⏳ 설치 중 (${p.applyDay}일차 적용 예정)</span>`;
-      disabledClass = 'disabled';
-      onClickAttr = '';
+      badge = `<span class="badge-status badge-pending">⏳ 시공 중 (${p.applyDay}일차 적용)</span>`;
+      disabled = 'disabled';
+      clickAttr = '';
     } else if (budget < p.cost) {
-      badge = `<span class="badge-status badge-ready">예산 부족 (${p.cost}억 필요)</span>`;
-      disabledClass = 'disabled';
-      onClickAttr = '';
+      badge = `<span class="badge-status badge-ready">예산 부족 (${p.cost}억)</span>`;
+      disabled = 'disabled';
+      clickAttr = '';
     } else {
-      badge = `<span class="badge-status badge-ready">시행 가능 (비용: ${p.cost}억)</span>`;
+      badge = `<span class="badge-status badge-ready">설치 가능 (${p.cost}억)</span>`;
     }
 
     return `
-      <div class="policy-card ${disabledClass}" ${onClickAttr}>
+      <div class="policy-card ${disabled}" ${clickAttr}>
         <div>
-          <div style="font-weight:700; font-size:1.05rem; color:#f5e6c8; margin-bottom:5px;">${p.name}</div>
-          <div style="font-size:0.86rem; color:#cfc9bc; line-height:1.45;">${p.desc}</div>
+          <div style="font-weight:bold; font-size:1rem; color:#e6dfc8; margin-bottom:4px;">${p.name}</div>
+          <div style="font-size:0.82rem; color:#9c93a8; line-height:1.4;">${p.desc}</div>
         </div>
         <div>${badge}</div>
       </div>
@@ -1118,36 +963,28 @@ function renderLaptopModal() {
 
   openModal(`
     <div class="modal-header">
-      <span class="modal-title">💻 환경공학 정책 제어 터미널 (잔여 예산: ${budget}억)</span>
+      <span class="modal-title">💻 환경 정책 구매 터미널 (보유 예산: ${budget}억)</span>
       <button class="close-btn" onclick="closeModal()">닫기</button>
     </div>
-    <p style="font-size:0.88rem; color:#c9b182; margin-bottom:12px;">
-      ※ 선택한 정책은 현장 시공을 거쳐 <strong>2일 후</strong>부터 도시에 적용됩니다.
-    </p>
+    <p style="font-size:0.85rem; color:#c9b182; margin-bottom:12px;">정책을 고르면 <strong>2일 뒤</strong>에 현장에 적용됩니다!</p>
     <div class="policy-grid">${cardsHtml}</div>
   `);
 }
 
-function confirmPolicy(policyId) {
-  const p = POLICIES.find(item => item.id === policyId);
+function confirmPolicy(id) {
+  const p = POLICIES.find(item => item.id === id);
   openModal(`
-    <div style="text-align:center; padding:20px 10px;">
-      <h3 style="font-family:'Gowun Batang', serif; font-size:1.45rem; color:#f5e6c8; margin-bottom:12px;">
-        "${p.name}"을(를) 선택하시겠습니까?
-      </h3>
-      <p style="color:#cfc9bc; font-size:0.98rem;">
-        소요 예산: <strong>${p.cost}억</strong> | 적용 시점: <strong>${day + 2}일차 아침</strong>
-      </p>
-      <div style="display:flex; justify-content:center; gap:16px; margin-top:24px;">
-        <button class="action-btn btn-yes" onclick="executePolicy('${p.id}')">확인</button>
-        <button class="action-btn btn-no" onclick="renderLaptopModal()">아니오</button>
-      </div>
+    <div style="text-align:center; padding:16px;">
+      <h3 style="font-size:1.2rem; color:#e6dfc8; margin-bottom:10px;">"${p.name}"을(를) 설치할까요?</h3>
+      <p style="font-size:0.95rem; color:#9c93a8; margin-bottom:20px;">비용: ${p.cost}억 | 적용: ${day + 2}일차 아침</p>
+      <button class="action-btn" onclick="executePolicy('${p.id}')">응, 바로 진행해!</button>
+      <button class="action-btn" style="background:#3b3547; margin-left:10px;" onclick="renderLaptopModal()">아니, 다른 거 볼래</button>
     </div>
   `);
 }
 
-function executePolicy(policyId) {
-  const p = POLICIES.find(item => item.id === policyId);
+function executePolicy(id) {
+  const p = POLICIES.find(item => item.id === id);
   if (budget >= p.cost && p.status === 'READY') {
     budget -= p.cost;
     p.status = 'PENDING';
@@ -1156,10 +993,8 @@ function executePolicy(policyId) {
   }
 }
 
-// --- 일일 환경 & 대기화학 시뮬레이션 ---
+// 일일 시뮬레이션
 function simulateNewDay() {
-  activeTasks.seedingReady = true;
-
   let newlyApplied = [];
   POLICIES.forEach(p => {
     if (p.status === 'PENDING' && day >= p.applyDay) {
@@ -1170,112 +1005,78 @@ function simulateNewDay() {
 
   const activeIds = POLICIES.filter(p => p.status === 'ACTIVE').map(p => p.id);
 
-  // 자연재해 확률 (15% 가뭄, 2% 폭우, 30% 황사)
   const roll = Math.random() * 100;
   if (roll < 2) weather.type = 'HEAVY_RAIN';
   else if (roll < 17) weather.type = 'DROUGHT';
-  else if (roll < 47) weather.type = 'DUST';
+  else if (roll < 47) {
+    weather.type = 'DUST';
+    activeTasks.sensorDirty = true;
+    cleanedSensors = 0;
+  }
   else weather.type = 'CLEAR';
 
   weather.cloudType = Math.random() < 0.5 ? 'WARM' : 'COLD';
 
-  if (weather.type === 'DUST') {
-    activeTasks.sensorDirty = true;
-    cleanedCount = 0;
-  }
-
-  // 매일 45% 확률로 긴급 환경 감사/민원 전화 수신
-  if (!activeTasks.phoneRinging && Math.random() < 0.45) {
+  if (!activeTasks.phoneRinging && Math.random() < 0.4) {
     activeTasks.phoneRinging = true;
     activeTasks.currentAudit = AUDIT_SCENARIOS[Math.floor(Math.random() * AUDIT_SCENARIOS.length)];
   }
 
   const dirs = ['북풍', '북서풍', '서풍', '남서풍', '남동풍', '동풍'];
   weather.windDir = dirs[Math.floor(Math.random() * dirs.length)];
-  weather.windSpeed = +(1.2 + Math.random() * 6.5).toFixed(1);
-  weather.temp = weather.type === 'DROUGHT' ? Math.floor(41 + Math.random() * 6) : Math.floor(29 + Math.random() * 9);
-  weather.humidity = weather.type === 'HEAVY_RAIN' ? 88 : (weather.type === 'DROUGHT' ? 16 : Math.floor(25 + Math.random() * 35));
-  if (activeIds.includes('seeding')) weather.humidity = Math.min(95, weather.humidity + 18);
+  weather.windSpeed = +(1.2 + Math.random() * 6).toFixed(1);
+  weather.temp = weather.type === 'DROUGHT' ? 42 : 32;
+  weather.humidity = weather.type === 'HEAVY_RAIN' ? 90 : (weather.type === 'DROUGHT' ? 18 : 30);
+  if (activeIds.includes('seeding')) weather.humidity += 15;
 
   let so2Gen = activeIds.includes('fgd') ? 4 : 16;
-  let noxGen = 13;
   let pmGen = activeIds.includes('esp') ? 4 : 15;
-  if (weather.type === 'DUST') pmGen += 28;
+  if (weather.type === 'DUST') pmGen += 25;
 
-  const dispersion = weather.windSpeed * 2.1;
-  weather.so2 = Math.max(8, Math.min(150, weather.so2 + so2Gen - dispersion));
-  weather.nox = Math.max(8, Math.min(140, weather.nox + noxGen - dispersion));
-  weather.pm25 = Math.max(10, Math.min(200, weather.pm25 + pmGen - dispersion));
+  weather.so2 = Math.max(8, weather.so2 + so2Gen - (weather.windSpeed * 2));
+  weather.pm25 = Math.max(10, weather.pm25 + pmGen - (weather.windSpeed * 2));
 
-  let rainProb = (weather.humidity * 0.55) - (weather.temp * 0.3);
-  if (activeIds.includes('seeding')) rainProb += 28;
-  if (weather.type === 'HEAVY_RAIN') rainProb = 95;
-  if (weather.type === 'DROUGHT') rainProb = 3;
-  weather.rainProb = Math.max(2, Math.min(95, Math.round(rainProb)));
+  let rainProb = (weather.humidity * 0.5) - (weather.temp * 0.25);
+  if (activeIds.includes('seeding')) rainProb += 25;
+  weather.rainProb = Math.max(5, Math.min(90, Math.round(rainProb)));
 
   const didRain = (Math.random() * 100) < weather.rainProb;
   if (didRain) {
-    if (weather.type !== 'HEAVY_RAIN') weather.type = 'RAIN';
+    weather.type = 'RAIN';
     totalRainDays++;
-
-    const acidLoad = (weather.so2 * 0.021) + (weather.nox * 0.015);
-    weather.ph = +(Math.max(3.9, Math.min(6.8, 6.5 - acidLoad))).toFixed(2);
-
-    weather.so2 *= 0.65;
-    weather.nox *= 0.7;
-    weather.pm25 *= 0.6;
-
-    let droughtReduce = 7;
-    if (activeIds.includes('raingarden')) droughtReduce += 4;
-    if (activeIds.includes('permeable')) droughtReduce += 4;
-    if (activeIds.includes('reservoir')) droughtReduce += 7;
-    if (weather.type === 'HEAVY_RAIN') droughtReduce += 6;
-    droughtLevel = Math.max(5, droughtLevel - droughtReduce);
-
-    if (weather.ph < 5.6) {
-      acidRainDays++;
-      activeTasks.phAlert = true;
-      weather.ecoHealth = Math.max(10, weather.ecoHealth - 6);
-    } else {
-      activeTasks.phAlert = false;
-      weather.ecoHealth = Math.min(100, weather.ecoHealth + 5);
-    }
+    droughtLevel = Math.max(5, droughtLevel - 9);
   } else {
-    let droughtInc = weather.type === 'DROUGHT' ? 5.5 : 2.2;
-    if (activeIds.includes('reservoir')) droughtInc *= 0.65;
-    droughtLevel = Math.min(100, droughtLevel + droughtInc);
+    droughtLevel = Math.min(100, droughtLevel + (weather.type === 'DROUGHT' ? 5 : 2));
   }
 
   updateWeatherHUD();
   updateAlertStrip();
 
   if (newlyApplied.length > 0) {
-    showDialogue('나', `오늘부터 [${newlyApplied.join(', ')}] 설비가 가동되기 시작했어! 도시 환경이 한층 개선될 거야.`);
+    showDialogue('나', `드디어 [${newlyApplied.join(', ')}] 설치가 끝났어! 공장 녀석들도 이제 함부로 못 나설 걸.`);
   }
 }
 
 function updateWeatherHUD() {
   const hud = document.getElementById('hud-weather');
-  const weatherNames = {
-    'CLEAR': '☀️ 맑음 (사막 건조기후)',
-    'DROUGHT': '🔥 자연재해: 극심한 폭염·가뭄',
-    'DUST': '🌪️ 자연재해: 고농도 황사 발생',
-    'HEAVY_RAIN': '⛈️ 자연재해: 국지성 폭우',
-    'RAIN': '🌧️ 비 내리는 중'
+  const names = {
+    'CLEAR': '☀️ 맑음 (사막 건조)',
+    'DROUGHT': '🔥 극심한 폭염 가뭄',
+    'DUST': '🌪️ 모래바람(황사) 경보',
+    'HEAVY_RAIN': '⛈️ 국지성 폭우',
+    'RAIN': '🌧️ 단비 내리는 중'
   };
   const hasSensor = POLICIES.find(p => p.id === 'sensor').status === 'ACTIVE';
-  const sensorInfo = (hasSensor && !activeTasks.sensorDirty)
-    ? `SO₂: ${weather.so2.toFixed(0)} | NOₓ: ${weather.nox.toFixed(0)} | PM2.5: ${weather.pm25.toFixed(0)} | 강수 pH: ${weather.ph}`
-    : (activeTasks.sensorDirty ? `⚠️ 센서 오염됨 (정비 단말기 클릭 필요)` : `대기질 정밀 데이터: [센서 미설치]`);
+  const sensorText = (hasSensor && !activeTasks.sensorDirty) ? `SO₂: ${weather.so2.toFixed(0)} | PM2.5: ${weather.pm25.toFixed(0)}` : `센서 확인 필요`;
 
   hud.innerHTML = `
-    <div style="font-weight:700; color:#f3d59b;">${weatherNames[weather.type]}</div>
-    <div style="font-size:0.84rem; color:#ddd;">바람: ${weather.windDir} ${weather.windSpeed}m/s | 습도: ${weather.humidity}% | 강수확률: ${weather.rainProb}%</div>
-    <div style="font-size:0.82rem; color:#a8dadc; margin-top:2px;">${sensorInfo}</div>
+    <div style="font-weight:bold; color:#ffd166;">${names[weather.type]}</div>
+    <div style="font-size:0.82rem; color:#b8b0a2;">바람: ${weather.windDir} | 습도: ${weather.humidity}%</div>
+    <div style="font-size:0.8rem; color:#4cc9f0; margin-top:2px;">${sensorText}</div>
   `;
 }
 
-// --- 30일차 결산 및 엔딩 ---
+// 30일차 결산
 function checkMonthEnd() {
   const status = getChecklistStatus();
   if (status.check1 && status.check2) {
@@ -1286,11 +1087,10 @@ function checkMonthEnd() {
     document.getElementById('alert-strip').style.display = 'none';
     openModal(`
       <div style="text-align:center; padding:15px;">
-        <h2 style="font-family:'Cinzel', serif; font-size:2rem; color:#f3d59b; margin-bottom:10px;">HAPPY ENDING : 푸른 하늘의 귀환</h2>
-        <p style="font-family:'Gowun Batang', serif; font-size:1.12rem; line-height:1.8; color:#f0ece1; margin-bottom:20px;">
-          가뭄 진행도 <strong>${droughtLevel.toFixed(1)}%</strong>, 산성비 빈도 <strong>${status.acidFreq}%</strong>!<br>
-          당신은 사막의 회색 도시에 맑은 비와 푸른 녹지를 되찾아주었습니다.<br>
-          두둑한 외화 보너스를 손에 쥔 채, 창밖으로 펼쳐진 푸른 도시를 내려다보며 고향행 비행기에 오릅니다.
+        <h2 style="font-size:1.8rem; color:#ffd166; margin-bottom:12px;">🌟 HAPPY ENDING : 푸른 레인 시티!</h2>
+        <p style="font-size:1.05rem; line-height:1.7; color:#f0ece1; margin-bottom:20px;">
+          가뭄도 잡고 산성비도 완벽하게 막아냈어!<br>
+          두둑한 보너스 챙겨서 가향으로 돌아가는 발걸음이 아주 가볍구만. 고생했다 나 자신!
         </p>
         <button class="start-btn" onclick="location.reload()">처음부터 다시하기</button>
       </div>
@@ -1299,18 +1099,16 @@ function checkMonthEnd() {
     month++;
     day = 1;
     gameMinutes = 7 * 60;
-    budget += 120;
-    showDialogue('나', `목표 중 하나를 달성해 계약이 연장되었어! ${month}개월째 임무를 이어가며 추가 예산 120억이 지원되었으니 이번 달엔 꼭 두 목표를 모두 완수하자.`);
+    budget += 100;
+    showDialogue('나', `절반은 성공해서 계약이 연장됐어! ${month}개월째 추가 예산 100억 받고 마저 달린다!`);
   } else {
     scene = 'ENDING';
     isPaused = true;
     openModal(`
       <div style="text-align:center; padding:15px;">
-        <h2 style="font-family:'Cinzel', serif; font-size:1.9rem; color:#ff8fa3; margin-bottom:10px;">BAD ENDING : 계약 해지</h2>
-        <p style="font-family:'Gowun Batang', serif; font-size:1.1rem; line-height:1.8; color:#f0ece1; margin-bottom:20px;">
-          가뭄 진행도 <strong>${droughtLevel.toFixed(1)}%</strong>, 산성비 빈도 <strong>${status.acidFreq}%</strong>...<br>
-          도시는 여전히 메마르고 산성비에 신음하고 있습니다.<br>
-          결국 환경정책국에서 해고 통지서를 받고 짐을 싸게 되었습니다.
+        <h2 style="font-size:1.8rem; color:#ff8fa3; margin-bottom:12px;">💀 BAD ENDING : 해고 통지서</h2>
+        <p style="font-size:1.05rem; line-height:1.7; color:#f0ece1; margin-bottom:20px;">
+          결국 도시를 살리지 못하고 짐을 싸게 되었어... 뼈 빠지게 일했는데 쫓겨나다니 억울해서 원!
         </p>
         <button class="start-btn" onclick="location.reload()">다시 도전하기</button>
       </div>
@@ -1318,289 +1116,91 @@ function checkMonthEnd() {
   }
 }
 
-// --- 그래픽 렌더링 ---
+// --- 그래픽 렌더링 (오모리 픽셀아트 스타일) ---
 function drawTitleBackground() {
-  const grad = ctx.createLinearGradient(0, 0, 0, height);
-  grad.addColorStop(0, '#181424');
-  grad.addColorStop(0.45, '#4a3238');
-  grad.addColorStop(0.8, '#9e6b43');
-  grad.addColorStop(1, '#2b1d16');
-  ctx.fillStyle = grad;
+  ctx.fillStyle = '#14121a';
   ctx.fillRect(0, 0, width, height);
 
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(width * 0.5, height * 0.36, Math.min(width, height) * 0.22, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(247, 238, 220, 0.14)';
-  ctx.fill();
-  ctx.restore();
+  ctx.fillStyle = '#2b2233';
+  ctx.fillRect(0, height * 0.5, width, height * 0.5);
 
-  ctx.fillStyle = '#141118';
-  const baseY = height * 0.78;
-  const buildings = [
-    { x: 0.15, w: 0.04, h: 0.22 }, { x: 0.21, w: 0.05, h: 0.32 }, { x: 0.28, w: 0.03, h: 0.19 },
-    { x: 0.34, w: 0.06, h: 0.42 }, { x: 0.42, w: 0.04, h: 0.28 }, { x: 0.48, w: 0.05, h: 0.48 },
-    { x: 0.55, w: 0.06, h: 0.36 }, { x: 0.63, w: 0.04, h: 0.25 }, { x: 0.69, w: 0.05, h: 0.39 },
-    { x: 0.76, w: 0.04, h: 0.21 }
-  ];
-
-  buildings.forEach(b => {
-    const bx = width * b.x;
-    const bw = width * b.w;
-    const bh = height * b.h;
-    ctx.fillRect(bx, baseY - bh, bw, bh + 40);
-    ctx.beginPath();
-    ctx.moveTo(bx + bw * 0.5, baseY - bh - 35);
-    ctx.lineTo(bx + bw * 0.35, baseY - bh);
-    ctx.lineTo(bx + bw * 0.65, baseY - bh);
-    ctx.closePath();
-    ctx.fill();
+  ctx.fillStyle = '#4a3d5c';
+  const buildings = [0.1, 0.2, 0.32, 0.45, 0.58, 0.7, 0.82];
+  buildings.forEach((bx, idx) => {
+    const bw = width * 0.08;
+    const bh = height * (0.25 + (idx % 3) * 0.08);
+    ctx.fillRect(width * bx, height * 0.5 - bh, bw, bh);
   });
-
-  ctx.fillStyle = '#1c1412';
-  ctx.beginPath();
-  ctx.moveTo(0, height);
-  ctx.lineTo(0, height * 0.76);
-  ctx.quadraticCurveTo(width * 0.3, height * 0.71, width * 0.6, height * 0.78);
-  ctx.quadraticCurveTo(width * 0.85, height * 0.83, width, height * 0.74);
-  ctx.lineTo(width, height);
-  ctx.fill();
-
-  drawParticles('#e6c288', 6);
-}
-
-function drawParticles(color, speedMult) {
-  ctx.fillStyle = color;
-  particles.forEach(p => {
-    p.x += p.speedX * speedMult * 0.3;
-    p.y += p.speedY;
-    if (p.x > width) p.x = 0;
-    if (p.y > height) p.y = 0;
-    if (p.y < 0) p.y = height;
-
-    ctx.globalAlpha = p.alpha;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-    ctx.fill();
-  });
-  ctx.globalAlpha = 1.0;
 }
 
 function drawOfficeScene() {
-  const dayProgress = (gameMinutes - 420) / 840;
-  const skyGrad = ctx.createLinearGradient(0, 0, 0, height * 0.68);
+  // 오모리풍 감성적인 실내 배경
+  ctx.fillStyle = '#1e1b26';
+  ctx.fillRect(0, 0, width, height * 0.65);
 
-  if (weather.type === 'DUST') {
-    skyGrad.addColorStop(0, '#8c6239');
-    skyGrad.addColorStop(1, '#c9965b');
-  } else if (weather.type === 'RAIN' || weather.type === 'HEAVY_RAIN') {
-    skyGrad.addColorStop(0, '#222b38');
-    skyGrad.addColorStop(1, '#4a5a6e');
-  } else if (dayProgress < 0.2) {
-    skyGrad.addColorStop(0, '#3a4f7a');
-    skyGrad.addColorStop(1, '#e8a87c');
-  } else if (dayProgress < 0.7) {
-    skyGrad.addColorStop(0, '#2b6cb0');
-    skyGrad.addColorStop(1, '#ebd5b3');
-  } else if (dayProgress < 0.88) {
-    skyGrad.addColorStop(0, '#2d1e3e');
-    skyGrad.addColorStop(0.6, '#b85d43');
-    skyGrad.addColorStop(1, '#f2b872');
-  } else {
-    skyGrad.addColorStop(0, '#0b0e17');
-    skyGrad.addColorStop(1, '#1d2436');
-  }
-
+  // 통유리창 밖 풍경
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, height * 0.65);
+  skyGrad.addColorStop(0, '#38283f');
+  skyGrad.addColorStop(0.7, '#6b4f59');
+  skyGrad.addColorStop(1, '#9e6b43');
   ctx.fillStyle = skyGrad;
-  ctx.fillRect(0, 0, width, height * 0.68);
+  ctx.fillRect(0, 0, width, height * 0.62);
 
-  const greenRatio = Math.max(0, (100 - droughtLevel) / 100);
-  ctx.fillStyle = greenRatio > 0.6 ? '#4a6b48' : '#b89468';
-  ctx.fillRect(0, height * 0.54, width, height * 0.14);
-
-  // 창밖 3개 공장
+  // 창밖 공장 실루엣
   FACTORIES.forEach(f => {
     const fx = width * f.relX;
     const fy = height * f.relY;
     const fw = width * f.relW;
     const fh = height * f.relH;
-
-    ctx.fillStyle = '#2b2d38';
-    ctx.strokeStyle = '#121318';
-    ctx.lineWidth = 2.5;
-    ctx.fillRect(fx, fy + fh * 0.35, fw, fh * 0.65);
-    ctx.strokeRect(fx, fy + fh * 0.35, fw, fh * 0.65);
-
-    ctx.fillRect(fx + fw * 0.2, fy, fw * 0.14, fh * 0.35);
-    ctx.strokeRect(fx + fw * 0.2, fy, fw * 0.14, fh * 0.35);
-    ctx.fillRect(fx + fw * 0.65, fy + fh * 0.08, fw * 0.14, fh * 0.27);
-    ctx.strokeRect(fx + fw * 0.65, fy + fh * 0.08, fw * 0.14, fh * 0.27);
-
-    ctx.fillStyle = `rgba(90, 85, 80, ${Math.min(0.75, weather.so2 / 140)})`;
-    ctx.beginPath();
-    ctx.arc(fx + fw * 0.27, fy - 12, 16, 0, Math.PI * 2);
-    ctx.arc(fx + fw * 0.35, fy - 26, 22, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.fillStyle = '#141018';
+    ctx.fillRect(fx, fy, fw, fh);
+    ctx.fillRect(fx + fw * 0.25, fy - 25, fw * 0.15, 25);
   });
 
-  if (weather.type === 'DUST') {
-    drawParticles('rgba(218, 165, 95, 0.65)', 12);
-  } else if (weather.type === 'RAIN' || weather.type === 'HEAVY_RAIN') {
-    ctx.strokeStyle = weather.ph < 5.6 ? 'rgba(180, 220, 160, 0.55)' : 'rgba(175, 215, 255, 0.6)';
-    ctx.lineWidth = weather.type === 'HEAVY_RAIN' ? 2.2 : 1.3;
-    const count = weather.type === 'HEAVY_RAIN' ? 140 : 65;
-    for (let i = 0; i < count; i++) {
-      const rx = Math.random() * width;
-      const ry = Math.random() * height * 0.65;
-      ctx.beginPath();
-      ctx.moveTo(rx, ry);
-      ctx.lineTo(rx - 6, ry + 18);
-      ctx.stroke();
-    }
-  }
+  // 창틀
+  ctx.strokeStyle = '#0e0c12';
+  ctx.lineWidth = 8;
+  ctx.strokeRect(0, 0, width, height * 0.62);
 
-  // 통유리창 프레임
-  ctx.strokeStyle = '#181920';
-  ctx.lineWidth = 10;
-  ctx.strokeRect(0, 0, width, height * 0.65);
-  for (let i = 1; i <= 3; i++) {
-    ctx.beginPath();
-    ctx.moveTo((width / 4) * i, 0);
-    ctx.lineTo((width / 4) * i, height * 0.65);
-    ctx.stroke();
-  }
-
-  // 원목 책상
-  const deskGrad = ctx.createLinearGradient(0, height * 0.63, 0, height);
-  deskGrad.addColorStop(0, '#59412e');
-  deskGrad.addColorStop(0.2, '#422f20');
-  deskGrad.addColorStop(1, '#241911');
-  ctx.fillStyle = deskGrad;
-  ctx.fillRect(0, height * 0.63, width, height * 0.37);
-
-  ctx.strokeStyle = '#1a110b';
-  ctx.lineWidth = 4;
-  ctx.beginPath();
-  ctx.moveTo(0, height * 0.63);
-  ctx.lineTo(width, height * 0.63);
-  ctx.stroke();
+  // 원목 책상 (픽셀 감성)
+  ctx.fillStyle = '#423126';
+  ctx.fillRect(0, height * 0.62, width, height * 0.38);
+  ctx.fillStyle = '#2b1f18';
+  ctx.fillRect(0, height * 0.62, width, 12);
 
   drawDeskObjects();
 }
 
 function drawDeskObjects() {
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = '#1c1815';
-  const blink = Math.floor(Date.now() / 400) % 2 === 0;
+  const blink = Math.floor(Date.now() / 350) % 2 === 0;
 
-  // 1. 인공강우 작전 무전기
-  const rad = DESK_ITEMS[0];
-  ctx.fillStyle = '#2b303a';
-  ctx.fillRect(width * rad.relX, height * rad.relY, width * rad.relW, height * rad.relH);
-  ctx.strokeRect(width * rad.relX, height * rad.relY, width * rad.relW, height * rad.relH);
-  // 안테나
-  ctx.beginPath();
-  ctx.moveTo(width * (rad.relX + 0.015), height * rad.relY);
-  ctx.lineTo(width * (rad.relX + 0.015), height * (rad.relY - 0.06));
-  ctx.stroke();
-  // 상태 LED
-  ctx.fillStyle = activeTasks.seedingReady ? '#52b788' : '#6c757d';
-  ctx.beginPath();
-  ctx.arc(width * (rad.relX + 0.035), height * (rad.relY + 0.03), 5, 0, Math.PI * 2);
-  ctx.fill();
+  DESK_ITEMS.forEach(item => {
+    const ix = width * item.relX;
+    const iy = height * item.relY;
+    const iw = width * item.relW;
+    const ih = height * item.relH;
 
-  // 2. 신문 기사
-  const news = DESK_ITEMS[1];
-  ctx.fillStyle = '#e6dcc5';
-  ctx.fillRect(width * news.relX, height * news.relY, width * news.relW, height * news.relH);
-  ctx.strokeRect(width * news.relX, height * news.relY, width * news.relW, height * news.relH);
-  ctx.fillStyle = '#3b332b';
-  ctx.fillRect(width * (news.relX + 0.015), height * (news.relY + 0.02), width * (news.relW - 0.03), 5);
+    ctx.fillStyle = '#2d2538';
+    ctx.strokeStyle = '#5c4e6b';
+    ctx.lineWidth = 2;
+    ctx.fillRect(ix, iy, iw, ih);
+    ctx.strokeRect(ix, iy, iw, ih);
 
-  // 3. 서류 더미
-  const docs = DESK_ITEMS[2];
-  for (let i = 2; i >= 0; i--) {
-    ctx.fillStyle = i === 0 ? '#f7f3e8' : '#dcd3be';
-    ctx.fillRect(width * docs.relX + i * 4, height * docs.relY - i * 4, width * docs.relW, height * docs.relH);
-    ctx.strokeRect(width * docs.relX + i * 4, height * docs.relY - i * 4, width * docs.relW, height * docs.relH);
-  }
-
-  // 4. 노트북
-  const lap = DESK_ITEMS[3];
-  ctx.fillStyle = '#252934';
-  ctx.fillRect(width * lap.relX, height * lap.relY, width * lap.relW, height * (lap.relH * 0.68));
-  ctx.strokeRect(width * lap.relX, height * lap.relY, width * lap.relW, height * (lap.relH * 0.68));
-  ctx.fillStyle = '#3b5266';
-  ctx.fillRect(width * (lap.relX + 0.01), height * (lap.relY + 0.012), width * (lap.relW - 0.02), height * (lap.relH * 0.52));
-  ctx.fillStyle = '#3a3f4d';
-  ctx.fillRect(width * (lap.relX - 0.01), height * (lap.relY + lap.relH * 0.68), width * (lap.relW + 0.02), height * (lap.relH * 0.32));
-  ctx.strokeRect(width * (lap.relX - 0.01), height * (lap.relY + lap.relH * 0.68), width * (lap.relW + 0.02), height * (lap.relH * 0.32));
-
-  // 5. 대기질 센서 정비 단말기
-  const sen = DESK_ITEMS[4];
-  ctx.fillStyle = '#1e222b';
-  ctx.fillRect(width * sen.relX, height * sen.relY, width * sen.relW, height * sen.relH);
-  ctx.strokeRect(width * sen.relX, height * sen.relY, width * sen.relW, height * sen.relH);
-  ctx.fillStyle = (activeTasks.sensorDirty && blink) ? '#e09f3e' : '#2b9348';
-  ctx.fillRect(width * (sen.relX + 0.01), height * (sen.relY + 0.015), width * (sen.relW - 0.02), height * (sen.relH * 0.55));
-
-  // 6. 수질·강수 pH 중화 실험 세트 (비커)
-  const bkr = DESK_ITEMS[5];
-  ctx.fillStyle = 'rgba(200, 230, 255, 0.35)';
-  ctx.fillRect(width * bkr.relX, height * bkr.relY, width * bkr.relW, height * bkr.relH);
-  ctx.strokeRect(width * bkr.relX, height * bkr.relY, width * bkr.relW, height * bkr.relH);
-  // 비커 속 용액 색상 (산성 경보 시 붉은빛 점멸)
-  ctx.fillStyle = (activeTasks.phAlert && blink) ? '#e63946' : '#4cc9f0';
-  ctx.fillRect(width * (bkr.relX + 0.005), height * (bkr.relY + bkr.relH * 0.45), width * (bkr.relW - 0.01), height * (bkr.relH * 0.5));
-
-  // 7. 가족사진
-  const pic = DESK_ITEMS[6];
-  ctx.fillStyle = '#8c6239';
-  ctx.fillRect(width * pic.relX, height * pic.relY, width * pic.relW, height * pic.relH);
-  ctx.strokeRect(width * pic.relX, height * pic.relY, width * pic.relW, height * pic.relH);
-  ctx.fillStyle = '#d9cbb8';
-  ctx.fillRect(width * (pic.relX + 0.008), height * (pic.relY + 0.012), width * (pic.relW - 0.016), height * (pic.relH - 0.024));
-
-  // 8. 펜꽂이
-  const pen = DESK_ITEMS[7];
-  const px = width * pen.relX;
-  const py = height * pen.relY;
-  const pw = width * pen.relW;
-  const ph = height * pen.relH;
-  ['#c94a4a', '#3b6ea5', '#e3b23c'].forEach((col, idx) => {
-    ctx.strokeStyle = col;
-    ctx.lineWidth = 2.5;
-    ctx.beginPath();
-    ctx.moveTo(px + pw * (0.25 + idx * 0.25), py + ph * 0.4);
-    ctx.lineTo(px + pw * (0.15 + idx * 0.3), py - 12);
-    ctx.stroke();
+    // 아이템별 디테일 포인트
+    if (item.id === 'beaker') {
+      ctx.fillStyle = activeTasks.phPrepared ? '#52b788' : '#e63946';
+      ctx.fillRect(ix + 4, iy + ih * 0.4, iw - 8, ih * 0.5);
+    } else if (item.id === 'phone' && activeTasks.phoneRinging && blink) {
+      ctx.fillStyle = '#ff8fa3';
+      ctx.fillRect(ix + 6, iy + 6, iw - 12, ih - 12);
+    } else if (item.id === 'sensor_pad' && activeTasks.sensorDirty && blink) {
+      ctx.fillStyle = '#e09f3e';
+      ctx.fillRect(ix + 6, iy + 6, iw - 12, ih - 12);
+    }
   });
-  ctx.strokeStyle = '#1c1815';
-  ctx.lineWidth = 2;
-  ctx.fillStyle = '#4a4e59';
-  ctx.fillRect(px, py + ph * 0.35, pw, ph * 0.65);
-  ctx.strokeRect(px, py + ph * 0.35, pw, ph * 0.65);
-
-  // 9. 환경평가원 직통 전화기
-  const phn = DESK_ITEMS[8];
-  const shakeX = (activeTasks.phoneRinging && blink) ? 3 : 0;
-  ctx.fillStyle = activeTasks.phoneRinging ? '#9e2a2b' : '#2b2d42';
-  ctx.fillRect(width * phn.relX + shakeX, height * phn.relY, width * phn.relW, height * phn.relH);
-  ctx.strokeRect(width * phn.relX + shakeX, height * phn.relY, width * phn.relW, height * phn.relH);
-
-  // 10. 탁상 캘린더
-  const cal = DESK_ITEMS[9];
-  ctx.fillStyle = '#f5efe2';
-  ctx.fillRect(width * cal.relX, height * cal.relY, width * cal.relW, height * cal.relH);
-  ctx.strokeRect(width * cal.relX, height * cal.relY, width * cal.relW, height * cal.relH);
-  ctx.fillStyle = '#9e2a2b';
-  ctx.fillRect(width * cal.relX, height * cal.relY, width * cal.relW, height * (cal.relH * 0.28));
-  ctx.fillStyle = '#1c1815';
-  ctx.font = 'bold 14px Gowun Batang';
-  ctx.fillText(`${day}일`, width * (cal.relX + 0.015), height * (cal.relY + 0.075));
 }
 
-// --- 마우스 호버 & 클릭 ---
+// 마우스 인터랙션
 canvas.addEventListener('mousemove', (e) => {
   if (scene !== 'OFFICE' || isPaused) {
     document.getElementById('hover-tooltip').style.display = 'none';
@@ -1649,7 +1249,7 @@ canvas.addEventListener('click', (e) => {
   }
 });
 
-// --- 메인 게임 루프 ---
+// 메인 게임 루프 (현실 3분 = 게임 1일 / 180초 = 840분 -> 초당 4.67분)
 function gameLoop(timestamp) {
   if (!lastTimestamp) lastTimestamp = timestamp;
   const deltaSec = (timestamp - lastTimestamp) / 1000;
@@ -1657,13 +1257,13 @@ function gameLoop(timestamp) {
 
   ctx.clearRect(0, 0, width, height);
 
-  if (scene === 'TITLE' || scene === 'ZOOMING') {
+  if (scene === 'TITLE') {
     drawTitleBackground();
   } else if (scene === 'OFFICE' || scene === 'ENDING') {
     drawOfficeScene();
 
     if (scene === 'OFFICE' && !isPaused) {
-      gameMinutes += deltaSec * 1.4 * timeMultiplier;
+      gameMinutes += deltaSec * 4.67 * timeMultiplier;
 
       if (gameMinutes >= 21 * 60) {
         if (day >= 30) {
@@ -1679,7 +1279,7 @@ function gameLoop(timestamp) {
       const mins = Math.floor(gameMinutes % 60);
       const prefix = month > 1 ? `${month}개월째 ` : '';
       document.getElementById('clock-day-text').innerText = `${prefix}${day}일차`;
-      document.getElementById('clock-time-text').innerText = `${String(hrs).padStart(2, '0')}시 ${String(mins).padStart(2, '0')}분`;
+      document.getElementById('clock-time-text').innerText = `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
     }
   }
 
