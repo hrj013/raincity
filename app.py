@@ -517,7 +517,6 @@ game_html = """
     box-shadow: 0 0 0 3px var(--gold), 0 0 0 6px var(--ink);
   }
 
-  /* 말풍선 직접 클릭 스타일 (기존 크림·골드·네이비 톤 유지) */
   .speaker-bubble-card {
     display: flex;
     align-items: center;
@@ -709,27 +708,26 @@ let pendingFinalSettlement = false;
 let endingType = null;
 
 const DESK_ITEMS = [
-  { id: 'radio', name: '🎯 고배출 표적 필터 사격 무전기', relX: 0.04, relY: 0.65, relW: 0.07, relH: 0.13 },
+  { id: 'radio', name: '🏭 배출기준 초과 사업장 현장 점검 무전기', relX: 0.04, relY: 0.65, relW: 0.07, relH: 0.13 },
   { id: 'newspaper', name: '📰 대한민국 개발사업 평가 공고', relX: 0.13, relY: 0.74, relW: 0.14, relH: 0.12 },
   { id: 'documents', name: '📁 환경영향평가서·조사 체크리스트', relX: 0.29, relY: 0.70, relW: 0.13, relH: 0.14 },
   { id: 'laptop', name: '💻 환경 데이터 분석 노트북', relX: 0.44, relY: 0.64, relW: 0.16, relH: 0.17 },
   { id: 'sensor_pad', name: '📡 대기질·소음 측정자료 점검 단말기', relX: 0.62, relY: 0.67, relW: 0.08, relH: 0.12 },
-  { id: 'beaker', name: '⌨️ 긴급 환경보고서 타자 챌린지 도면', relX: 0.72, relY: 0.66, relW: 0.07, relH: 0.14 },
-  { id: 'photo', name: '🧗 현장 완충녹지 드래그 점프 탐사 지도', relX: 0.80, relY: 0.73, relW: 0.06, relH: 0.10 },
-  { id: 'penholder', name: '🎯 고배출 표적 필터 사격 수첩', relX: 0.87, relY: 0.72, relW: 0.04, relH: 0.10 },
-  { id: 'phone', name: '☎️ 주민 말풍선 직접 선택 민원 전화기', relX: 0.85, relY: 0.61, relW: 0.07, relH: 0.09 },
+  { id: 'beaker', name: '📝 환경영향평가서 초안 작성 도면', relX: 0.72, relY: 0.66, relW: 0.07, relH: 0.14 },
+  { id: 'photo', name: '⛰️ 현장 사면·완충대 드래그 조사 지도', relX: 0.80, relY: 0.73, relW: 0.06, relH: 0.10 },
+  { id: 'penholder', name: '🏭 배출기준 초과 사업장 점검 수첩', relX: 0.87, relY: 0.72, relW: 0.04, relH: 0.10 },
+  { id: 'phone', name: '☎️ 주민 의견 말풍선 접수 전화기', relX: 0.85, relY: 0.61, relW: 0.07, relH: 0.09 },
   { id: 'calendar', name: '📅 환경조사 및 평가 일정 캘린더', relX: 0.92, relY: 0.71, relW: 0.06, relH: 0.11 },
-  { id: 'ecology_game', name: '🌿 서식지 훼손 차단 아케이드 미니게임', relX: 0.04, relY: 0.85, relW: 0.10, relH: 0.09 },
-  { id: 'noise_game', name: '🔊 소음 파형 피크 잡기 미니게임', relX: 0.36, relY: 0.85, relW: 0.11, relH: 0.09 },
+  { id: 'ecology_game', name: '🌿 서식지 교란 차단 현장 조사', relX: 0.04, relY: 0.85, relW: 0.10, relH: 0.09 },
+  { id: 'noise_game', name: '🔊 소음 파형 피크 측정 점검', relX: 0.36, relY: 0.85, relW: 0.11, relH: 0.09 },
   { id: 'mitigation_game', name: '🧱 완충·저감시설 배치 시뮬레이터', relX: 0.68, relY: 0.85, relW: 0.11, relH: 0.09 },
-  { id: 'wind_game', name: '💨 연기 기둥 차단막 디펜스 미니게임', relX: 0.86, relY: 0.85, relW: 0.10, relH: 0.09 }
+  { id: 'wind_game', name: '💨 바람길·확산 경로 저감 대응', relX: 0.86, relY: 0.85, relW: 0.10, relH: 0.09 }
 ];
 
-// 사람 모양이 직접 말풍선을 띄우는 민원 전화 시나리오
 const AUDIT_SCENARIOS = [
   {
-    title: "현장 민원 · 발전시설 대기확산 우려",
-    situation: "오늘 바람이 주거지 방향으로 불고 있습니다. 각 주민의 말풍선을 직접 클릭해, 실제 환경영향평가에서 우선 확인할 핵심 근거 발언을 고르세요!",
+    title: "주민 의견 수렴 · 발전시설 대기확산 우려",
+    situation: "주거지 방향 바람이 잦은 시기입니다. 각 주민의 말풍선을 직접 클릭해 환경영향평가에서 우선 검토할 핵심 근거 발언을 고르세요.",
     speakers: [
       {
         avatar: "🧑",
@@ -740,7 +738,7 @@ const AUDIT_SCENARIOS = [
           budget = Math.max(0, budget - 5);
           weather.co2 = Math.max(180, weather.co2 - 10);
           pollutionRisk = Math.max(5, pollutionRisk - 2);
-          return "정확해! 바람 방향과 배출량을 함께 봐야 오염물질 이동과 농도를 예측할 수 있어.";
+          return "정확해! 풍향·풍속과 배출량 자료를 함께 봐야 오염물질 이동과 농도를 예측할 수 있어.";
         }
       },
       {
@@ -748,7 +746,7 @@ const AUDIT_SCENARIOS = [
         name: "행인 B",
         bubble: "공장 울타리 페인트 색깔만 파란색으로 바꾸면 연기도 시원해 보이지 않을까요?",
         correct: false,
-        effect: () => "페인트 색깔로는 대기오염 농도나 확산 경로를 줄일 수 없어. 기상·배출량·확산 예측이 필요해."
+        effect: () => "외벽 색상은 대기오염 농도나 확산 경로를 줄이지 못해. 배출량과 기상 조건, 확산 예측이 필요해."
       },
       {
         avatar: "🧔",
@@ -763,8 +761,8 @@ const AUDIT_SCENARIOS = [
     ]
   },
   {
-    title: "현장 민원 · 대형 물류차량 소음·통학로 안전",
-    situation: "새벽 물류차량 통행과 등굣길 안전을 두고 주민들이 말하고 있습니다. 평가 근거가 담긴 말풍선을 직접 누르세요!",
+    title: "주민 의견 수렴 · 물류차량 소음·통학로 안전",
+    situation: "새벽 대형차 통행과 등굣길 안전에 관한 주민 의견입니다. 평가 근거가 담긴 말풍선을 직접 클릭하세요.",
     speakers: [
       {
         avatar: "👵",
@@ -774,7 +772,7 @@ const AUDIT_SCENARIOS = [
         effect: () => {
           budget = Math.max(0, budget - 6);
           pollutionRisk = Math.max(5, pollutionRisk - 2);
-          return "맞아! 시간대별 교통량·통학로·소음 예측을 함께 검토해야 안전과 소음을 동시에 잡을 수 있어.";
+          return "맞아! 시간대별 교통량·통학로·소음 예측을 함께 봐야 안전과 소음을 동시에 검토할 수 있어.";
         }
       },
       {
@@ -797,8 +795,8 @@ const AUDIT_SCENARIOS = [
     ]
   },
   {
-    title: "현장 민원 · 하천 녹지 훼손 및 우수 유출",
-    situation: "집중호우 시 하천 인근 녹지 훼손과 흙탕물 유입 우려가 제기되었습니다. 핵심 근거 말풍선을 직접 클릭하세요!",
+    title: "주민 의견 수렴 · 하천 녹지 훼손 및 우수 유출",
+    situation: "집중호우 시 하천 인근 녹지 훼손과 초기우수 유입 우려가 제기되었습니다. 핵심 근거 말풍선을 직접 클릭하세요.",
     speakers: [
       {
         avatar: "👩‍🌾",
@@ -872,7 +870,7 @@ function startGame() {
     document.getElementById('hud-weather').style.display = 'block';
     updateWeatherHUD();
     updateAlertStrip();
-    showDialogue('나', '기후 위기로 폭염과 집중호우, 미세먼지 문제가 심해진 대한민국의 한 도시야. 책상 위 지도(드래그 점프 탐사), 전화기(주민 말풍선 선택), 무전기(고배출 표적 사격), 하단 미니게임들을 눌러 직접 플레이해 보자!');
+    showDialogue('나', '기후 위기로 폭염과 집중호우, 미세먼지 문제가 심해진 대한민국의 한 도시야. 환경평가원 실무로서 배출기준 초과 사업장 점검, 사면·완충대 드래그 조사, 주민 말풍선 근거 확인, 저감시설 배치 등을 진행해 보자!');
   }, 1800);
 }
 
@@ -909,13 +907,13 @@ function updateAlertStrip() {
   const strip = document.getElementById('alert-strip');
   let alerts = [];
   if (activeTasks.phAlert) {
-    alerts.push(`<div class="alert-pill" onclick="handleObjectClick('beaker')">⌨️ 긴급 보고서 타자 입력 필요 [예측 도면] 클릭</div>`);
+    alerts.push(`<div class="alert-pill" onclick="handleObjectClick('beaker')">📝 평가서 초안 작성 필요 [예측 도면] 클릭</div>`);
   }
   if (activeTasks.sensorDirty) {
     alerts.push(`<div class="alert-pill" onclick="handleObjectClick('sensor_pad')">📡 경고: 환경 측정장비 데이터 오류 발생! [점검 단말기] 클릭</div>`);
   }
   if (activeTasks.phoneRinging) {
-    alerts.push(`<div class="alert-pill" onclick="handleObjectClick('phone')">☎️ 수신 중: 주민 말풍선 민원 도착! [전화기] 클릭</div>`);
+    alerts.push(`<div class="alert-pill" onclick="handleObjectClick('phone')">☎️ 수신 중: 주민 말풍선 의견 도착! [전화기] 클릭</div>`);
   }
   strip.innerHTML = alerts.join('');
   strip.style.display = alerts.length > 0 ? 'flex' : 'none';
@@ -968,7 +966,7 @@ function handleObjectClick(id) {
   } else if (id === 'laptop') {
     renderLaptopModal();
   } else if (id === 'radio' || id === 'penholder') {
-    openTargetShooterMinigame();
+    openEmissionInspectionGame();
   } else if (id === 'beaker') {
     openTypingChallengeGame();
   } else if (id === 'sensor_pad') {
@@ -1007,31 +1005,31 @@ function openSiteInfoModal(id) {
     <div class="check-item"><span>현재 사업 결정</span><strong>${status}</strong></div></div>`);
 }
 
-// --- [게임 1] 무전기: 움직이는 고배출 표적에 저감 필터 조준 사격 ---
-function openTargetShooterMinigame() {
+// --- [업무 1] 배출허용기준 초과 사업장 현장 점검 ---
+function openEmissionInspectionGame() {
   if (!activeTasks.seedingReady) {
-    showDialogue('나', '오늘의 고배출 표적 필터 사격 훈련은 이미 마쳤어. 내일 다시 도전해 보자!');
+    showDialogue('나', '오늘의 배출시설 현장 점검은 이미 마쳤어. 내일 다시 점검해 보자.');
     return;
   }
 
-  let hits = 0;
-  let misses = 0;
+  let inspected = 0;
+  let falseChecks = 0;
   let running = true;
 
-  const targets = [
-    { x: 90, y: 80, vx: 1.8, vy: 1.2, high: true, label: 'NOx 초과' },
-    { x: 260, y: 150, vx: -2.1, vy: 1.4, high: true, label: 'PM2.5 초과' },
-    { x: 430, y: 95, vx: 1.6, vy: -1.5, high: false, label: '기준 이내' },
-    { x: 540, y: 185, vx: -1.7, vy: -1.1, high: true, label: 'SOx 초과' }
+  const sites = [
+    { x: 110, y: 85, vx: 1.5, vy: 1.0, exceed: true, label: 'NOx 기준초과' },
+    { x: 280, y: 155, vx: -1.8, vy: 1.2, exceed: true, label: 'PM2.5 기준초과' },
+    { x: 450, y: 95, vx: 1.4, vy: -1.3, exceed: false, label: '기준적합 사업장' },
+    { x: 560, y: 185, vx: -1.5, vy: -1.0, exceed: true, label: 'SOx 기준초과' }
   ];
 
   openModal(`
-    <div class="modal-header"><span class="modal-title">🎯 고배출 표적 필터 사격 (${hits}/3 명중)</span><button class="close-btn" onclick="closeModal()">닫기</button></div>
+    <div class="modal-header"><span class="modal-title">🏭 배출허용기준 초과 사업장 점검 (${inspected}/3 조치)</span><button class="close-btn" onclick="closeModal()">닫기</button></div>
     <p style="line-height:1.65; color:#d9d1bd; margin-bottom:10px;">
-      움직이는 <strong>붉은 고배출 표적(NOx·PM2.5·SOx 초과)</strong>을 클릭해 저감 필터를 명중시키세요! (초록 '기준 이내' 표적은 피하세요)
+      현장 모니터링에서 <strong>기준 초과(붉은 마커)</strong>로 잡힌 사업장을 클릭해 저감·개선 조치를 지시하세요! (기준적합 사업장은 불필요한 제재를 피하세요)
     </p>
-    <canvas id="shooterCanvas" width="700" height="270" style="position:relative; width:100%; height:260px; border:3px solid #e9efff; background:#0d163b; cursor:crosshair;"></canvas>
-    <p id="shooter-status" style="min-height:24px; color:#ffd166; font-weight:700; margin-top:10px;">붉은 고배출 표적을 클릭하세요!</p>
+    <canvas id="shooterCanvas" width="700" height="270" style="position:relative; width:100%; height:260px; border:3px solid #e9efff; background:#0d163b; cursor:pointer;"></canvas>
+    <p id="shooter-status" style="min-height:24px; color:#ffd166; font-weight:700; margin-top:10px;">기준 초과 사업장을 클릭해 개선 조치를 내리세요!</p>
   `);
 
   const c = document.getElementById('shooterCanvas');
@@ -1044,30 +1042,30 @@ function openTargetShooterMinigame() {
     const sy = ((e.clientY - rect.top) / rect.height) * c.height;
     const stEl = document.getElementById('shooter-status');
 
-    for (let i = targets.length - 1; i >= 0; i--) {
-      const t = targets[i];
+    for (let i = sites.length - 1; i >= 0; i--) {
+      const t = sites[i];
       const dist = Math.hypot(sx - t.x, sy - t.y);
-      if (dist <= 28) {
-        if (t.high) {
-          targets.splice(i, 1);
-          hits++;
+      if (dist <= 30) {
+        if (t.exceed) {
+          sites.splice(i, 1);
+          inspected++;
           const titleEl = document.querySelector('.modal-title');
-          if (titleEl) titleEl.innerText = `🎯 고배출 표적 필터 사격 (${hits}/3 명중)`;
-          if (stEl) stEl.innerText = `✅ ${t.label} 표적 필터 명중! (${hits}/3)`;
-          if (hits >= 3) {
+          if (titleEl) titleEl.innerText = `🏭 배출허용기준 초과 사업장 점검 (${inspected}/3 조치)`;
+          if (stEl) stEl.innerText = `✅ ${t.label} 사업장 개선 조치 완료! (${inspected}/3)`;
+          if (inspected >= 3) {
             running = false;
             clearInterval(iv);
             activeTasks.seedingReady = false;
             assessmentQuality += 1.5;
             pollutionRisk = Math.max(5, pollutionRisk - 2.5);
-            recordDailyTask('고배출 표적 필터 사격 완료', '기준 초과 오염원 표적 3개를 정확히 조준해 저감 필터를 적용했습니다.');
+            recordDailyTask('배출허용기준 초과 사업장 점검 완료', '기준 초과 사업장 3곳을 확인하고 배출저감 개선 조치를 기록했습니다.');
             closeModal();
             updateWeatherHUD();
-            showDialogue('나 · 필터 명중 완료', '움직이는 고배출 표적 3개를 모두 맞혔어! 대기오염 저감 효율이 올랐어.');
+            showDialogue('나 · 현장 점검 완료', '기준 초과 사업장 3곳에 개선 조치를 지시했어! 대기오염 관리 실적이 올랐어.');
           }
         } else {
-          misses++;
-          if (stEl) stEl.innerText = `⚠️ 기준 이내 표적을 맞혔어요! (오사격 ${misses}회)`;
+          falseChecks++;
+          if (stEl) stEl.innerText = `⚠️ 해당 사업장은 배출기준 적합 상태입니다! (오점검 ${falseChecks}회)`;
         }
         break;
       }
@@ -1076,33 +1074,32 @@ function openTargetShooterMinigame() {
 
   const iv = setInterval(() => {
     if (!running) return;
-    targets.forEach(t => {
+    sites.forEach(t => {
       t.x += t.vx;
       t.y += t.vy;
-      if (t.x < 34 || t.x > c.width - 34) t.vx *= -1;
-      if (t.y < 34 || t.y > c.height - 34) t.vy *= -1;
+      if (t.x < 48 || t.x > c.width - 48) t.vx *= -1;
+      if (t.y < 36 || t.y > c.height - 36) t.vy *= -1;
     });
 
     sctx.clearRect(0, 0, c.width, c.height);
     sctx.fillStyle = '#0d163b';
     sctx.fillRect(0, 0, c.width, c.height);
 
-    // 픽셀 그리드 배경
     sctx.fillStyle = '#18275c';
     for (let gx = 0; gx < c.width; gx += 35) sctx.fillRect(gx, 0, 1, c.height);
     for (let gy = 0; gy < c.height; gy += 35) sctx.fillRect(0, gy, c.width, 1);
 
-    targets.forEach(t => {
-      sctx.fillStyle = t.high ? '#e0505a' : '#52b788';
+    sites.forEach(t => {
+      sctx.fillStyle = t.exceed ? '#e0505a' : '#52b788';
       sctx.beginPath();
-      sctx.arc(t.x, t.y, 22, 0, Math.PI * 2);
+      sctx.arc(t.x, t.y, 24, 0, Math.PI * 2);
       sctx.fill();
       sctx.lineWidth = 3;
       sctx.strokeStyle = '#16111f';
       sctx.stroke();
 
       sctx.fillStyle = '#ffffff';
-      sctx.font = 'bold 12px "Noto Sans KR", sans-serif';
+      sctx.font = 'bold 11px "Noto Sans KR", sans-serif';
       sctx.textAlign = 'center';
       sctx.fillText(t.label, t.x, t.y + 4);
     });
@@ -1114,27 +1111,27 @@ function openTargetShooterMinigame() {
   };
 }
 
-// --- [게임 2 · 드래그 이동 점프] 현장 완충녹지 드래그 점프 탐사 (점프킹 이름 미사용) ---
+// --- [업무 2 · 드래그 조작 개선] 현장 사면·완충대 드래그 조사 ---
 function openDragClimbMinigame() {
   const idx = Math.min(2, Math.floor((day - 1) / 5));
   const f = FACTORIES[idx];
 
   openModal(`
     <div class="modal-header">
-      <span class="modal-title">🧗 현장 관측대 드래그 점프 탐사 · ${f.facility}</span>
+      <span class="modal-title">⛰️ 현장 사면·완충대 드래그 조사 · ${f.facility}</span>
       <button class="close-btn" onclick="closeModal()">닫기</button>
     </div>
     <p style="line-height:1.65; color:#d9d1bd; margin-bottom:10px;">
-      탐사원 위에서 <strong>마우스를 뒤로 당겨(드래그)</strong> 각도와 힘을 정한 뒤 <strong>놓으면</strong> 점프합니다! 꼭대기 <strong>초록 관측대</strong>에 도달하세요.
+      조사원 위에서 <strong>마우스를 원하는 방향과 길이만큼 뒤로 당긴 뒤 놓으세요</strong>! 당기는 길이와 각도에 따라 <strong>점프 높이와 방향</strong>이 달라지며, 노란 점선으로 궤적을 미리 볼 수 있습니다.
     </p>
     <div style="display:flex; justify-content:space-between; background:#0d1438; padding:8px 14px; border:2px solid #4b63c9; margin-bottom:10px; font-size:0.9rem;">
-      <span>최고 높이: <strong id="drag-climb-pct" style="color:#ffd166;">0%</strong></span>
-      <span>조작: <strong style="color:#6ad0c8;">클릭 후 뒤로 드래그 → 놓기</strong></span>
-      <span>상태: <strong id="drag-climb-status" style="color:#a8e6cf;">탐사 중</strong></span>
+      <span>도달 고도: <strong id="drag-climb-pct" style="color:#ffd166;">0%</strong></span>
+      <span>조작: <strong style="color:#6ad0c8;">드래그 길이 = 세기 · 드래그 반대 방향 = 각도</strong></span>
+      <span>상태: <strong id="drag-climb-status" style="color:#a8e6cf;">현장 조사 중</strong></span>
     </div>
     <canvas id="dragClimbCanvas" width="700" height="360" style="position:relative; width:100%; height:340px; border:3px solid #e9efff; background:#101942; cursor:grab;"></canvas>
     <div style="text-align:right; margin-top:10px;">
-      <button class="action-btn btn-no" id="drag-reset-btn">시작 위치로 복귀</button>
+      <button class="action-btn btn-no" id="drag-reset-btn">출발 지점 복귀</button>
     </div>
   `);
 
@@ -1145,11 +1142,11 @@ function openDragClimbMinigame() {
 
   const platforms = [
     { x: 0, y: H - 26, w: W, h: 26, type: 'ground' },
-    { x: 85, y: H - 82, w: 145, h: 14, type: 'plat' },
-    { x: 300, y: H - 134, w: 140, h: 14, type: 'plat' },
-    { x: 495, y: H - 188, w: 140, h: 14, type: 'plat' },
-    { x: 265, y: H - 242, w: 150, h: 14, type: 'plat' },
-    { x: 75, y: H - 294, w: 135, h: 14, type: 'plat' },
+    { x: 85, y: H - 82, w: 150, h: 14, type: 'plat' },
+    { x: 300, y: H - 134, w: 145, h: 14, type: 'plat' },
+    { x: 495, y: H - 188, w: 145, h: 14, type: 'plat' },
+    { x: 265, y: H - 242, w: 155, h: 14, type: 'plat' },
+    { x: 75, y: H - 294, w: 140, h: 14, type: 'plat' },
     { x: 450, y: H - 332, w: 185, h: 16, type: 'goal' }
   ];
 
@@ -1161,12 +1158,37 @@ function openDragClimbMinigame() {
   let cleared = false;
   let running = true;
 
+  const GRAVITY = 1150;
+  const MAX_DRAG = 160;
+
   function toCanvasCoords(evt) {
     const rect = c.getBoundingClientRect();
     return {
       x: ((evt.clientX - rect.left) / rect.width) * W,
       y: ((evt.clientY - rect.top) / rect.height) * H
     };
+  }
+
+  // 드래그 벡터를 실제 초기 속도 (vx, vy)로 변환
+  function computeLaunchVelocity() {
+    const pullX = dragStart.x - dragCurr.x;
+    const pullY = dragStart.y - dragCurr.y;
+    const rawDist = Math.hypot(pullX, pullY);
+    if (rawDist < 8) return null;
+    const clampedDist = Math.min(MAX_DRAG, rawDist);
+    const ratio = clampedDist / MAX_DRAG;
+    const nx = pullX / rawDist;
+    const ny = pullY / rawDist;
+
+    // 수평·수직 방향 모두 드래그 방향과 세기에 비례하게 반응
+    const speed = 140 + ratio * 520;
+    let vx = nx * speed;
+    let vy = ny * speed;
+    // 아래로 당겨 위로 쏘는 기본 감각을 유지하되, 드래그 각도에 따라 높이·방향이 확실히 변하도록 조정
+    if (vy > -110 && ratio > 0.25) {
+      vy = -110 - ratio * 260;
+    }
+    return { vx, vy, powerPct: Math.round(ratio * 100) };
   }
 
   c.onmousedown = (evt) => {
@@ -1191,16 +1213,10 @@ function openDragClimbMinigame() {
     c.style.cursor = 'grab';
     if (!player.grounded) return;
 
-    // 뒤로 당긴 벡터의 반대 방향으로 발사
-    let dx = dragStart.x - dragCurr.x;
-    let dy = dragStart.y - dragCurr.y;
-    const mag = Math.min(180, Math.hypot(dx, dy));
-    if (mag < 12) return;
-    const angle = Math.atan2(dy, dx);
-    const power = mag / 180;
-    player.vx = Math.cos(angle) * (150 + power * 360);
-    player.vy = Math.sin(angle) * (160 + power * 520);
-    if (player.vy > -180) player.vy = -180;
+    const vel = computeLaunchVelocity();
+    if (!vel) return;
+    player.vx = vel.vx;
+    player.vy = vel.vy;
     player.grounded = false;
   }
 
@@ -1220,21 +1236,21 @@ function openDragClimbMinigame() {
     prevT = now;
 
     if (!player.grounded) {
-      player.vy += 1280 * dt;
+      player.vy += GRAVITY * dt;
     }
     const prevBottom = player.y + player.h;
     player.x += player.vx * dt;
     player.y += player.vy * dt;
 
-    if (player.x < 0) { player.x = 0; player.vx = Math.abs(player.vx) * 0.6; }
-    if (player.x + player.w > W) { player.x = W - player.w; player.vx = -Math.abs(player.vx) * 0.6; }
+    if (player.x < 0) { player.x = 0; player.vx = Math.abs(player.vx) * 0.5; }
+    if (player.x + player.w > W) { player.x = W - player.w; player.vx = -Math.abs(player.vx) * 0.5; }
     if (player.y < 0) { player.y = 0; player.vy = 0; }
 
     let landed = false;
     if (player.vy >= 0) {
       for (const p of platforms) {
-        const overlapX = (player.x + player.w - 3) > p.x && (player.x + 3) < (p.x + p.w);
-        if (overlapX && prevBottom <= p.y + 8 && (player.y + player.h) >= p.y) {
+        const overlapX = (player.x + player.w - 2) > p.x && (player.x + 2) < (p.x + p.w);
+        if (overlapX && prevBottom <= p.y + 12 && (player.y + player.h) >= p.y) {
           player.y = p.y - player.h;
           player.vy = 0;
           player.vx = 0;
@@ -1246,10 +1262,10 @@ function openDragClimbMinigame() {
             assessmentQuality += 2;
             pollutionRisk = Math.max(5, pollutionRisk - 3);
             weather.ecoHealth = Math.min(100, weather.ecoHealth + 5);
-            recordDailyTask('현장 고지대 드래그 점프 탐사 성공', `${f.facility} 주변 완충녹지 관측대에 도달했습니다.`);
+            recordDailyTask('현장 사면·완충대 조사 완료', `${f.facility} 주변 상부 완충녹지 관측 지점에 도달했습니다.`);
             updateWeatherHUD();
             const stEl = document.getElementById('drag-climb-status');
-            if (stEl) stEl.innerText = '관측대 도착! (+2 평가품질)';
+            if (stEl) stEl.innerText = '상부 관측 지점 도달! (+2 평가품질)';
           }
           break;
         }
@@ -1266,7 +1282,7 @@ function openDragClimbMinigame() {
     dctx.fillStyle = '#101942';
     dctx.fillRect(0, 0, W, H);
 
-    // 관측대 깃발
+    // 상부 관측 지점 표식
     const goal = platforms[platforms.length - 1];
     dctx.fillStyle = '#95d5b2';
     dctx.fillRect(goal.x + goal.w - 32, goal.y - 22, 5, 22);
@@ -1280,23 +1296,35 @@ function openDragClimbMinigame() {
       dctx.fillRect(p.x, p.y, p.w, 3);
     });
 
-    // 드래그 조준선 표시
+    // 드래그 조준선 및 포물선 미리보기
     if (dragging && player.grounded) {
       const cx = player.x + player.w / 2;
       const cy = player.y + player.h / 2;
-      const aimX = cx + (cx - dragCurr.x);
-      const aimY = cy + (cy - dragCurr.y);
-      dctx.strokeStyle = '#ffd166';
-      dctx.lineWidth = 3;
-      dctx.setLineDash([6, 6]);
-      dctx.beginPath();
-      dctx.moveTo(cx, cy);
-      dctx.lineTo(aimX, aimY);
-      dctx.stroke();
-      dctx.setLineDash([]);
+      const vel = computeLaunchVelocity();
+      if (vel) {
+        dctx.strokeStyle = '#ffd166';
+        dctx.lineWidth = 3;
+        dctx.beginPath();
+        dctx.moveTo(cx, cy);
+        dctx.lineTo(dragCurr.x, dragCurr.y);
+        dctx.stroke();
+
+        // 예상 궤적 점선
+        dctx.fillStyle = '#6ad0c8';
+        for (let step = 1; step <= 10; step++) {
+          const tSim = step * 0.065;
+          const pxSim = cx + vel.vx * tSim;
+          const pySim = cy + vel.vy * tSim + 0.5 * GRAVITY * tSim * tSim;
+          dctx.fillRect(pxSim - 2, pySim - 2, 4, 4);
+        }
+
+        dctx.fillStyle = '#ffe9a8';
+        dctx.font = 'bold 12px "Noto Sans KR", sans-serif';
+        dctx.fillText(`출력 ${vel.powerPct}%`, cx + 10, cy - 12);
+      }
     }
 
-    // 탐사원 캐릭터
+    // 조사원 캐릭터
     dctx.fillStyle = '#f2c14e';
     dctx.fillRect(player.x, player.y, player.w, player.h);
     dctx.fillStyle = '#16111f';
@@ -1314,7 +1342,7 @@ function openDragClimbMinigame() {
   };
 }
 
-// --- [게임 3] 긴급 환경보고서 타자 챌린지 ---
+// --- [업무 3] 환경영향평가서 초안 작성 타자 ---
 const TYPING_PROMPTS = [
   "배출가스 저감시설과 완충녹지를 확보해 환경영향을 줄입니다",
   "주민 의견과 계절별 풍향 자료를 반영해 입지 대안을 비교합니다",
@@ -1330,11 +1358,11 @@ function openTypingChallengeGame() {
 
   openModal(`
     <div class="modal-header">
-      <span class="modal-title">⌨️ 긴급 평가 보고서 타자 챌린지 · ${FACTORIES[idx].facility}</span>
+      <span class="modal-title">📝 환경영향평가서 초안 작성 · ${FACTORIES[idx].facility}</span>
       <button class="close-btn" onclick="closeModal()">닫기</button>
     </div>
     <p style="line-height:1.65; color:#d9d1bd; margin-bottom:12px;">
-      제한 시간 <strong>30초</strong> 안에 아래 문장을 빠르게 입력하세요!
+      제한 시간 <strong>30초</strong> 안에 평가서 검토 문장을 입력하세요!
     </p>
     <div class="dossier-box">
       <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-weight:700;">
@@ -1342,12 +1370,12 @@ function openTypingChallengeGame() {
         <span>정확도: <strong id="typing-acc-label" style="color:#1b4332;">0%</strong></span>
       </div>
       <div style="background:#e6decb; padding:14px; border-left:6px solid #1b2766; font-size:1.05rem; font-weight:700; line-height:1.6; margin-bottom:14px;">${targetText}</div>
-      <input id="typing-input-box" type="text" placeholder="여기에 문장을 빠르게 입력하세요..."
+      <input id="typing-input-box" type="text" placeholder="여기에 평가서 문장을 입력하세요..."
         style="width:100%; padding:12px 14px; font-size:1rem; background:#fffdf7; color:#181512; border:3px solid #16111f; outline:none;" />
     </div>
     <div style="text-align:center; margin-top:16px; display:flex; justify-content:center; gap:12px;">
-      <button class="action-btn btn-yes" id="typing-submit-btn">보고서 제출</button>
-      <button class="action-btn btn-no" onclick="openTypingChallengeGame()">다시 시작</button>
+      <button class="action-btn btn-yes" id="typing-submit-btn">초안 반영</button>
+      <button class="action-btn btn-no" onclick="openTypingChallengeGame()">다시 작성</button>
     </div>
   `);
 
@@ -1375,17 +1403,17 @@ function openTypingChallengeGame() {
     if (acc >= 70) {
       assessmentQuality += 1.5;
       pollutionRisk = Math.max(5, pollutionRisk - 2.5);
-      recordDailyTask('긴급 환경영향평가 보고서 타자 완료', `정확도 ${acc}%, 타수 ${cpm}타/분으로 보고서를 제출했습니다.`);
+      recordDailyTask('환경영향평가서 초안 작성 완료', `정확도 ${acc}%, 타수 ${cpm}타/분으로 검토 문장을 반영했습니다.`);
       closeModal();
       updateWeatherHUD();
       updateAlertStrip();
-      showDialogue('나 · 타자 보고서 완료', `정확도 ${acc}% (${cpm}타/분) 달성! 위험도가 낮아졌어.`);
+      showDialogue('나 · 초안 반영 완료', `정확도 ${acc}% (${cpm}타/분)로 평가서 초안을 정리했어.`);
     } else {
-      recordDailyTask('환경영향평가 보고서 초안 입력', `정확도 ${acc}%로 초안을 입력했습니다.`);
+      recordDailyTask('환경영향평가서 초안 입력', `정확도 ${acc}%로 초안을 입력했습니다.`);
       closeModal();
       updateWeatherHUD();
       updateAlertStrip();
-      showDialogue('나 · 초안 입력 완료', `정확도 ${acc}%였어. 조금만 더 정확하게 치면 저감 효과가 더 커져!`);
+      showDialogue('나 · 초안 입력 완료', `정확도 ${acc}%였어. 정확도를 더 높이면 검토 완성도가 올라가.`);
     }
   }
 
@@ -1414,29 +1442,29 @@ function openTypingChallengeGame() {
   };
 }
 
-// --- [게임 4] 생태 상자: 서식지 훼손 마커 요격 아케이드 ---
+// --- [업무 4] 서식지 교란 차단 현장 조사 ---
 function openHabitatShieldArcadeGame() {
   const idx = Math.min(2, Math.floor((day - 1) / 5));
   if (ecologyGameCompleted[idx]) {
-    showDialogue('나', '이 부지의 생태 서식지 방어 훈련은 이미 마쳤어.');
+    showDialogue('나', '이 부지의 생태 서식지 교란 점검은 이미 마쳤어.');
     return;
   }
 
   let saved = 0;
   let running = true;
   const threats = [
-    { x: 130, y: 30, vx: 0.7, vy: 1.5 },
-    { x: 350, y: 20, vx: -0.9, vy: 1.7 },
-    { x: 540, y: 40, vx: 0.8, vy: 1.4 }
+    { x: 130, y: 30, vx: 0.7, vy: 1.5, tag: '토사유출' },
+    { x: 350, y: 20, vx: -0.9, vy: 1.7, tag: '식생훼손' },
+    { x: 540, y: 40, vx: 0.8, vy: 1.4, tag: '동선침범' }
   ];
 
   openModal(`
-    <div class="modal-header"><span class="modal-title">🌿 서식지 훼손 차단 아케이드 (${saved}/4 차단)</span><button class="close-btn" onclick="closeModal()">닫기</button></div>
+    <div class="modal-header"><span class="modal-title">🌿 서식지 교란 차단 조사 (${saved}/4 조치)</span><button class="close-btn" onclick="closeModal()">닫기</button></div>
     <p style="line-height:1.65; color:#d9d1bd; margin-bottom:10px;">
-      아래 초록 <strong>생태 서식지</strong>로 내려오는 <strong>붉은 훼손 마커(🪓)</strong>를 클릭해 4번 막아내세요!
+      하단 <strong>생태 보전 구역</strong>으로 접근하는 교란 요인(토사유출·식생훼손·동선침범)을 클릭해 4번 저지하세요!
     </p>
     <canvas id="ecoArcadeCanvas" width="700" height="250" style="position:relative; width:100%; height:240px; border:3px solid #e9efff; background:#0d1838; cursor:pointer;"></canvas>
-    <p id="eco-arcade-status" style="min-height:24px; color:#ffd166; font-weight:700; margin-top:10px;">내려오는 훼손 마커를 클릭하세요!</p>
+    <p id="eco-arcade-status" style="min-height:24px; color:#ffd166; font-weight:700; margin-top:10px;">교란 요인을 클릭해 보전 대책을 적용하세요!</p>
   `);
 
   const c = document.getElementById('ecoArcadeCanvas');
@@ -1451,13 +1479,13 @@ function openHabitatShieldArcadeGame() {
 
     for (let i = threats.length - 1; i >= 0; i--) {
       const t = threats[i];
-      if (Math.hypot(mx - t.x, my - t.y) <= 28) {
+      if (Math.hypot(mx - t.x, my - t.y) <= 30) {
         saved++;
         t.y = 15;
         t.x = 80 + Math.random() * (c.width - 160);
         const titleEl = document.querySelector('.modal-title');
-        if (titleEl) titleEl.innerText = `🌿 서식지 훼손 차단 아케이드 (${saved}/4 차단)`;
-        if (stEl) stEl.innerText = `✅ 서식지 훼손 차단 성공! (${saved}/4)`;
+        if (titleEl) titleEl.innerText = `🌿 서식지 교란 차단 조사 (${saved}/4 조치)`;
+        if (stEl) stEl.innerText = `✅ ${t.tag} 차단 대책 반영! (${saved}/4)`;
         if (saved >= 4) {
           running = false;
           clearInterval(iv);
@@ -1465,10 +1493,10 @@ function openHabitatShieldArcadeGame() {
           assessmentQuality += 1;
           pollutionRisk = Math.max(5, pollutionRisk - 2);
           weather.ecoHealth = Math.min(100, weather.ecoHealth + 5);
-          recordDailyTask('생태 서식지 훼손 차단 완료', '서식지로 향하던 훼손 마커 4개를 모두 차단해 생태축을 보호했습니다.');
+          recordDailyTask('생태 서식지 교란 차단 조사 완료', '서식지 보전 구역으로 향하던 교란 요인 4건을 저지했습니다.');
           closeModal();
           updateWeatherHUD();
-          showDialogue('나 · 서식지 보호 완료', '서식지 훼손을 4번 막아냈어! 생태 연결축 보전 점수가 올랐어.');
+          showDialogue('나 · 서식지 보전 완료', '서식지 교란 요인 4건을 모두 막아냈어! 생태 연결축 보전 점수가 올랐어.');
         }
         break;
       }
@@ -1480,7 +1508,7 @@ function openHabitatShieldArcadeGame() {
     threats.forEach(t => {
       t.x += t.vx;
       t.y += t.vy;
-      if (t.x < 30 || t.x > c.width - 30) t.vx *= -1;
+      if (t.x < 45 || t.x > c.width - 45) t.vx *= -1;
       if (t.y > c.height - 46) {
         t.y = 18;
         t.x = 70 + Math.random() * (c.width - 140);
@@ -1491,7 +1519,6 @@ function openHabitatShieldArcadeGame() {
     ectx.fillStyle = '#0d1838';
     ectx.fillRect(0, 0, c.width, c.height);
 
-    // 하단 보호 서식지 띠
     ectx.fillStyle = '#2d6a4f';
     ectx.fillRect(0, c.height - 28, c.width, 28);
     ectx.fillStyle = '#95d5b2';
@@ -1500,15 +1527,15 @@ function openHabitatShieldArcadeGame() {
     threats.forEach(t => {
       ectx.fillStyle = '#e0505a';
       ectx.beginPath();
-      ectx.arc(t.x, t.y, 18, 0, Math.PI * 2);
+      ectx.arc(t.x, t.y, 22, 0, Math.PI * 2);
       ectx.fill();
       ectx.lineWidth = 2;
       ectx.strokeStyle = '#16111f';
       ectx.stroke();
       ectx.fillStyle = '#fff';
-      ectx.font = '14px sans-serif';
+      ectx.font = 'bold 10px "Noto Sans KR", sans-serif';
       ectx.textAlign = 'center';
-      ectx.fillText('🪓', t.x, t.y + 5);
+      ectx.fillText(t.tag, t.x, t.y + 4);
     });
   }, 16);
 
@@ -1518,7 +1545,7 @@ function openHabitatShieldArcadeGame() {
   };
 }
 
-// --- [게임 5] 소음 파형 피크 잡기 ---
+// --- [업무 5] 소음 파형 피크 측정 점검 ---
 function openNoisePeakTimingGame() {
   const idx = Math.min(2, Math.floor((day - 1) / 5));
   if (noiseGameCompleted[idx]) {
@@ -1532,7 +1559,7 @@ function openNoisePeakTimingGame() {
   let running = true;
 
   openModal(`
-    <div class="modal-header"><span class="modal-title">🔊 소음 파형 피크 잡기 (${captures}/3 포착)</span><button class="close-btn" onclick="closeModal()">닫기</button></div>
+    <div class="modal-header"><span class="modal-title">🔊 소음 파형 피크 측정 (${captures}/3 포착)</span><button class="close-btn" onclick="closeModal()">닫기</button></div>
     <p style="line-height:1.65; color:#d9d1bd; margin-bottom:10px;">움직이는 <strong>노란 커서</strong>가 <strong>초록 고소음 피크 구간</strong>에 들어왔을 때 <strong>[피크 포착!]</strong>을 눌러 3번 측정하세요.</p>
     <div style="position:relative; width:100%; height:56px; background:#0b1236; border:3px solid #e9efff; margin:16px 0; overflow:hidden;">
       <div style="position:absolute; left:22%; width:18%; top:0; bottom:0; background:rgba(82,183,136,0.45); border-left:2px solid #95d5b2; border-right:2px solid #95d5b2;"></div>
@@ -1562,7 +1589,7 @@ function openNoisePeakTimingGame() {
     if (inZone1 || inZone2) {
       captures++;
       const tEl = document.querySelector('.modal-title');
-      if (tEl) tEl.innerText = `🔊 소음 파형 피크 잡기 (${captures}/3 포착)`;
+      if (tEl) tEl.innerText = `🔊 소음 파형 피크 측정 (${captures}/3 포착)`;
       if (stEl) stEl.innerText = `✅ 고소음 피크 포착 성공! (${captures}/3)`;
       if (captures >= 3) {
         running = false;
@@ -1586,7 +1613,7 @@ function openNoisePeakTimingGame() {
   };
 }
 
-// --- [게임 6] 완충·저감시설 배치 시뮬레이터 ---
+// --- [업무 6] 완충·저감시설 배치 시뮬레이터 ---
 function openMitigationPlacementGame() {
   const idx = Math.min(2, Math.floor((day - 1) / 5));
   if (mitigationGameCompleted[idx]) {
@@ -1660,11 +1687,11 @@ function openMitigationPlacementGame() {
   renderPlacement();
 }
 
-// --- [게임 7] 연기 기둥 차단막 디펜스 ---
+// --- [업무 7] 바람길·확산 경로 저감 대응 ---
 function openWindPlumeDefenseGame() {
   const idx = Math.min(2, Math.floor((day - 1) / 5));
   if (windGameCompleted[idx]) {
-    showDialogue('나', '이 부지의 연기 기둥 차단 훈련은 이미 완료했어.');
+    showDialogue('나', '이 부지의 대기확산 저감 점검은 이미 마쳤어.');
     return;
   }
 
@@ -1673,15 +1700,15 @@ function openWindPlumeDefenseGame() {
   let running = true;
 
   openModal(`
-    <div class="modal-header"><span class="modal-title">💨 연기 기둥 차단막 디펜스 (${blockedCount}/2 차단)</span><button class="close-btn" onclick="closeModal()">닫기</button></div>
-    <p style="line-height:1.65; color:#d9d1bd; margin-bottom:10px;">바람을 타고 오른쪽 <strong>주거·생태 구역</strong>으로 다가오는 <strong>연기 기둥</strong>이 <strong>중앙 차단 구역(45%~68%)</strong>에 있을 때 <strong>[차단막 전개!]</strong>를 눌러 2번 막아내세요.</p>
+    <div class="modal-header"><span class="modal-title">💨 바람길·확산 경로 저감 대응 (${blockedCount}/2 제어)</span><button class="close-btn" onclick="closeModal()">닫기</button></div>
+    <p style="line-height:1.65; color:#d9d1bd; margin-bottom:10px;">바람을 타고 오른쪽 <strong>주거·녹지 구역</strong>으로 이동하는 <strong>오염 확산 기둥</strong>이 <strong>중간 저감 구역(45%~68%)</strong>에 있을 때 <strong>[차단막 전개!]</strong>를 눌러 2번 제어하세요.</p>
     <div style="position:relative; width:100%; height:64px; background:#0d163b; border:3px solid #e9efff; margin:16px 0; overflow:hidden;">
       <div style="position:absolute; left:0; top:0; bottom:0; width:14%; background:#4a3f55; display:flex; align-items:center; justify-content:center; font-size:0.75rem;">배출원</div>
       <div style="position:absolute; left:45%; top:0; bottom:0; width:23%; background:rgba(106,208,200,0.35); border-left:2px dashed #6ad0c8; border-right:2px dashed #6ad0c8;"></div>
       <div style="position:absolute; right:0; top:0; bottom:0; width:16%; background:#2d6a4f; display:flex; align-items:center; justify-content:center; font-size:0.75rem;">주거·녹지</div>
       <div id="plume-token" style="position:absolute; left:12%; top:14px; width:34px; height:34px; background:#b5a692; border:2px solid #16111f; display:flex; align-items:center; justify-content:center; font-size:1.1rem;">☁️</div>
     </div>
-    <p id="plume-status" style="min-height:24px; color:#ffd166; font-weight:700; margin-bottom:12px;">연기 기둥이 점선 차단 구역에 오면 전개하세요!</p>
+    <p id="plume-status" style="min-height:24px; color:#ffd166; font-weight:700; margin-bottom:12px;">확산 기둥이 점선 저감 구역에 오면 전개하세요!</p>
     <div style="text-align:center;">
       <button class="action-btn btn-yes" id="plume-block-btn">🛡️ 차단막 전개!</button>
     </div>
@@ -1702,21 +1729,21 @@ function openWindPlumeDefenseGame() {
       blockedCount++;
       plumeX = 12;
       const tEl = document.querySelector('.modal-title');
-      if (tEl) tEl.innerText = `💨 연기 기둥 차단막 디펜스 (${blockedCount}/2 차단)`;
-      if (stEl) stEl.innerText = `✅ 연기 기둥 차단 성공! (${blockedCount}/2)`;
+      if (tEl) tEl.innerText = `💨 바람길·확산 경로 저감 대응 (${blockedCount}/2 제어)`;
+      if (stEl) stEl.innerText = `✅ 확산 경로 제어 성공! (${blockedCount}/2)`;
       if (blockedCount >= 2) {
         running = false;
         clearInterval(iv);
         windGameCompleted[idx] = true;
         assessmentQuality += 1;
         pollutionRisk = Math.max(5, pollutionRisk - 2);
-        recordDailyTask('연기 기둥 차단 및 대기확산 대응 완료', '확산 경로상에서 연기 기둥을 2회 차단해 대기오염 대응 방안을 검증했습니다.');
+        recordDailyTask('바람길·확산 경로 저감 대응 완료', '확산 경로상에서 오염 기둥을 2회 제어해 대기오염 대응 방안을 검증했습니다.');
         closeModal();
         updateWeatherHUD();
-        showDialogue('나 · 차단 훈련 완료', '연기 기둥이 주거·녹지 구역에 닿기 전에 2번 막아냈어!');
+        showDialogue('나 · 확산 제어 완료', '오염 확산 기둥을 2번 제어했어!');
       }
     } else if (stEl) {
-      stEl.innerText = '❌ 아직 점선 차단 구역(45%~68%)에 들어오지 않았어요!';
+      stEl.innerText = '❌ 아직 점선 저감 구역(45%~68%)에 들어오지 않았어요!';
     }
   };
 
@@ -1726,7 +1753,7 @@ function openWindPlumeDefenseGame() {
   };
 }
 
-// --- 주민 민원 전화기: 사람 모양이 말풍선으로 직접 말하고, 그 말풍선을 클릭해 선택 ---
+// --- 주민 의견 말풍선 직접 선택 ---
 function openAuditPhoneModal() {
   const audit = (activeTasks.phoneRinging && activeTasks.currentAudit)
     ? activeTasks.currentAudit
@@ -2104,7 +2131,6 @@ function checkCampaignEnd() {
     <button class="start-btn" onclick="location.reload()">처음부터 다시하기</button></div>`);
 }
 
-// --- 기존 게임 그래픽 렌더링 (원본 그대로) ---
 const INK = '#16111f';
 let lastFrameT = 0;
 let frameDt = 0.016;
