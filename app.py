@@ -714,6 +714,15 @@ const FACTORIES = [
 // 세 부지의 최종 결정: standard(협의 동의), conditional(조건부 동의), reject(부동의/대안 재검토)
 let facilityDecisions = [null, null, null];
 let surveyPlanCompleted = [false, false, false];
+let ecologyGameCompleted = [false, false, false];
+let noiseGameCompleted = [false, false, false];
+let mitigationGameCompleted = [false, false, false];
+let windGameCompleted = [false, false, false];
+let windChoice = null;
+let windTarget = null;
+let ecologySelections = [];
+let noiseSelections = [];
+let mitigationSelections = [];
 let projectImpactScore = 0;
 let assessmentQuality = 0;
 let pendingMilestoneIndex = null;
@@ -731,7 +740,11 @@ const DESK_ITEMS = [
   { id: 'photo', name: '🗺️ 대한민국 사업지 입지·토지이용 지도', relX: 0.80, relY: 0.73, relW: 0.06, relH: 0.10 },
   { id: 'penholder', name: '📝 조사 계획 수첩·근거 카드', relX: 0.87, relY: 0.72, relW: 0.04, relH: 0.10 },
   { id: 'phone', name: '☎️ 주민 의견·관계기관 협의 전화기', relX: 0.85, relY: 0.61, relW: 0.07, relH: 0.09 },
-  { id: 'calendar', name: '📅 환경조사 및 평가 일정 캘린더', relX: 0.92, relY: 0.71, relW: 0.06, relH: 0.11 }
+  { id: 'calendar', name: '📅 환경조사 및 평가 일정 캘린더', relX: 0.92, relY: 0.71, relW: 0.06, relH: 0.11 },
+  { id: 'ecology_game', name: '🌿 생태 조사 표본 상자 미니게임', relX: 0.04, relY: 0.85, relW: 0.10, relH: 0.09 },
+  { id: 'noise_game', name: '🔊 소음 측정 지도 미니게임', relX: 0.36, relY: 0.85, relW: 0.11, relH: 0.09 },
+  { id: 'mitigation_game', name: '🧱 환경 저감시설 배치판 미니게임', relX: 0.68, relY: 0.85, relW: 0.11, relH: 0.09 },
+  { id: 'wind_game', name: '💨 대기오염 확산 예측 미니게임', relX: 0.86, relY: 0.85, relW: 0.10, relH: 0.09 }
 ];
 
 // 긴급 환경 감사/민원 시나리오 풀
@@ -929,6 +942,14 @@ function handleObjectClick(id) {
     showDialogue('나', '지도에서 사업지와 주변 주거지, 학교, 하천, 녹지, 기존 도로가 얼마나 가까운지 확인해야 해. 입지를 조금만 조정해도 환경영향을 크게 줄일 수 있는지 비교해 보자.');
   } else if (id === 'penholder') {
     openSurveyPlanMinigame();
+  } else if (id === 'ecology_game') {
+    openEcologyFieldGame();
+  } else if (id === 'noise_game') {
+    openNoiseMappingGame();
+  } else if (id === 'mitigation_game') {
+    openMitigationPlacementGame();
+  } else if (id === 'wind_game') {
+    openWindDispersionGame();
   } else if (id === 'calendar') {
     const siteIndex = Math.min(2, Math.floor((day - 1) / 5));
     showDialogue('나', `오늘은 전체 15일 중 ${day}일차야. 현재는 ${siteIndex + 1}번 부지 평가 기간이고, ${Math.min(5, (siteIndex + 1) * 5 - day + 1)}일 안에 이 사업의 환경영향 검토를 마쳐야 해.`);
@@ -1064,6 +1085,129 @@ function cleanNode(idx) {
       }, 350);
     }
   }
+}
+
+// --- [추가 미니게임 A] 생태 현장 조사: 서식지 흔적 찾기 ---
+function openEcologyFieldGame() {
+  const idx = Math.min(2, Math.floor((day - 1) / 5));
+  if (ecologyGameCompleted[idx]) {
+    showDialogue('나', '이 부지의 생태 현장 조사는 완료했어. 조사 기록을 바탕으로 서식지 보전과 대체 공간을 검토하자.');
+    return;
+  }
+  ecologySelections = [];
+  const tiles = [
+    ['🏙️','주차장'],['🌳','큰 나무'],['🪨','나지'],
+    ['🐦','새 둥지'],['🏢','건물'],['🌾','풀밭'],
+    ['🐸','물가 흔적'],['🚧','공사장'],['🦋','꽃 주변']
+  ];
+  openModal(`<div class="modal-header"><span class="modal-title">🌿 생태 현장 조사 · 서식 흔적 찾기</span><button class="close-btn" onclick="closeModal()">닫기</button></div>
+    <p style="line-height:1.7;color:#d9d1bd;">사업지 주변을 살펴보고 생물 서식 가능성이 높은 지점 3곳을 직접 선택해 봐. 선택한 지점은 조사 기록에 표시돼.</p>
+    <div class="dossier-box"><strong>조사 대상: ${FACTORIES[idx].facility}</strong><p style="margin:7px 0 12px;">서식 흔적이 있는 지점 3곳을 골라줘. 선택: <b id="eco-count">0/3</b></p><p id="eco-feedback" style="color:#ffd166;min-height:22px;"></p>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px;">${tiles.map((t,i)=>`<button id="eco-tile-${i}" class="choice-btn" style="margin:0;text-align:center;min-height:78px;padding:9px;" onclick="toggleEcoTile(${i})"><span style="font-size:1.5rem;display:block;">${t[0]}</span><small>${t[1]}</small></button>`).join('')}</div></div>
+    <div style="text-align:center;margin-top:16px;"><button class="action-btn btn-yes" onclick="submitEcologyGame()">조사 기록 제출</button></div>`);
+}
+function toggleEcoTile(i) {
+  const pos = ecologySelections.indexOf(i);
+  if (pos >= 0) ecologySelections.splice(pos,1);
+  else if (ecologySelections.length < 3) ecologySelections.push(i);
+  const el = document.getElementById(`eco-tile-${i}`);
+  if (el) el.style.background = ecologySelections.includes(i) ? '#286b4c' : '#1d2a70';
+  const count = document.getElementById('eco-count'); if (count) count.innerText = `${ecologySelections.length}/3`;
+}
+function submitEcologyGame() {
+  if (ecologySelections.length !== 3) { const fb=document.getElementById('eco-feedback'); if(fb)fb.innerText='서식 가능성이 있는 지점을 정확히 세 곳 선택해 줘.'; return; }
+  const idx = Math.min(2, Math.floor((day - 1) / 5));
+  const targets = [[1,3,8],[1,5,6],[3,5,8]][idx];
+  const good = targets.every(v => ecologySelections.includes(v)) && ecologySelections.every(v => targets.includes(v));
+  if (!good) { const fb=document.getElementById('eco-feedback'); if(fb)fb.innerText='일부 선택 지점의 서식 근거가 부족해. 나무·물가·꽃 주변을 다시 살펴보자.'; return; }
+  ecologyGameCompleted[idx] = true; assessmentQuality += 1; pollutionRisk = Math.max(5,pollutionRisk-2); weather.ecoHealth = Math.min(100,weather.ecoHealth+5);
+  recordDailyTask('생태 현장 조사 및 서식 흔적 기록', `${FACTORIES[idx].facility} 주변의 서식 가능 지점을 확인하고 생태 보전 검토 자료를 확보했습니다.`);
+  closeModal(); updateWeatherHUD(); showDialogue('나 · 생태 조사 완료','좋아! 서식 가능 지점을 기록했어. 이제 공사 구역 조정과 생태 연결축 확보 등 회피·저감 대안을 검토할 수 있어.');
+}
+
+// --- [추가 미니게임 B] 소음 측정: 측정값이 높은 구역 찾기 ---
+function openNoiseMappingGame() {
+  const idx = Math.min(2, Math.floor((day - 1) / 5));
+  if (noiseGameCompleted[idx]) { showDialogue('나','이 부지의 소음 분포 측정은 완료했어. 측정 결과를 바탕으로 주거지와 학교 주변의 영향을 검토하자.'); return; }
+  noiseSelections = [];
+  const values = [42,48,51,39,55,78,73,44,40,69,82,50,35,47,58,41];
+  openModal(`<div class="modal-header"><span class="modal-title">🔊 소음 측정 · 고소음 지점 추적</span><button class="close-btn" onclick="closeModal()">닫기</button></div>
+    <p style="line-height:1.7;color:#d9d1bd;">측정 지도를 보고 소음이 큰 지점 3곳을 선택해. 숫자는 모의 측정값(dB)이야. 높은 값이 표시된 구역을 찾아보자.</p>
+    <div class="dossier-box"><strong>사업지 주변 소음 측정 지도</strong><p style="margin:7px 0 12px;">고소음 지점 선택: <b id="noise-count">0/3</b></p><p id="noise-feedback" style="color:#ffd166;min-height:22px;"></p>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">${values.map((v,i)=>`<button id="noise-tile-${i}" class="choice-btn" style="margin:0;text-align:center;padding:14px 4px;background:${v>=69?'#75402d':'#263b62'};" onclick="toggleNoiseTile(${i})"><b>${v}</b><small style="display:block;">dB · 구역 ${i+1}</small></button>`).join('')}</div>
+    <p style="font-size:.82rem;margin-top:10px;color:#d9d1bd;">참고: 실제 소음 평가는 시간대·측정 위치·측정 조건을 함께 고려해야 해.</p></div>
+    <div style="text-align:center;margin-top:16px;"><button class="action-btn btn-yes" onclick="submitNoiseGame()">소음 지도 완성</button></div>`);
+}
+function toggleNoiseTile(i) {
+  const pos=noiseSelections.indexOf(i); if(pos>=0) noiseSelections.splice(pos,1); else if(noiseSelections.length<3) noiseSelections.push(i);
+  const el=document.getElementById(`noise-tile-${i}`); if(el) el.style.outline=noiseSelections.includes(i)?'4px solid #ffd166':'none';
+  const count=document.getElementById('noise-count'); if(count) count.innerText=`${noiseSelections.length}/3`;
+}
+function submitNoiseGame() {
+  if(noiseSelections.length!==3){const fb=document.getElementById('noise-feedback');if(fb)fb.innerText='측정값이 높은 지점을 세 곳 선택해 줘.';return;}
+  const idx=Math.min(2,Math.floor((day-1)/5));
+  const targets=[5,6,10];
+  const good=targets.every(v=>noiseSelections.includes(v))&&noiseSelections.every(v=>targets.includes(v));
+  if(!good){const fb=document.getElementById('noise-feedback');if(fb)fb.innerText='선택한 지점에 고소음 구역이 아닌 곳이 포함됐어. 측정값을 다시 비교해 보자.';return;}
+  noiseGameCompleted[idx]=true; assessmentQuality+=1; pollutionRisk=Math.max(5,pollutionRisk-1.5);
+  recordDailyTask('주변 소음 측정 및 고소음 구역 지도화',`${FACTORIES[idx].facility} 주변의 소음 측정값을 비교해 우선 관리 구역을 표시했습니다.`);
+  closeModal(); updateWeatherHUD(); showDialogue('나 · 소음 조사 완료','고소음 구역을 찾아냈어! 이 결과를 활용해 방음벽 위치, 운행 시간 조정, 주거지와의 완충거리 등을 검토하자.');
+}
+
+// --- [추가 미니게임 C] 저감시설 배치: 환경 민감 구역 보호하기 ---
+function openMitigationPlacementGame() {
+  const idx=Math.min(2,Math.floor((day-1)/5));
+  if(mitigationGameCompleted[idx]){showDialogue('나','이 부지의 저감시설 배치안은 이미 검토했어. 다음은 실제 이행 여부를 확인하는 일이야.');return;}
+  mitigationSelections=[];
+  const cells=[['주거지','🏠'],['도로','🚚'],['녹지','🌳'],['하천','🌊'],['사업지','🏭'],['학교','🏫'],['공원','🌲'],['주차장','🅿️'],['마을','🏘️']];
+  openModal(`<div class="modal-header"><span class="modal-title">🧱 환경 저감시설 배치 시뮬레이터</span><button class="close-btn" onclick="closeModal()">닫기</button></div>
+    <p style="line-height:1.7;color:#d9d1bd;">사업지 주변의 민감한 공간을 보호하도록 완충시설을 둘 두 곳에 배치해 봐. 타일을 누르면 녹지 완충시설을 설치하거나 해제할 수 있어.</p>
+    <div class="dossier-box"><strong>${FACTORIES[idx].facility} · 배치 도면</strong><p style="margin:7px 0 12px;">완충시설 설치 지점: <b id="mitigation-count">0/2</b></p><p id="mitigation-feedback" style="color:#ffd166;min-height:22px;"></p>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">${cells.map((c,i)=>`<button id="mit-tile-${i}" class="choice-btn" style="margin:0;text-align:center;padding:12px 4px;" onclick="toggleMitigationTile(${i})"><span style="font-size:1.4rem;display:block;">${c[1]}</span><small>${c[0]}</small></button>`).join('')}</div>
+    <p style="font-size:.82rem;margin-top:10px;color:#d9d1bd;">목표는 사업지 자체가 아니라 주변의 민감한 공간과 오염 이동 경로를 보호하는 거야.</p></div>
+    <div style="text-align:center;margin-top:16px;"><button class="action-btn btn-yes" onclick="submitMitigationGame()">배치안 검토</button></div>`);
+}
+function toggleMitigationTile(i){const pos=mitigationSelections.indexOf(i);if(pos>=0)mitigationSelections.splice(pos,1);else if(mitigationSelections.length<2)mitigationSelections.push(i);const el=document.getElementById(`mit-tile-${i}`);if(el)el.style.background=mitigationSelections.includes(i)?'#286b4c':'#1d2a70';const count=document.getElementById('mitigation-count');if(count)count.innerText=`${mitigationSelections.length}/2`;}
+function submitMitigationGame(){
+  if(mitigationSelections.length!==2){const fb=document.getElementById('mitigation-feedback');if(fb)fb.innerText='완충시설을 둘 지점 두 곳을 선택해 줘.';return;}
+  const idx=Math.min(2,Math.floor((day-1)/5));
+  const targets=[[0,3],[1,5],[0,5]][idx];
+  const good=targets.every(v=>mitigationSelections.includes(v))&&mitigationSelections.every(v=>targets.includes(v));
+  if(!good){const fb=document.getElementById('mitigation-feedback');if(fb)fb.innerText='환경 민감 구역을 충분히 보호하지 못해. 주거지·학교·하천과 사업지의 관계를 다시 살펴보자.';return;}
+  mitigationGameCompleted[idx]=true; assessmentQuality+=1; pollutionRisk=Math.max(5,pollutionRisk-3); weather.ecoHealth=Math.min(100,weather.ecoHealth+3);
+  recordDailyTask('환경 저감시설 공간 배치 및 대안 비교',`${FACTORIES[idx].facility} 주변의 민감 공간을 고려해 완충시설 배치 대안을 검토했습니다.`);
+  closeModal(); updateWeatherHUD(); showDialogue('나 · 저감대책 배치 완료','좋아! 환경 민감 구역을 고려한 배치안을 만들었어. 실제 평가에서는 이 배치의 효과와 유지관리 가능성도 확인해야 해.');
+}
+
+// --- [추가 미니게임 D] 대기오염 확산 예측: 풍향과 영향권 맞추기 ---
+function openWindDispersionGame(){
+  const idx=Math.min(2,Math.floor((day-1)/5));
+  if(windGameCompleted[idx]){showDialogue('나','이 부지의 대기확산 방향 검토는 완료했어. 실제 평가서에는 계절별 풍향·풍속과 배출량을 함께 검토해야 해.');return;}
+  windChoice=null; windTarget=null;
+  openModal(`<div class="modal-header"><span class="modal-title">💨 대기오염 확산 예측 시뮬레이터</span><button class="close-btn" onclick="closeModal()">닫기</button></div>
+    <p style="line-height:1.7;color:#d9d1bd;">바람은 오염물질이 이동하는 방향에 영향을 줘. 먼저 바람이 불어오는 방향을 선택하고, 그 바람이 불어가는 쪽의 영향권을 골라 봐.</p>
+    <div class="dossier-box"><strong>${FACTORIES[idx].facility} · 모의 풍향 조작</strong>
+      <p style="margin:8px 0;">① 바람이 불어오는 방향을 선택해.</p>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px;">${[['west','서풍'],['east','동풍'],['south','남풍'],['north','북풍']].map(v=>`<button id="wind-${v[0]}" class="choice-btn" style="margin:0;text-align:center;padding:10px 3px;" onclick="chooseWind('${v[0]}')">${v[1]}</button>`).join('')}</div>
+      <p id="wind-arrow" style="text-align:center;font-size:1.15rem;margin:12px 0;color:#ffd166;min-height:28px;">풍향을 선택하면 이동 방향이 표시돼.</p>
+      <p style="margin:8px 0;">② 오염물질이 이동할 가능성이 높은 영향권을 선택해.</p>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px;">${[['north','북쪽'],['east','동쪽'],['south','남쪽'],['west','서쪽']].map(v=>`<button id="zone-${v[0]}" class="choice-btn" style="margin:0;text-align:center;padding:12px 3px;" onclick="chooseWindZone('${v[0]}')">${v[1]} 영향권</button>`).join('')}</div>
+      <p id="wind-feedback" style="color:#ffd166;min-height:22px;margin-top:10px;"></p>
+    </div><div style="text-align:center;margin-top:16px;"><button class="action-btn btn-yes" onclick="submitWindGame()">확산 예측 제출</button></div>`);
+}
+function chooseWind(dir){
+  windChoice=dir; const map={west:['east','서풍 → 동쪽'],east:['west','동풍 → 서쪽'],south:['north','남풍 → 북쪽'],north:['south','북풍 → 남쪽']};
+  ['west','east','south','north'].forEach(d=>{const el=document.getElementById(`wind-${d}`);if(el)el.style.background=d===dir?'#286b4c':'#1d2a70';});
+  const label=document.getElementById('wind-arrow');if(label)label.innerText=`바람 이동 방향: ${map[dir][1]} →`;
+}
+function chooseWindZone(zone){windTarget=zone;['north','east','south','west'].forEach(d=>{const el=document.getElementById(`zone-${d}`);if(el)el.style.background=d===zone?'#286b4c':'#1d2a70';});}
+function submitWindGame(){
+  if(!windChoice||!windTarget){const fb=document.getElementById('wind-feedback');if(fb)fb.innerText='풍향과 영향권을 모두 선택해 줘.';return;}
+  const expected={west:'east',east:'west',south:'north',north:'south'}[windChoice];
+  if(windTarget!==expected){const fb=document.getElementById('wind-feedback');if(fb)fb.innerText='바람이 불어가는 방향과 영향권이 일치하지 않아. 화살표를 다시 확인해 봐.';return;}
+  const idx=Math.min(2,Math.floor((day-1)/5));windGameCompleted[idx]=true;assessmentQuality+=1;pollutionRisk=Math.max(5,pollutionRisk-2);
+  recordDailyTask('풍향에 따른 대기오염 확산 영향권 예측',`${FACTORIES[idx].facility}의 모의 풍향과 오염물질 이동 방향을 연결해 영향권을 검토했습니다.`);
+  closeModal();updateWeatherHUD();showDialogue('나 · 대기확산 검토 완료','정확해! 바람이 불어가는 쪽을 영향권으로 표시했어. 실제 평가는 계절별 풍향·풍속, 배출량, 굴뚝 조건과 지형을 반영한 확산 모델로 더 정밀하게 예측해야 해.');
 }
 
 // --- [미니게임] 조사 계획 수립: 사업별 핵심 영향과 조사 근거 연결 ---
@@ -2228,6 +2372,31 @@ function drawDeskObjects() {
     pr(r.x + 3, r.y - 1, 2, 3, '#2a2430');
     pr(r.x + r.w - 5, r.y - 1, 2, 3, '#2a2430');
     pr(r.x + 3, r.y + r.h - 4, r.w - 6, 1, '#cfc7b4');
+  }
+
+  // 11~13. 새 조작형 미니게임 오브젝트
+  {
+    const r=rr(DESK_ITEMS[10]); box(r.x,r.y,r.w,r.h,'#315d43'); shade(r.x,r.y,r.w,r.h,'#6c9a65','#203b31');
+    pr(r.x+3,r.y+3,r.w-6,2,'#c4d7a1'); pr(r.x+Math.floor(r.w*.25),r.y+Math.floor(r.h*.35),3,4,'#7ecb75');
+    pr(r.x+Math.floor(r.w*.55),r.y+Math.floor(r.h*.3),3,5,'#a9d18e'); pr(r.x+Math.floor(r.w*.72),r.y+Math.floor(r.h*.55),3,3,'#f0d77a');
+  }
+  {
+    const r=rr(DESK_ITEMS[11]); box(r.x,r.y,r.w,r.h,'#343d4d'); shade(r.x,r.y,r.w,r.h,'#687c91','#202735');
+    pr(r.x+3,r.y+3,r.w-6,r.h-6,'#172b3c');
+    for(let k=0;k<5;k++) pline(r.x+4,r.y+Math.floor(r.h*(.25+k*.12)),r.x+r.w-4,r.y+Math.floor(r.h*(.25+k*.12)),k===2?'#e5a14a':'#587a91');
+    pr(r.x+Math.floor(r.w*.48),r.y+Math.floor(r.h*.25),3,3,'#f3c969');
+  }
+  {
+    const r=rr(DESK_ITEMS[12]); box(r.x,r.y,r.w,r.h,'#6d5940'); shade(r.x,r.y,r.w,r.h,'#a58b62','#3b3028');
+    pr(r.x+3,r.y+3,r.w-6,r.h-6,'#d7c9a5');
+    pr(r.x+Math.floor(r.w*.2),r.y+Math.floor(r.h*.25),Math.max(3,Math.floor(r.w*.22)),Math.max(3,Math.floor(r.h*.25)),'#579b69');
+    pr(r.x+Math.floor(r.w*.58),r.y+Math.floor(r.h*.48),Math.max(3,Math.floor(r.w*.22)),Math.max(3,Math.floor(r.h*.25)),'#579b69');
+  }
+  {
+    const r=rr(DESK_ITEMS[13]); box(r.x,r.y,r.w,r.h,'#344d63'); shade(r.x,r.y,r.w,r.h,'#7895a7','#1e2b3c');
+    pr(r.x+3,r.y+3,r.w-6,r.h-6,'#dce6df');
+    pline(r.x+Math.floor(r.w*.25),r.y+Math.floor(r.h*.5),r.x+Math.floor(r.w*.75),r.y+Math.floor(r.h*.5),'#4b9bc4');
+    pr(r.x+Math.floor(r.w*.48),r.y+Math.floor(r.h*.3),3,3,'#d96b55');
   }
 }
 
