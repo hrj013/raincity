@@ -2,7 +2,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 st.set_page_config(
-    page_title="Rain City",
+    page_title="GREEN HORIZON",
     page_icon="🌧️",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -29,7 +29,7 @@ game_html = """
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>Rain City</title>
+<title>GREEN HORIZON</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Cinzel:wght@600;800&family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@300;400;600;700&display=swap');
 
@@ -584,8 +584,8 @@ game_html = """
 
   <!-- 타이틀 화면 -->
   <div id="title-overlay">
-    <div class="title-logo">RAIN CITY</div>
-    <div class="title-sub">기후 위기로 사막화된 땅에 다시 생명의 숨결을</div>
+    <div class="title-logo">GREEN HORIZON</div>
+    <div class="title-sub">기후 위기 속, 지속 가능한 대한민국의 미래를 평가하다</div>
     <button class="start-btn" onclick="startGame()">START</button>
   </div>
 
@@ -660,66 +660,74 @@ let dailyWork = {
 };
 let pendingFinalDay = false;
 let pendingDayNotice = '';
-let previousCo2Emission = 420;
+let previousCo2Emission = 280;
 
-// 기후 위기로 사막화가 진행된 사막 도시의 환경 및 시뮬레이션 지표
+// 기후 위기 영향이 커진 대한민국 도시의 환경 및 시뮬레이션 지표
 let budget = 250;
-let droughtLevel = 68; // 목표: 30% 미만
+let pollutionRisk = 38; // 개발사업 누적 환경오염 위험도 (낮을수록 좋음)
 let totalRainDays = 0;
 let acidRainDays = 0;
 
 let weather = {
   type: 'CLEAR',
-  cloudType: 'WARM', // 'WARM'(고온·대기 정체) or 'COLD'(저온·대기 확산)
-  windDir: '북서풍',
-  windSpeed: 3.2,
-  humidity: 32,
-  temp: 36,
-  rainProb: 15,
-  so2: 75,
-  nox: 65,
-  pm25: 80,
-  ph: 4.6,
-  ecoHealth: 45,
-  co2: 420 // 사막 도시의 추정 온실가스 배출량 (tCO₂e/일)
+  cloudType: 'WARM',
+  windDir: '서풍',
+  windSpeed: 2.4,
+  humidity: 55,
+  temp: 19,
+  rainProb: 20,
+  so2: 18,
+  nox: 24,
+  pm25: 32,
+  ph: 6.5,
+  ecoHealth: 72,
+  co2: 280 // 도시 개발사업의 모의 온실가스 배출량 (tCO₂e/일)
 };
 
 // 실시간 현장 액션 상태 (환경영향평가원 업무)
 let activeTasks = {
-  seedingReady: true,      // 기후적응 사업 검토 가능 여부 (하루 1회)
-  phAlert: false,          // 수질오염 저감대책 검토 필요 여부
-  sensorDirty: false,      // 황사 등으로 대기질 센서 오염 여부
+  seedingReady: true,      // 환경영향 예측 검토 가능 여부 (하루 1회)
+  phAlert: false,          // 집중호우 시 비점오염 검토 필요 여부
+  sensorDirty: false,      // 미세먼지 등으로 측정자료 품질 점검 필요 여부
   phoneRinging: false,     // 주민 의견·관계기관 협의 요청 수신 여부
   currentAudit: null
 };
 
 // 정책 데이터 (선택 후 2일 뒤에 적용)
 const POLICIES = [
-  { id: 'fgd', name: '저탄소 에너지 전환 계획', cost: 45, desc: '화석연료 의존도를 낮추고 재생에너지와 고효율 에너지원을 도입하도록 권고해 온실가스와 대기오염 배출을 줄입니다.', status: 'READY', applyDay: null },
-  { id: 'esp', name: '산업시설 에너지 효율 개선', cost: 40, desc: '노후 설비의 에너지 손실을 줄이고 고효율 장비로 교체하도록 제안해 미세먼지와 탄소배출량을 함께 낮춥니다.', status: 'READY', applyDay: null },
-  { id: 'sensor', name: '온실가스·대기질 통합 측정망', cost: 25, desc: 'CO₂, SO₂, NOₓ, PM2.5 등을 지속적으로 측정해 배출 현황과 환경영향평가 예측의 정확도를 높입니다.', status: 'READY', applyDay: null },
-  { id: 'raingarden', name: '사막 오아시스·토착식생 복원', cost: 30, desc: '오아시스 주변의 토착 식생과 생태 완충 구역을 복원해 토양 유실을 줄이고 사막 생태계의 회복력을 높입니다.', status: 'READY', applyDay: null },
-  { id: 'permeable', name: '빗물 침투·토양 수분 보전 사업', cost: 35, desc: '빗물이 땅속으로 스며들 수 있도록 토양과 지표를 개선하고 증발 손실을 줄여 지하수 함양과 토양 수분 보전을 돕습니다.', status: 'READY', applyDay: null },
-  { id: 'reservoir', name: '우수 저장·중수 재이용 시설', cost: 50, desc: '드물게 내리는 비와 생활하수를 안전하게 저장·처리해 농업과 생활용수로 재이용하고 물 부족에 대비합니다.', status: 'READY', applyDay: null },
-  { id: 'seeding', name: '인공 강우 및 수자원 확보 타당성 조사', cost: 55, desc: '구름과 습도 등 기상 조건을 확인해 인공 강우의 가능성과 한계를 평가하고, 강수에 따른 수질·생태계 영향까지 검토합니다. 인공 강우는 온실가스 감축을 대신하지 않는 보조적 적응 수단입니다.', status: 'READY', applyDay: null }
+  { id: 'fgd', name: '저NOx 연소·배출가스 방지시설', cost: 45, desc: '연소 효율을 높이고 질소산화물·황산화물 저감시설을 설치하도록 사업계획에 반영합니다.', status: 'READY', applyDay: null },
+  { id: 'esp', name: '고효율 설비 및 전력 사용 최적화', cost: 40, desc: '고효율 모터·전기화 설비와 에너지 관리 시스템을 적용해 온실가스와 대기오염 배출을 줄입니다.', status: 'READY', applyDay: null },
+  { id: 'sensor', name: '대기질·소음 통합 측정망', cost: 25, desc: '사업지 경계와 주거지역에 측정망을 설치해 미세먼지와 소음 영향을 지속적으로 확인합니다.', status: 'READY', applyDay: null },
+  { id: 'raingarden', name: '완충녹지 및 생태 연결축 확보', cost: 30, desc: '주거지와 사업시설 사이에 완충녹지를 두고 기존 녹지·하천 생태축을 연결하도록 권고합니다.', status: 'READY', applyDay: null },
+  { id: 'permeable', name: '저영향개발(LID)·빗물관리', cost: 35, desc: '투수성 포장과 빗물정원, 저류시설을 반영해 불투수면 증가와 집중호우 때의 유출 영향을 줄입니다.', status: 'READY', applyDay: null },
+  { id: 'reservoir', name: '폐수 재이용 및 비점오염 저감', cost: 50, desc: '폐수 재이용, 초기우수 처리, 유출수 관리계획을 마련해 하천과 토양에 미치는 영향을 줄입니다.', status: 'READY', applyDay: null },
+  { id: 'seeding', name: '공사차량·비산먼지 관리계획', cost: 30, desc: '공사차량 동선과 운행시간을 조정하고 살수·세륜·덮개 등 비산먼지 저감대책을 마련합니다.', status: 'READY', applyDay: null }
 ];
 
-// 창밖 3개 공장
+// 창밖에 보이는 세 곳의 개발사업 예정 부지. 승인 전에는 빈 부지로만 보입니다.
 const FACTORIES = [
-  { id: 'factory1', name: '제1 화력·담수화 복합발전소', role: '사막 도시의 전력과 담수를 공급하는 시설입니다. 연료 사용량, 에너지 효율, 온배수와 염수 배출이 주변 사막 생태계와 해안 환경에 미치는 영향을 조사해야 합니다.', pollutants: '이산화탄소(CO₂), 아황산가스(SO₂), 질소산화물(NOₓ), 온배수', relX: 0.22, relY: 0.42, relW: 0.13, relH: 0.16 },
-  { id: 'factory2', name: '제2 광물·자원 가공 플랜트', role: '사막 지역의 광물 자원을 가공하는 산업시설입니다. 에너지 사용량과 온실가스·분진 배출, 지하수 사용량, 주변 토양과 주거지역에 미치는 영향을 평가해야 합니다.', pollutants: '이산화탄소(CO₂), 휘발성유기화합물(VOCs), 아황산가스(SO₂), 초미세먼지(PM2.5)', relX: 0.44, relY: 0.43, relW: 0.14, relH: 0.15 },
-  { id: 'factory3', name: '제3 시멘트·건설자재 공장', role: '사막 도시의 기반 시설을 건설하는 자재 생산 시설입니다. 공정 에너지 사용과 분진, 운송 과정의 온실가스 배출이 사막 토양과 주변 생태계에 미치는 영향을 검토해야 합니다.', pollutants: '이산화탄소(CO₂), 미세먼지(PM10/PM2.5), 질소산화물(NOₓ), 중금속 분진', relX: 0.68, relY: 0.41, relW: 0.13, relH: 0.17 }
+  { id: 'factory1', name: '제1 에너지 공급시설 부지', facility: 'LNG 열병합발전소', benefit: '도시와 산업시설에 안정적인 전력과 열을 공급합니다.', role: '전력 공급은 필요하지만 연료 연소 과정에서 온실가스와 질소산화물 등이 발생할 수 있습니다. 주거지와의 이격거리, 배출구 높이, 저NOx 연소기술, 방지시설, 대체 에너지 입지를 비교해야 합니다.', pollutants: '온실가스(CO₂), 질소산화물(NOx), 황산화물(SOx), 소음 및 냉각수 영향', relX: 0.22, relY: 0.42, relW: 0.13, relH: 0.16 },
+  { id: 'factory2', name: '제2 자원순환시설 부지', facility: '폐기물 소각·자원회수시설', benefit: '도시에서 발생하는 폐기물을 처리하고 열과 자원을 회수합니다.', role: '폐기물 처리시설은 도시 운영에 필요하지만 대기배출, 악취, 폐수, 폐기물 운반차량과 주민 수용성 문제가 발생할 수 있습니다. 재활용·감량 대안, 배출가스 처리, 밀폐형 반입시설, 교통 동선을 함께 비교해야 합니다.', pollutants: '질소산화물(NOx), 먼지, 악취, 폐수, 운반차량 배출가스 및 소음', relX: 0.44, relY: 0.43, relW: 0.14, relH: 0.15 },
+  { id: 'factory3', name: '제3 물류지원시설 부지', facility: '대형 물류센터', benefit: '생활물자와 산업 원료를 공급하고 지역 일자리와 물류 기능을 지원합니다.', role: '물류시설은 지역경제와 생활에 필요하지만 대형 화물차 통행, 야간 소음, 대기오염, 넓은 불투수면과 녹지 훼손을 유발할 수 있습니다. 기존 도로 활용, 대중교통·친환경 차량, 완충녹지, 빗물관리 대안을 검토해야 합니다.', pollutants: '화물차 배출가스(PM2.5·NOx), 교통소음, 불투수면 증가, 녹지 훼손', relX: 0.68, relY: 0.41, relW: 0.13, relH: 0.17 }
 ];
+
+// 세 부지의 최종 결정: standard(협의 동의), conditional(조건부 동의), reject(부동의/대안 재검토)
+let facilityDecisions = [null, null, null];
+let projectImpactScore = 0;
+let assessmentQuality = 0;
+let pendingMilestoneIndex = null;
+let pendingFinalSettlement = false;
+let endingType = null;
 
 // 책상 위 오브젝트 (환경영향평가 현장 조사·분석 장비)
 const DESK_ITEMS = [
   { id: 'radio', name: '📻 현장 조사팀 무전기', relX: 0.04, relY: 0.65, relW: 0.07, relH: 0.13 },
-  { id: 'newspaper', name: '📰 개발사업 환경영향평가 공고', relX: 0.13, relY: 0.74, relW: 0.14, relH: 0.12 },
-  { id: 'documents', name: '📁 환경영향평가 보고서 및 조사 체크리스트', relX: 0.29, relY: 0.70, relW: 0.13, relH: 0.14 },
+  { id: 'newspaper', name: '📰 대한민국 개발사업 평가 공고', relX: 0.13, relY: 0.74, relW: 0.14, relH: 0.12 },
+  { id: 'documents', name: '📁 환경영향평가서·조사 체크리스트', relX: 0.29, relY: 0.70, relW: 0.13, relH: 0.14 },
   { id: 'laptop', name: '💻 환경 데이터 분석 노트북', relX: 0.44, relY: 0.64, relW: 0.16, relH: 0.17 },
-  { id: 'sensor_pad', name: '📡 수질·대기 측정장비 점검 단말기', relX: 0.62, relY: 0.67, relW: 0.08, relH: 0.12 },
-  { id: 'beaker', name: '🧪 오아시스·지하수 수질 시료 분석 세트', relX: 0.72, relY: 0.66, relW: 0.07, relH: 0.14 },
-  { id: 'photo', name: '🗺️ 개발사업 대상지 생태·토지이용 지도', relX: 0.80, relY: 0.73, relW: 0.06, relH: 0.10 },
+  { id: 'sensor_pad', name: '📡 대기질·소음 측정자료 점검 단말기', relX: 0.62, relY: 0.67, relW: 0.08, relH: 0.12 },
+  { id: 'beaker', name: '📐 개발사업 환경영향 예측 도면', relX: 0.72, relY: 0.66, relW: 0.07, relH: 0.14 },
+  { id: 'photo', name: '🗺️ 대한민국 사업지 입지·토지이용 지도', relX: 0.80, relY: 0.73, relW: 0.06, relH: 0.10 },
   { id: 'penholder', name: '✏️ 현장 조사 기록용 필기구', relX: 0.87, relY: 0.72, relW: 0.04, relH: 0.10 },
   { id: 'phone', name: '☎️ 주민 의견·관계기관 협의 전화기', relX: 0.85, relY: 0.61, relW: 0.07, relH: 0.09 },
   { id: 'calendar', name: '📅 환경조사 및 평가 일정 캘린더', relX: 0.92, relY: 0.71, relW: 0.06, relH: 0.11 }
@@ -728,27 +736,27 @@ const DESK_ITEMS = [
 // 긴급 환경 감사/민원 시나리오 풀
 const AUDIT_SCENARIOS = [
   {
-    title: "신규 산업단지의 온실가스 배출량 검토 요청",
-    desc: "산업단지 개발계획서가 접수되었습니다. 사업자는 고용 창출 효과를 강조하지만, 에너지 사용량과 온실가스 배출량 예측이 충분하지 않습니다. 환경평가원으로서 어떤 의견을 제시할까요?",
+    title: "발전시설 배출량 예측 자료 보완 요청",
+    desc: "사업자가 제출한 에너지 사용량과 대기오염 배출량 산정 근거가 불충분합니다. 인근 주거지역의 바람 방향과 대기질 현황도 함께 확인해야 합니다. 어떤 검토 의견을 제시할까요?",
     choices: [
-      { text: "배출량 산정 자료를 보완하도록 하고 저탄소 에너지 대안을 제시한다 (예산 -5억, CO₂ 감축 권고)", effect: () => { budget = Math.max(0, budget - 5); weather.co2 = Math.max(250, weather.co2 - 18); return "배출량 산정 근거와 저탄소 에너지 대안을 보완 의견으로 제출했습니다."; } },
-      { text: "기존 자료만으로 평가를 마무리한다 (추가 조치 없음)", effect: () => { return "검토는 마무리했지만 배출량 예측의 불확실성이 남았습니다."; } }
+      { text: "배출량 산정 근거와 계절별 대기확산 예측을 보완하고 저NOx 설비 대안을 비교한다", effect: () => { budget = Math.max(0, budget - 5); weather.co2 = Math.max(180, weather.co2 - 12); return "배출량 산정 근거와 계절별 대기확산 예측, 저NOx 설비 대안을 보완하도록 의견을 제출했습니다."; } },
+      { text: "사업자가 제출한 단일 예측값만으로 검토를 마무리한다", effect: () => { return "검토는 마무리했지만 계절별 기상 조건과 배출량 산정의 불확실성이 남았습니다."; } }
     ]
   },
   {
-    title: "도시개발 예정지의 습지 훼손 우려",
-    desc: "신도시 도로가 철새와 양서류가 서식하는 습지를 통과할 예정입니다. 습지는 탄소를 저장하고 홍수를 완화하는 기능도 있습니다. 어떤 대안을 제시할까요?",
+    title: "물류센터 입지와 생태축 단절 우려",
+    desc: "물류센터 진입도로가 하천 주변 녹지와 야생동물 이동 구간을 통과할 가능성이 있습니다. 어떤 대안을 검토할까요?",
     choices: [
-      { text: "도로 노선을 조정하고 핵심 습지와 생태 연결축을 보전한다 (예산 -8억, 생태 건강도 상승)", effect: () => { budget = Math.max(0, budget - 8); weather.ecoHealth = Math.min(100, weather.ecoHealth + 12); return "습지 핵심 구역을 보전하도록 노선 조정 의견을 제출했습니다. 생태계와 탄소흡수 기능을 지키는 데 도움이 될 거야."; } },
-      { text: "훼손을 허용하고 공사 이후 대체 녹지만 조성하도록 권고한다 (생태 건강도 소폭 하락)", effect: () => { weather.ecoHealth = Math.max(10, weather.ecoHealth - 5); return "대체 녹지 조성을 권고했지만 기존 습지의 기능을 완전히 대신하기는 어려워."; } }
+      { text: "대체 노선을 비교하고 하천변 완충녹지와 생태 연결 통로를 확보한다 (예산 -8억)", effect: () => { budget = Math.max(0, budget - 8); weather.ecoHealth = Math.min(100, weather.ecoHealth + 10); return "대체 노선과 완충녹지, 생태 연결 통로를 포함하도록 권고했습니다."; } },
+      { text: "현재 노선을 유지하고 공사 후 훼손된 녹지를 복구한다", effect: () => { weather.ecoHealth = Math.max(10, weather.ecoHealth - 5); return "사후 복구만으로는 기존 생태 연결 기능을 충분히 대신하기 어려울 수 있습니다."; } }
     ]
   },
   {
-    title: "집중호우 때 침수 위험이 커진다는 주민 의견",
-    desc: "주민들이 사막 도시의 포장 면적이 넓어지면 드문 강우 때 빗물이 땅속으로 스며들지 못하고 유실될 수 있다고 주민들이 의견을 보내왔습니다. 환경평가원으로서 어떤 대책을 검토할까요?",
+    title: "주민의 공사 소음·비산먼지 민원",
+    desc: "인근 주민이 공사차량 통행과 야간 소음, 비산먼지에 대한 우려를 전달했습니다. 평가 과정에서 어떤 조치를 할까요?",
     choices: [
-      { text: "빗물저류시설과 투수성 포장, 자연 배수 공간을 계획에 반영하도록 한다 (예산 -7억, 가뭄·침수 대응 개선)", effect: () => { budget = Math.max(0, budget - 7); droughtLevel = Math.max(5, droughtLevel - 5); return "주민 의견을 반영해 물순환 개선 대책을 개발계획에 포함하도록 권고했습니다."; } },
-      { text: "공사 이후 침수 민원이 발생하면 대책을 마련하도록 한다 (개선 효과 제한)", effect: () => { return "사후 대응만으로는 집중호우에 따른 피해를 충분히 예방하기 어려울 수 있어."; } }
+      { text: "주민 의견을 평가서에 반영하고 공사시간·차량동선·방진시설을 구체화한다 (예산 -7억)", effect: () => { budget = Math.max(0, budget - 7); pollutionRisk = Math.max(5, pollutionRisk - 4); return "주민 의견을 반영해 공사시간 제한, 차량 동선 분리, 방진·소음 저감대책을 구체화하도록 권고했습니다."; } },
+      { text: "공사 중 민원이 접수되면 사업자가 대응하도록 한다", effect: () => { pollutionRisk = Math.min(100, pollutionRisk + 3); return "사후 대응만으로는 공사 초기의 소음과 먼지 영향을 예방하기 어렵습니다."; } }
     ]
   }
 ];
@@ -785,7 +793,7 @@ function startGame() {
     document.getElementById('hud-weather').style.display = 'block';
     updateWeatherHUD();
     updateAlertStrip();
-    showDialogue('나', '기후 위기로 평균 기온이 오르고 폭염과 장기 가뭄이 반복되면서 이 지역의 초원이 빠르게 사라졌어. 토양은 메말라 모래바람이 잦아졌고, 오아시스와 지하수도 줄어들고 있지. 앞으로 15일 동안 환경평가원으로서 사막화의 원인과 개발사업의 영향을 조사하고, 온실가스 감축·토양과 생태계 복원·물 절약 대책을 평가해야 해. 인공 강우도 기상 조건과 환경 영향을 따져 신중하게 검토해야 해.');
+    showDialogue('나', '기후 위기로 폭염과 집중호우, 미세먼지 문제가 심해진 대한민국의 한 도시야. 도시 외곽에는 에너지 공급시설, 자원순환시설, 물류지원시설을 새로 만들자는 계획이 나왔어. 세 시설은 시민 생활에 꼭 필요하지만 온실가스와 대기오염, 소음, 교통량 증가, 녹지 훼손을 일으킬 수 있지. 앞으로 15일 동안 환경평가원으로서 세 부지의 환경현황을 조사하고, 사업 시행 전·후의 영향을 예측한 뒤 대안과 저감방안을 비교해 협의 의견을 마련해야 해. 실제 사업 허가는 승인기관이 결정하지만, 우리의 평가 의견이 중요한 근거가 될 거야.');
   }, 1800);
 }
 
@@ -824,7 +832,7 @@ function updateAlertStrip() {
   const strip = document.getElementById('alert-strip');
   let alerts = [];
   if (activeTasks.phAlert) {
-    alerts.push(`<div class="alert-pill" onclick="handleObjectClick('beaker')">🧪 경고: 수질 시료 산성화 확인 필요! [수질 분석 세트] 클릭</div>`);
+    alerts.push(`<div class="alert-pill" onclick="handleObjectClick('beaker')">📐 집중호우 영향 검토 필요 [환경영향 예측 도면] 클릭</div>`);
   }
   if (activeTasks.sensorDirty) {
     alerts.push(`<div class="alert-pill" onclick="handleObjectClick('sensor_pad')">📡 경고: 환경 측정장비 데이터 오류 발생! [점검 단말기] 클릭</div>`);
@@ -844,259 +852,160 @@ function recordDailyTask(title, detail) {
   dailyWork.tasks.push({ title, detail });
 }
 
-function getChecklistStatus() {
-  const acidFreq = totalRainDays === 0 ? 12.0 : (acidRainDays / Math.max(1, day)) * 100;
+function calculateFinalScores() {
+  const builtCount = facilityDecisions.filter(d => d && d !== 'reject').length;
+  const utilityScore = builtCount === 3 ? 3 : (builtCount >= 2 ? 2 : 1);
+  const activePolicyCount = POLICIES.filter(p => p.status === 'ACTIVE' && p.id !== 'sensor').length;
+  const netImpact = Math.max(0, projectImpactScore - activePolicyCount * 0.65 - assessmentQuality * 0.25);
+  const risk = pollutionRisk;
+  const environmentScore = (netImpact <= 1.5 && risk <= 48) ? 3 : ((netImpact <= 5 && risk <= 72) ? 2 : 1);
   return {
-    check1: weather.co2 < 350,
-    check2: droughtLevel < 30,
-    acidFreq: acidFreq.toFixed(1)
+    utilityScore,
+    environmentScore,
+    builtCount,
+    netImpact: +netImpact.toFixed(1),
+    risk: +risk.toFixed(1)
   };
 }
 
+function scoreMark(score) {
+  return score === 3 ? 'O' : (score === 2 ? '△' : 'x');
+}
+
+// --- 오브젝트 클릭 핸들러 ---
 // --- 오브젝트 클릭 핸들러 ---
 function handleObjectClick(id) {
   if (id === 'newspaper') {
-    recordDailyTask('사막 지역 개발사업 공고 확인', '기후 위기로 취약해진 사막 지역의 개발사업 환경영향평가 공고와 사업 개요를 확인했습니다.');
+    recordDailyTask('개발사업 평가 공고 및 사업계획 확인', '사업 목적, 규모, 입지, 공사·운영 계획과 환경영향평가 대상 항목을 확인했습니다.');
     openModal(`
-      <div class="modal-header">
-        <span class="modal-title">📰 개발사업 환경영향평가 공고</span>
-        <button class="close-btn" onclick="closeModal()">닫기</button>
-      </div>
-      <div class="newspaper-sheet">
-        <div class="news-head">
-          <div style="font-size:0.85rem; letter-spacing:0.2em;">THE RAIN CITY CHRONICLE</div>
-          <h2 style="font-size:1.55rem; margin-top:4px;">"사막이 된 땅에 다시 지속 가능한 미래를"</h2>
-        </div>
-        <p style="line-height:1.8; font-size:1.05rem;">
-          기후 위기로 폭염과 가뭄이 심해지면서 한때 초원이던 지역은 사막으로 변해가고 있다. 줄어드는 지하수와 오아시스, 잦아진 모래폭풍으로 주민들의 삶과 생태계가 위협받는 가운데, 새로운 산업·관광 개발 계획까지 발표되었다. 환경영향평가팀은 기후 위기와 개발이 사막화에 미치는 영향을 조사하고 지속 가능한 대책을 마련하기로 했다.
-        </p>
-      </div>
+      <div class="modal-header"><span class="modal-title">📰 대한민국 개발사업 환경영향평가 공고</span><button class="close-btn" onclick="closeModal()">닫기</button></div>
+      <div class="newspaper-sheet"><div class="news-head"><div style="font-size:0.85rem; letter-spacing:0.2em;">대한민국 환경영향평가팀</div>
+      <h2 style="font-size:1.45rem; margin-top:4px;">"필요한 개발과 환경 보전, 두 가지를 함께 검토합니다"</h2></div>
+      <p style="line-height:1.8; font-size:1.02rem;">기후 위기로 폭염과 집중호우, 대기오염 위험이 커진 대한민국의 한 도시. 도시 외곽에 에너지 공급시설, 자원순환시설, 물류지원시설의 입지가 제안되었다. 세 시설은 도시 운영에 필요하지만 온실가스와 대기오염, 소음, 교통량 증가, 녹지 훼손 등의 영향을 일으킬 수 있다. 평가팀은 각 사업의 환경현황을 조사하고 사업 시행 전·후의 영향을 예측한 뒤, 입지 대안과 저감방안을 비교해 승인 의견을 마련해야 한다.</p></div>
     `);
-    setTimeout(() => {
-      document.getElementById('dialogue-speaker').innerText = '나';
-      document.getElementById('dialogue-text').innerText = '기후 위기로 사막화가 진행된 원인을 살피고, 개발이 물과 토양, 생태계에 미칠 영향을 평가해야 해. 인공 강우만으로 문제를 해결할 수는 없어. 온실가스 감축과 물 관리, 토착 생태계 복원을 함께 검토하자.';
-      document.getElementById('dialogue-box').style.display = 'block';
-    }, 250);
-  }
-  else if (id === 'documents') {
-    recordDailyTask('환경영향평가 보고서 검토', '조사 결과와 환경보전 목표 달성 현황을 확인했습니다.');
-    const status = getChecklistStatus();
-    openModal(`
-      <div class="modal-header">
-        <span class="modal-title">📁 환경영향평가 보고서 및 조사 체크리스트</span>
-        <button class="close-btn" onclick="closeModal()">닫기</button>
-      </div>
-      <div class="dossier-box">
-        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #8c7a5b; padding-bottom:12px; margin-bottom:16px;">
-          <span style="font-size:1.15rem; font-weight:700;">💰 가용 사막 환경 복원 예산</span>
-          <span style="font-size:1.5rem; font-weight:800; color:#1b4332;">${budget} 억 디르함</span>
-        </div>
-        <h3 style="margin-bottom:10px; color:#3d3122;">📋 사막 지역 환경관리 목표 (실시간 갱신)</h3>
-        <div class="check-item">
-          <span>1. 지역 온실가스 추정 배출량이 350tCO₂e/일 미만인가? (현재: ${weather.co2.toFixed(0)}tCO₂e/일)</span>
-          <span style="font-size:1.25rem;">${status.check1 ? '✅ 달성' : '⬜ 미달성'}</span>
-        </div>
-        <div class="check-item">
-          <span>2. 사막 지역의 사막 지역 물 부족 위험 지수가 30% 미만인가? (현재: ${droughtLevel.toFixed(1)}%)</span>
-          <span style="font-size:1.25rem;">${status.check2 ? '✅ 달성' : '⬜ 미달성'}</span>
-        </div>
-      </div>
-    `);
-  }
-  else if (id === 'laptop') {
+  } else if (id === 'documents') {
+    recordDailyTask('환경영향평가서 및 조사 체크리스트 검토', '환경현황, 영향예측, 대안 비교, 저감방안, 주민 의견 반영 여부를 점검했습니다.');
+    const built = facilityDecisions.filter(d => d && d !== 'reject').length;
+    openModal(`<div class="modal-header"><span class="modal-title">📁 환경영향평가서 검토 현황</span><button class="close-btn" onclick="closeModal()">닫기</button></div>
+      <div class="dossier-box"><h3>평가서 핵심 검토 항목</h3>
+      <div class="check-item"><span>① 사업 목적·규모·입지와 주변 토지이용</span><strong>검토</strong></div>
+      <div class="check-item"><span>② 대기질·소음·물환경·생태·교통 현황</span><strong>조사 중</strong></div>
+      <div class="check-item"><span>③ 사업 시행 전·후 환경영향 예측</span><strong>분석 중</strong></div>
+      <div class="check-item"><span>④ 입지·규모·공법 대안 및 저감방안</span><strong>비교 중</strong></div>
+      <div class="check-item"><span>⑤ 주민 의견 및 협의 조건 반영</span><strong>확인 중</strong></div>
+      <div class="check-item"><span>승인 결정된 시설</span><strong>${built}/3곳</strong></div>
+      <div class="check-item"><span>평가 예산 잔액</span><strong>${budget}억 원</strong></div></div>`);
+  } else if (id === 'laptop') {
     renderLaptopModal();
-  }
-  else if (id === 'radio') {
-    openSeedingMinigame();
-  }
-  else if (id === 'beaker') {
-    openPhNeutralizeMinigame();
-  }
-  else if (id === 'sensor_pad') {
+  } else if (id === 'radio') {
+    openImpactReviewMinigame();
+  } else if (id === 'beaker') {
+    openSiteImpactOverview();
+  } else if (id === 'sensor_pad') {
     openSensorRepairMinigame();
-  }
-  else if (id === 'phone') {
+  } else if (id === 'phone') {
     openAuditPhoneModal();
-  }
-  else if (id === 'photo') {
-    recordDailyTask('개발 대상지 지도 검토', '토지이용 현황과 생태적으로 민감한 구역을 지도에서 확인했습니다.');
-    showDialogue('나', '사막 지역 조사 지도야. 오아시스와 지하수 이용 지역, 토착 식생이 남아 있는 곳, 모래폭풍 취약 지역을 확인하고 개발 구역과 겹치는지 살펴봐야 해.');
-  }
-  else if (id === 'penholder') {
-    showDialogue('나', '현장 조사 기록을 정리할 필기구들이야. 측정값뿐 아니라 조사 시간과 장소, 날씨 같은 조건도 정확하게 기록해야 해.');
-  }
-  else if (id === 'calendar') {
-    showDialogue('나', `오늘은 전체 15일 중 ${day}일차야. 최종 환경평가 보고서 제출까지 ${TOTAL_GAME_DAYS - day}일 남았어.`);
-  }
-  else if (id.startsWith('factory')) {
-    const f = FACTORIES.find(item => item.id === id);
-    recordDailyTask('사업장 배출원 현장 조사', `${f.name}의 주요 배출원과 주변 환경 영향을 확인했습니다.`);
-    openModal(`
-      <div class="modal-header">
-        <span class="modal-title">🏭 ${f.name}</span>
-        <button class="close-btn" onclick="closeModal()">닫기</button>
-      </div>
-      <div style="line-height:1.8; font-size:1.05rem;">
-        <p><strong style="color:#e3c891;">[시설 역할]</strong><br>${f.role}</p><br>
-        <p><strong style="color:#ff8fa3;">[주요 배출 오염물질]</strong><br>${f.pollutants}</p>
-      </div>
-    `);
+  } else if (id === 'photo') {
+    recordDailyTask('사업지 입지 및 주변 환경 지도 검토', '주거지, 학교, 하천, 녹지, 기존 도로와 개발 예정 부지의 공간적 관계를 확인했습니다.');
+    showDialogue('나', '지도에서 사업지와 주변 주거지, 학교, 하천, 녹지, 기존 도로가 얼마나 가까운지 확인해야 해. 입지를 조금만 조정해도 환경영향을 크게 줄일 수 있는지 비교해 보자.');
+  } else if (id === 'penholder') {
+    showDialogue('나', '환경현황 조사 자료는 측정 위치와 날짜, 계절, 기상 조건을 함께 기록해야 해. 자료의 출처와 조사 방법이 분명해야 영향 예측도 신뢰할 수 있어.');
+  } else if (id === 'calendar') {
+    const siteIndex = Math.min(2, Math.floor((day - 1) / 5));
+    showDialogue('나', `오늘은 전체 15일 중 ${day}일차야. 현재는 ${siteIndex + 1}번 부지 평가 기간이고, ${Math.min(5, (siteIndex + 1) * 5 - day + 1)}일 안에 이 사업의 환경영향 검토를 마쳐야 해.`);
+  } else if (id.startsWith('factory')) {
+    openSiteInfoModal(id);
   }
 }
 
-// --- [미니게임 1] 기후적응 사업의 환경성·타당성 검토 ---
-function openSeedingMinigame() {
+function openSiteInfoModal(id) {
+  const idx = FACTORIES.findIndex(f => f.id === id);
+  const f = FACTORIES[idx];
+  const decision = facilityDecisions[idx];
+  const status = decision === 'standard' ? '협의 동의' : decision === 'conditional' ? '조건부 동의' : decision === 'reject' ? '부동의·대안 재검토' : '평가 중 · 미결정';
+  recordDailyTask(`${f.name} 현장 입지 검토`, `${f.facility}의 필요성과 예상 환경영향, 주변 주거지·생태·교통 여건을 확인했습니다.`);
+  openModal(`<div class="modal-header"><span class="modal-title">🏗️ ${f.name}</span><button class="close-btn" onclick="closeModal()">닫기</button></div>
+    <div class="dossier-box"><div class="check-item"><span>제안 시설</span><strong>${f.facility}</strong></div>
+    <p style="line-height:1.7; margin:12px 0;"><strong>도시에 필요한 이유</strong><br>${f.benefit}</p>
+    <p style="line-height:1.7; margin:12px 0;"><strong>예상 환경영향</strong><br>${f.role}</p>
+    <div class="check-item"><span>주요 검토 항목</span><strong>${f.pollutants}</strong></div>
+    <div class="check-item"><span>현재 사업 결정</span><strong>${status}</strong></div>
+    <p style="margin-top:12px; color:#e3c891; line-height:1.6;">부지의 클릭은 현장 정보를 확인하는 기능이야. 최종 승인 여부는 각 5일차 평가 결산 뒤에 결정해.</p></div>`);
+}
+
+function openSiteImpactOverview() {
+  const idx = Math.min(2, Math.floor((day - 1) / 5));
+  const f = FACTORIES[idx];
+  recordDailyTask('사업 시행 전·후 환경영향 예측 검토', `${f.facility}의 예상 배출·소음·교통·토지이용 변화를 검토하고 저감방안 전후를 비교했습니다.`);
+  openModal(`<div class="modal-header"><span class="modal-title">📐 환경영향 예측·대안 비교 도면</span><button class="close-btn" onclick="closeModal()">닫기</button></div>
+    <div class="dossier-box"><h3>${f.facility} · ${idx + 1}번 부지</h3>
+    <p style="line-height:1.7; margin:10px 0;">환경평가에서는 사업이 없을 때의 환경 상태와 사업 시행 시 예상되는 변화를 비교하고, 저감방안을 적용한 뒤 남는 영향을 다시 예측해.</p>
+    <div class="check-item"><span>대기환경</span><strong>배출량·확산 범위</strong></div>
+    <div class="check-item"><span>생활환경</span><strong>소음·진동·교통량</strong></div>
+    <div class="check-item"><span>자연환경</span><strong>녹지·하천·생태축</strong></div>
+    <div class="check-item"><span>물환경·토지</span><strong>불투수면·우수 유출</strong></div>
+    <p style="margin-top:12px; color:#e3c891; line-height:1.6;">현재 검토 중인 사업: ${f.name}. 사업을 하지 않는 대안, 입지 조정, 규모 축소, 저감시설 설치를 함께 비교해 보자.</p></div>`);
+}
+
+// --- [미니게임 1] 개발사업 환경영향 예측 및 저감방안 선택 ---
+function openImpactReviewMinigame() {
   if (!activeTasks.seedingReady) {
-    showDialogue('나', '오늘의 인공 강우·수자원 확보 타당성 검토는 이미 완료했어. 내일 새로운 구름·습도·수자원 자료를 확인하고 다시 검토하자.');
+    showDialogue('나', '오늘의 환경영향 예측 검토는 완료했어. 다른 조사 자료를 확인하고 내일 새 자료가 들어오면 다시 비교하자.');
     return;
   }
-  const cloudDesc = weather.cloudType === 'WARM'
-    ? '고온·대기 정체 조건 → 배출원 주변의 대기질과 확산 영향 집중 검토'
-    : '저온·대기 확산 조건 → 오염물질 이동 범위와 주변 영향 검토';
-
+  const idx = Math.min(2, Math.floor((day - 1) / 5));
+  const f = FACTORIES[idx];
   openModal(`
-    <div class="modal-header">
-      <span class="modal-title">📻 인공 강우·기후 적응 사업 환경성 검토</span>
-      <button class="close-btn" onclick="closeModal()">닫기</button>
+    <div class="modal-header"><span class="modal-title">📻 ${f.facility} 환경영향 예측 검토</span><button class="close-btn" onclick="closeModal()">닫기</button></div>
+    <p style="line-height:1.7; color:#cfc9bc; margin-bottom:12px;">사업계획의 영향을 예측하고 적절한 저감방안을 선택하세요. 평가 항목과 대책이 잘 맞을수록 검토의 질이 높아집니다.</p>
+    <div class="dossier-box">
+      <p><strong>예상 주요 영향</strong><br>${f.pollutants}</p>
+      <label style="display:block; margin:14px 0 6px;">① 가장 우선해 검토할 영향 항목</label>
+      <select id="impact-category" style="width:100%; padding:10px; background:#f6efd8; color:#1b1b1b;">
+        <option value="air">대기질·온실가스</option><option value="noise">소음·교통</option><option value="water">물순환·수질</option><option value="eco">생태·토지이용</option>
+      </select>
+      <label style="display:block; margin:14px 0 6px;">② 가장 적절한 저감방안</label>
+      <select id="impact-mitigation" style="width:100%; padding:10px; background:#f6efd8; color:#1b1b1b;">
+        <option value="emission">배출가스 방지시설·고효율 설비</option><option value="buffer">입지 조정·완충녹지</option><option value="traffic">공사·운영 차량 동선 및 시간 관리</option><option value="water">빗물·폐수 관리와 투수성 포장</option>
+      </select>
+      <p style="font-size:0.82rem; color:#cfc9bc; margin-top:10px;">힌트: 시설의 종류와 주변 환경을 함께 고려하고, 영향이 큰 항목부터 우선 관리하세요.</p>
     </div>
-    <p style="font-size:0.95rem; color:#e3c891; margin-bottom:8px;">📡 현재 상공 기상 레이더 분석: <strong>${cloudDesc}</strong></p>
-    <p style="font-size:0.88rem; color:#cfc9bc; margin-bottom:14px;">
-      구름의 상태와 습도 등 기상 조건을 분석해 인공 강우 가능성을 평가하세요. 조건이 맞지 않으면 시행해도 효과를 기대하기 어렵습니다. 인공 강우는 가뭄 대응을 위한 보조 수단이며 온실가스 감축·사막화 방지 대책을 대신할 수 없습니다. 레이더 커서가 <strong>초록색 조사 적정 시점</strong>에 들어왔을 때 검토 결과를 제출하세요. (조사 비용: 10억)
-    </p>
-    <div style="margin-bottom:12px;">
-      <label style="margin-right:16px; cursor:pointer;">
-        <input type="radio" name="seedType" value="WARM" checked> 🌡️ 고온·대기 정체 조건 조사
-      </label>
-      <label style="cursor:pointer;">
-        <input type="radio" name="seedType" value="COLD"> 🌬️ 저온·대기 확산 조건 조사
-      </label>
-    </div>
-    <div class="radar-bar">
-      <div class="radar-target" style="left: 38%; width: 24%;"></div>
-      <div class="radar-cursor" id="radar-cursor" style="left: 0%;"></div>
-    </div>
-    <div style="text-align:center; margin-top:16px;">
-      <button class="action-btn btn-yes" onclick="fireSeeding()">📋 환경성 검토 결과 제출 (10억)</button>
-    </div>
+    <div style="text-align:center; margin-top:16px;"><button class="action-btn btn-yes" onclick="submitImpactReview()">📊 예측·저감 검토 결과 제출</button></div>
   `);
-
-  let pos = 0;
-  let dir = 1;
-  radarInterval = setInterval(() => {
-    pos += dir * 2.8;
-    if (pos >= 98) { pos = 98; dir = -1; }
-    if (pos <= 0) { pos = 0; dir = 1; }
-    const cursor = document.getElementById('radar-cursor');
-    if (cursor) cursor.style.left = pos + '%';
-  }, 30);
 }
 
-function fireSeeding() {
-  if (budget < 10) {
-    closeModal();
-    showDialogue('나', '예산이 부족해서 현장 조사와 자료 분석 비용(10억)을 집행할 수 없어...');
-    return;
-  }
-  const cursor = document.getElementById('radar-cursor');
-  const pos = parseFloat(cursor.style.left);
-  const selectedSeed = document.querySelector('input[name="seedType"]:checked').value;
-
-  budget -= 10;
+function submitImpactReview() {
+  const idx = Math.min(2, Math.floor((day - 1) / 5));
+  const category = document.getElementById('impact-category').value;
+  const mitigation = document.getElementById('impact-mitigation').value;
+  const f = FACTORIES[idx];
+  const expected = idx === 0 ? 'air' : (idx === 1 ? 'air' : 'traffic');
+  const matched = category === expected || (idx === 1 && category === 'water') || (idx === 2 && category === 'noise');
+  const mitigationGood = (category === 'air' && mitigation === 'emission') || (category === 'eco' && mitigation === 'buffer') || (category === 'noise' && mitigation === 'traffic') || (category === 'water' && mitigation === 'water');
   activeTasks.seedingReady = false;
-  closeModal();
-
-  const isTimingGood = (pos >= 38 && pos <= 62);
-  const isTypeCorrect = (selectedSeed === weather.cloudType);
-
-  if (isTimingGood && isTypeCorrect) {
-    // 조사 조건과 시점이 모두 적절하면 기후적응 사업의 시범 적용을 권고
-    weather.type = 'RAIN';
-    totalRainDays++;
-    const acidLoad = (weather.so2 * 0.021) + (weather.nox * 0.015);
-    weather.ph = +(Math.max(3.9, Math.min(6.8, 6.5 - acidLoad))).toFixed(2);
-    droughtLevel = Math.max(5, droughtLevel - 11);
-    weather.so2 *= 0.7;
-    weather.pm25 *= 0.65;
-
-    if (weather.ph < 5.6) {
-      acidRainDays++;
-      activeTasks.phAlert = true;
-      showDialogue('나', `기후적응 사업 검토가 적절하게 마무리됐어. 다만 대기오염물질 때문에 강수 pH가 ${weather.ph}로 낮아졌어. 수질 시료를 분석하고 저감 대책을 검토해야 해.`);
-    } else {
-      showDialogue('나', `구름 상태와 조사 시점을 적절히 평가했어. 제한적인 강수 가능성을 고려한 수자원 확보 대책으로 물 부족 위험이 낮아졌어. 다만 장기적인 사막화 대응에는 온실가스 감축과 토양·생태계 복원도 필요해!`);
-    }
-  } else if (isTimingGood || isTypeCorrect) {
-    droughtLevel = Math.max(5, droughtLevel - 4);
-    showDialogue('나', '기상 조건과 조사 시점 중 하나가 맞지 않아 검토 결과의 신뢰도가 낮아졌어. 다음에는 관측 자료와 적정 조사 시점을 함께 확인하자.');
+  if (matched && mitigationGood) {
+    assessmentQuality += 1;
+    weather.ecoHealth = Math.min(100, weather.ecoHealth + 3);
+    recordDailyTask('환경영향 예측 및 저감방안 비교', `${f.facility}의 주요 영향 항목과 저감방안을 연계해 검토하고 예측 결과를 보완했습니다.`);
+    closeModal();
+    showDialogue('나', '좋아! 주요 영향 항목과 저감방안이 잘 연결됐어. 평가서에는 저감방안 적용 전·후의 예측 결과와 선택한 대안의 이유를 구체적으로 남기자.');
   } else {
-    showDialogue('나', '기상 조건과 조사 시점을 모두 잘못 판단했어. 환경평가에서는 자료와 조건을 꼼꼼하게 확인해야 해.');
+    recordDailyTask('환경영향 예측 검토', `${f.facility}의 영향 항목과 저감방안을 검토했으나 일부 연결이 적절하지 않아 추가 보완이 필요합니다.`);
+    closeModal();
+    showDialogue('나', '검토 방향을 조금 더 다듬어야겠어. 사업의 주요 배출·소음·교통·생태 영향을 먼저 파악하고, 그 영향에 직접 대응하는 저감방안을 연결해 보자.');
   }
-  recordDailyTask('인공 강우·기후 적응 사업 환경성 검토', isTimingGood && isTypeCorrect ? '구름과 습도 등 기상 조건을 검토해 인공 강우 사업의 제한적 시범 적용 가능성을 평가했습니다.' : '기상 조건 또는 조사 시점이 맞지 않아 추가 자료 검토가 필요합니다.');
   updateWeatherHUD();
-  updateAlertStrip();
 }
 
-// --- [미니게임 2] 수질 시료 분석 및 오염 저감대책 검토 ---
+// --- [미니게임 2] 환경 측정자료 품질관리 및 현장 점검 ---
 function openPhNeutralizeMinigame() {
-  if (!activeTasks.phAlert && weather.ph >= 5.6) {
-    showDialogue('나', `현재 수질 시료의 pH는 ${weather.ph}로 비교적 안정적이야. 오염이 확인되면 적정 처리량을 계산해 사업자에게 수질오염 저감대책을 권고해야 해.`);
-    return;
-  }
-
-  const currentPh = weather.ph;
-  openModal(`
-    <div class="modal-header">
-      <span class="modal-title">🧪 오아시스·지하수 수질 분석 및 저감대책 검토</span>
-      <button class="close-btn" onclick="closeModal()">닫기</button>
-    </div>
-    <p style="font-size:0.95rem; color:#ffccd5; margin-bottom:10px;">
-      ⚠️ 현재 측정된 수질 시료: <strong>pH ${currentPh}</strong> (산성화 여부 확인 필요)
-    </p>
-    <p style="font-size:0.9rem; color:#cfc9bc; margin-bottom:16px;">
-      수질 개선 대책의 적정 처리량을 검토해 목표 관리 범위인 <strong>pH 6.2 ~ 6.8</strong>에 도달할 수 있도록 계산하세요.
-      (게임 속 단순화된 모의 계산이며 실제 현장에서는 시료 특성과 법정 기준을 별도로 검토합니다.)
-    </p>
-    <div style="background:#1b1f2b; padding:16px; border-radius:10px; text-align:center;">
-      <label style="font-size:1.05rem; font-weight:700; color:#f3d59b;">
-        저감대책 적용량(모의값): <span id="alkali-val">150</span> kg
-      </label><br><br>
-      <input type="range" id="alkali-slider" min="20" max="300" value="150" style="width:85%;"
-             oninput="document.getElementById('alkali-val').innerText = this.value">
-    </div>
-    <div style="text-align:center; margin-top:18px;">
-      <button class="action-btn btn-yes" onclick="executePhNeutralize()">📊 분석 결과 및 저감대책 제출</button>
-    </div>
-  `);
-}
-
-function executePhNeutralize() {
-  const dose = parseInt(document.getElementById('alkali-slider').value);
-  const newPh = +(weather.ph + (dose * 0.01)).toFixed(2);
-  recordDailyTask('수질 시료 분석 및 저감대책 검토', `시료 pH ${weather.ph}를 분석하고 처리량 ${dose}kg의 모의 결과를 검토했습니다.`);
-  closeModal();
-
-  if (newPh >= 6.2 && newPh <= 6.8) {
-    weather.ph = newPh;
-    activeTasks.phAlert = false;
-    weather.ecoHealth = Math.min(100, weather.ecoHealth + 6);
-    if (acidRainDays > 0) acidRainDays--;
-    showDialogue('나', `분석 결과가 정확해! 수질 시료 pH ${newPh}를 기준 범위로 개선할 수 있는 적정 처리 대책을 제안했어.`);
-  } else if (newPh < 6.2) {
-    weather.ph = newPh;
-    showDialogue('나', `검토한 처리량이 부족해 예상 pH가 ${newPh}에 머물렀어. 시료 특성과 처리 기준을 다시 확인하자.`);
-  } else {
-    weather.ph = 7.4;
-    activeTasks.phAlert = false;
-    showDialogue('나', `처리량을 지나치게 높게 산정해 예상 pH가 ${newPh}까지 올라갔어. 환경 대책은 과도한 처리로 2차 영향을 만들지 않도록 적정량을 검토해야 해.`);
-  }
-  updateWeatherHUD();
-  updateAlertStrip();
+  openSiteImpactOverview();
 }
 
 // --- [미니게임 3] 대기질 센서 정비 단말기 ---
 function openSensorRepairMinigame() {
   if (!activeTasks.sensorDirty) {
-    showDialogue('나', '사막 지역의 4개 관측 지점에서 기온·습도·미세먼지·토양 수분 자료를 수집하고 있어. 측정값의 정확도를 주기적으로 점검해야 해.');
+    showDialogue('나', '사업지 경계와 인근 주거지역의 대기질·소음 자료를 수집하고 있어. 측정 위치와 장비 교정 상태를 주기적으로 점검해야 해.');
     return;
   }
 
@@ -1106,13 +1015,13 @@ function openSensorRepairMinigame() {
       <button class="close-btn" onclick="closeModal()">닫기</button>
     </div>
     <p style="font-size:0.92rem; color:#cfc9bc; margin-bottom:12px;">
-      현장 먼지와 습기로 인해 환경 측정장비의 자료 품질에 문제가 생겼습니다. <strong>오류가 표시된 4개 측정 노드를 모두 클릭</strong>해 장비 상태를 점검하고 교정하세요!
+      장비 교정값이 기준에서 벗어나 측정자료의 품질에 문제가 생겼습니다. <strong>오류가 표시된 4개 측정 노드를 모두 클릭</strong>해 장비 상태를 점검하고 교정하세요!
     </p>
     <div class="sensor-grid">
-      <div class="sensor-node dirty" id="node-1" onclick="cleanNode(1)">⚠️ 제1 발전소 구역 센서<br><small>[모래 먼지 막힘 - 클릭하여 세척]</small></div>
-      <div class="sensor-node dirty" id="node-2" onclick="cleanNode(2)">⚠️ 제2 석유화학 구역 센서<br><small>[모래 먼지 막힘 - 클릭하여 세척]</small></div>
-      <div class="sensor-node dirty" id="node-3" onclick="cleanNode(3)">⚠️ 제3 제련소 구역 센서<br><small>[모래 먼지 막힘 - 클릭하여 세척]</small></div>
-      <div class="sensor-node dirty" id="node-4" onclick="cleanNode(4)">⚠️ 중앙 호수·주거지 센서<br><small>[모래 먼지 막힘 - 클릭하여 세척]</small></div>
+      <div class="sensor-node dirty" id="node-1" onclick="cleanNode(1)">⚠️ 제1 부지 경계 센서<br><small>[미세먼지 막힘 - 클릭하여 세척]</small></div>
+      <div class="sensor-node dirty" id="node-2" onclick="cleanNode(2)">⚠️ 주거지역 대기질 센서<br><small>[미세먼지 막힘 - 클릭하여 세척]</small></div>
+      <div class="sensor-node dirty" id="node-3" onclick="cleanNode(3)">⚠️ 도로변 소음 센서<br><small>[미세먼지 막힘 - 클릭하여 세척]</small></div>
+      <div class="sensor-node dirty" id="node-4" onclick="cleanNode(4)">⚠️ 하천변 환경 센서<br><small>[미세먼지 막힘 - 클릭하여 세척]</small></div>
     </div>
   `);
 }
@@ -1128,12 +1037,11 @@ function cleanNode(idx) {
     if (cleanedCount >= 4) {
       cleanedCount = 0;
       activeTasks.sensorDirty = false;
-      budget += 10;
-      recordDailyTask('환경 측정장비 점검 및 자료 품질관리', '4개 구역 측정장비를 점검하고 데이터 신뢰도를 복구했습니다.');
+      recordDailyTask('환경 측정장비 교정 및 자료 품질관리', '사업지 주변 4개 지점의 측정장비를 교정하고 자료 신뢰도를 복구했습니다.');
       setTimeout(() => {
         closeModal();
         updateAlertStrip();
-        showDialogue('나', '4개 구역의 환경 측정장비를 모두 점검했어! 이제 신뢰할 수 있는 측정 자료를 환경영향평가에 활용할 수 있어.');
+        showDialogue('나', '4개 지점의 환경 측정장비를 모두 점검했어! 이제 신뢰할 수 있는 측정 자료를 환경영향평가에 활용할 수 있어.');
       }, 350);
     }
   }
@@ -1208,11 +1116,11 @@ function renderLaptopModal() {
 
   openModal(`
     <div class="modal-header">
-      <span class="modal-title">💻 환경보전 대책 검토 시스템 (잔여 예산: ${budget}억)</span>
+      <span class="modal-title">💻 환경영향 저감방안 검토 시스템 (잔여 예산: ${budget}억)</span>
       <button class="close-btn" onclick="closeModal()">닫기</button>
     </div>
     <p style="font-size:0.88rem; color:#c9b182; margin-bottom:12px;">
-      ※ 선택한 환경보전 대책은 관계기관 협의와 사업 반영 절차를 거쳐 <strong>2일 후</strong>부터 적용됩니다.
+      ※ 선택한 저감방안은 사업계획 반영과 협의 절차를 거쳐 <strong>2일 후</strong>부터 적용됩니다.
     </p>
     <div class="policy-grid">${cardsHtml}</div>
   `);
@@ -1240,7 +1148,7 @@ function executePolicy(policyId) {
   const p = POLICIES.find(item => item.id === policyId);
   if (budget >= p.cost && p.status === 'READY') {
     budget -= p.cost;
-    recordDailyTask('환경보전 대책 수립', `${p.name}을(를) 사업계획의 저감·적응 대책으로 제안했습니다.`);
+    recordDailyTask('환경영향 저감방안 제안', `${p.name}을(를) 사업계획의 저감·적응 대책으로 제안했습니다.`);
     p.status = 'PENDING';
     p.applyDay = day + 2;
     renderLaptopModal();
@@ -1250,7 +1158,6 @@ function executePolicy(policyId) {
 // --- 일일 환경 & 대기화학 시뮬레이션 ---
 function simulateNewDay() {
   activeTasks.seedingReady = true;
-
   let newlyApplied = [];
   POLICIES.forEach(p => {
     if (p.status === 'PENDING' && day >= p.applyDay) {
@@ -1258,197 +1165,121 @@ function simulateNewDay() {
       newlyApplied.push(p.name);
     }
   });
-
   const activeIds = POLICIES.filter(p => p.status === 'ACTIVE').map(p => p.id);
+  const standardCount = facilityDecisions.filter(d => d === 'standard').length;
+  const conditionalCount = facilityDecisions.filter(d => d === 'conditional').length;
 
-  // 기후 위기로 사막화가 진행된 지역의 일일 환경 변화 (폭염·가뭄·모래폭풍·간헐적 폭우)
   const roll = Math.random() * 100;
-  if (roll < 2) weather.type = 'HEAVY_RAIN';
-  else if (roll < 17) weather.type = 'DROUGHT';
-  else if (roll < 47) weather.type = 'DUST';
+  if (roll < 12) weather.type = 'HEAVY_RAIN';
+  else if (roll < 34) weather.type = 'FINE_DUST';
+  else if (roll < 48) weather.type = 'HEATWAVE';
   else weather.type = 'CLEAR';
+  if (weather.type === 'FINE_DUST') { activeTasks.sensorDirty = true; cleanedCount = 0; }
 
-  weather.cloudType = Math.random() < 0.5 ? 'WARM' : 'COLD';
-
-  if (weather.type === 'DUST') {
-    activeTasks.sensorDirty = true;
-    cleanedCount = 0;
-  }
-
-  // 매일 45% 확률로 주민 의견 또는 관계기관 협의 요청 수신
-  if (!activeTasks.phoneRinging && Math.random() < 0.45) {
+  if (!activeTasks.phoneRinging && Math.random() < 0.48) {
     activeTasks.phoneRinging = true;
     activeTasks.currentAudit = AUDIT_SCENARIOS[Math.floor(Math.random() * AUDIT_SCENARIOS.length)];
   }
 
   const dirs = ['북풍', '북서풍', '서풍', '남서풍', '남동풍', '동풍'];
   weather.windDir = dirs[Math.floor(Math.random() * dirs.length)];
-  weather.windSpeed = +(1.2 + Math.random() * 6.5).toFixed(1);
-  weather.temp = weather.type === 'DROUGHT' ? Math.floor(41 + Math.random() * 6) : Math.floor(29 + Math.random() * 9);
-  weather.humidity = weather.type === 'HEAVY_RAIN' ? 88 : (weather.type === 'DROUGHT' ? 16 : Math.floor(25 + Math.random() * 35));
-  if (activeIds.includes('seeding')) weather.humidity = Math.min(95, weather.humidity + 18);
+  weather.windSpeed = +(0.8 + Math.random() * 5.5).toFixed(1);
+  weather.temp = weather.type === 'HEATWAVE' ? Math.floor(33 + Math.random() * 5) : Math.floor(12 + Math.random() * 16);
+  weather.humidity = weather.type === 'HEAVY_RAIN' ? 88 : Math.floor(35 + Math.random() * 45);
 
-  let so2Gen = activeIds.includes('fgd') ? 4 : 16;
-  let noxGen = 13;
-  let pmGen = activeIds.includes('esp') ? 4 : 15;
-  if (weather.type === 'DUST') pmGen += 28;
+  const dispersion = weather.windSpeed * 1.8;
+  const facilityLoad = standardCount * 9 + conditionalCount * 4;
+  weather.so2 = Math.max(5, Math.min(150, 18 + facilityLoad * 0.3 - (activeIds.includes('fgd') ? 12 : 0) - dispersion));
+  weather.nox = Math.max(7, Math.min(140, 24 + facilityLoad * 0.7 - (activeIds.includes('fgd') ? 14 : 0) - dispersion));
+  weather.pm25 = Math.max(8, Math.min(200, 30 + (weather.type === 'FINE_DUST' ? 28 : 0) + facilityLoad * 0.5 - (activeIds.includes('sensor') ? 4 : 0) - dispersion));
+  weather.co2 = Math.max(170, Math.round(280 + standardCount * 55 + conditionalCount * 22 - (activeIds.includes('fgd') ? 22 : 0) - (activeIds.includes('esp') ? 30 : 0)));
 
-  const dispersion = weather.windSpeed * 2.1;
-  weather.so2 = Math.max(8, Math.min(150, weather.so2 + so2Gen - dispersion));
-  weather.nox = Math.max(8, Math.min(140, weather.nox + noxGen - dispersion));
-  weather.pm25 = Math.max(10, Math.min(200, weather.pm25 + pmGen - dispersion));
-
-  // 산업시설의 에너지 전환·효율 개선 대책이 반영되면 추정 온실가스 배출량이 감소
-  const co2Base = 420 + (weather.type === 'DROUGHT' ? 18 : 0) + (weather.type === 'DUST' ? 6 : 0);
-  let co2Reduction = 0;
-  if (activeIds.includes('fgd')) co2Reduction += 32;
-  if (activeIds.includes('esp')) co2Reduction += 24;
-  if (activeIds.includes('raingarden')) co2Reduction += 5;
-  if (activeIds.includes('permeable')) co2Reduction += 7;
-  weather.co2 = Math.max(250, Math.round(co2Base - co2Reduction));
-
-  let rainProb = (weather.humidity * 0.55) - (weather.temp * 0.3);
-  if (activeIds.includes('seeding')) rainProb += 28;
-  if (weather.type === 'HEAVY_RAIN') rainProb = 95;
-  if (weather.type === 'DROUGHT') rainProb = 3;
-  weather.rainProb = Math.max(2, Math.min(95, Math.round(rainProb)));
-
-  const didRain = (Math.random() * 100) < weather.rainProb;
-  if (didRain) {
-    if (weather.type !== 'HEAVY_RAIN') weather.type = 'RAIN';
-    totalRainDays++;
-
-    const acidLoad = (weather.so2 * 0.021) + (weather.nox * 0.015);
-    weather.ph = +(Math.max(3.9, Math.min(6.8, 6.5 - acidLoad))).toFixed(2);
-
-    weather.so2 *= 0.65;
-    weather.nox *= 0.7;
-    weather.pm25 *= 0.6;
-
-    let droughtReduce = 7;
-    if (activeIds.includes('raingarden')) droughtReduce += 4;
-    if (activeIds.includes('permeable')) droughtReduce += 4;
-    if (activeIds.includes('reservoir')) droughtReduce += 7;
-    if (weather.type === 'HEAVY_RAIN') droughtReduce += 6;
-    droughtLevel = Math.max(5, droughtLevel - droughtReduce);
-
-    if (weather.ph < 5.6) {
-      acidRainDays++;
-      activeTasks.phAlert = true;
-      weather.ecoHealth = Math.max(10, weather.ecoHealth - 6);
-    } else {
-      activeTasks.phAlert = false;
-      weather.ecoHealth = Math.min(100, weather.ecoHealth + 5);
-    }
-  } else {
-    let droughtInc = weather.type === 'DROUGHT' ? 5.5 : 2.2;
-    if (activeIds.includes('reservoir')) droughtInc *= 0.65;
-    droughtLevel = Math.min(100, droughtLevel + droughtInc);
-  }
+  let dailyRiskChange = 0.65 + standardCount * 0.85 + conditionalCount * 0.28;
+  if (weather.type === 'FINE_DUST') dailyRiskChange += 2.2;
+  if (weather.type === 'HEATWAVE') dailyRiskChange += 1.2;
+  if (weather.type === 'HEAVY_RAIN') dailyRiskChange += 0.8;
+  if (activeIds.includes('fgd')) dailyRiskChange -= 0.55;
+  if (activeIds.includes('esp')) dailyRiskChange -= 0.55;
+  if (activeIds.includes('raingarden')) dailyRiskChange -= 0.45;
+  if (activeIds.includes('permeable')) dailyRiskChange -= 0.35;
+  if (activeIds.includes('reservoir')) dailyRiskChange -= 0.3;
+  if (activeIds.includes('seeding')) dailyRiskChange -= 0.25;
+  pollutionRisk = Math.max(5, Math.min(100, pollutionRisk + dailyRiskChange));
+  if (activeIds.includes('raingarden')) weather.ecoHealth = Math.min(100, weather.ecoHealth + 1.5);
+  if (weather.type === 'FINE_DUST') weather.ecoHealth = Math.max(10, weather.ecoHealth - 1);
 
   updateWeatherHUD();
   updateAlertStrip();
-
-  if (newlyApplied.length > 0) {
-    pendingDayNotice = `오늘부터 [${newlyApplied.join(', ')}] 환경보전 대책이 적용되기 시작했습니다.`;
-  }
+  if (newlyApplied.length > 0) pendingDayNotice = `오늘부터 [${newlyApplied.join(', ')}] 저감방안이 적용되기 시작했습니다.`;
 }
 
 function updateWeatherHUD() {
   const hud = document.getElementById('hud-weather');
   const weatherNames = {
-    'CLEAR': '☀️ 맑음 (고온·건조한 사막 기후)',
-    'DROUGHT': '🔥 기후 위기 영향: 극심한 폭염·장기 가뭄',
-    'DUST': '🌪️ 기후 위기 영향: 강한 모래폭풍',
-    'HEAVY_RAIN': '⛈️ 자연재해: 국지성 폭우',
-    'RAIN': '🌧️ 비 내리는 중'
+    'CLEAR': '🌤️ 보통 기상 · 환경 조사 가능',
+    'HEATWAVE': '🌡️ 기후 위기 영향: 폭염·오존 주의',
+    'FINE_DUST': '🌫️ 미세먼지 농도 상승 · 측정자료 확인',
+    'HEAVY_RAIN': '🌧️ 집중호우 · 비점오염·침수 영향 검토',
+    'RAIN': '🌦️ 강수 중 · 유출수 관리 확인'
   };
   const hasSensor = POLICIES.find(p => p.id === 'sensor').status === 'ACTIVE';
   const sensorInfo = (hasSensor && !activeTasks.sensorDirty)
-    ? `SO₂: ${weather.so2.toFixed(0)} | NOₓ: ${weather.nox.toFixed(0)} | PM2.5: ${weather.pm25.toFixed(0)} | 강수 pH: ${weather.ph}`
-    : (activeTasks.sensorDirty ? `⚠️ 센서 오염됨 (정비 단말기 클릭 필요)` : `환경 측정 데이터: [측정망 미설치]`);
-
+    ? `SO₂: ${weather.so2.toFixed(0)} | NOₓ: ${weather.nox.toFixed(0)} | PM2.5: ${weather.pm25.toFixed(0)}`
+    : (activeTasks.sensorDirty ? `⚠️ 측정자료 품질 점검 필요 (단말기 클릭)` : `환경 측정 데이터: [통합 측정망 미설치]`);
   hud.innerHTML = `
     <div style="font-weight:700; color:#f3d59b;">${weatherNames[weather.type]}</div>
-    <div style="font-size:0.84rem; color:#ddd;">바람: ${weather.windDir} ${weather.windSpeed}m/s | 습도: ${weather.humidity}% | 강수확률: ${weather.rainProb}%</div>
+    <div style="font-size:0.84rem; color:#ddd;">바람: ${weather.windDir} ${weather.windSpeed}m/s | 습도: ${weather.humidity}% | 기온: ${weather.temp}℃</div>
     <div style="font-size:0.82rem; color:#a8dadc; margin-top:2px;">온실가스 추정 배출량: ${weather.co2.toFixed(0)}tCO₂e/일</div>
-    <div style="font-size:0.82rem; color:#a8dadc; margin-top:2px;">${sensorInfo}</div>
+    <div style="font-size:0.82rem; color:#a8dadc; margin-top:2px;">${sensorInfo} | 누적 환경오염 위험도: ${pollutionRisk.toFixed(1)}%</div>
   `;
 }
 
-// --- 하루 업무 결산 ---
+// --- 하루 업무 결산 및 5일 단위 사업 추진 심의 ---
 function showDailySummary(completedDay, snapshot, isFinalDay) {
   pendingFinalDay = isFinalDay;
   const taskList = snapshot.tasks.length
-    ? snapshot.tasks.map((task, index) => `
-        <div class="check-item" style="display:block;">
-          <div style="font-weight:700;">${index + 1}. ${task.title}</div>
-          <div style="font-size:0.88rem; font-weight:400; margin-top:5px; line-height:1.5;">${task.detail}</div>
-        </div>
-      `).join('')
-    : `<div class="check-item"><span>오늘 기록된 주요 업무가 없습니다. 내일은 사막화 현장 조사와 기후 자료 검토를 진행해 보세요.</span></div>`;
-
+    ? snapshot.tasks.map((task, index) => `<div class="check-item" style="display:block;"><div style="font-weight:700;">${index + 1}. ${task.title}</div><div style="font-size:0.88rem; font-weight:400; margin-top:5px; line-height:1.5;">${task.detail}</div></div>`).join('')
+    : `<div class="check-item"><span>오늘 기록된 업무가 없습니다. 사업계획서와 입지 자료를 확인해 보세요.</span></div>`;
   const co2Change = snapshot.co2 - snapshot.previousCo2;
-  const co2Text = co2Change < 0
-    ? `전날보다 ${Math.abs(co2Change).toFixed(0)}tCO₂e/일 감소`
-    : (co2Change > 0 ? `전날보다 ${co2Change.toFixed(0)}tCO₂e/일 증가` : '전날과 동일');
-
+  const co2Text = co2Change < 0 ? `전날보다 ${Math.abs(co2Change).toFixed(0)}tCO₂e/일 감소` : (co2Change > 0 ? `전날보다 ${co2Change.toFixed(0)}tCO₂e/일 증가` : '전날과 동일');
+  const milestone = completedDay % 5 === 0;
+  const siteNo = Math.ceil(completedDay / 5);
   openModal(`
-    <div class="modal-header">
-      <span class="modal-title">📋 ${completedDay}일차 오늘 한 일 결산</span>
-      <button class="close-btn" onclick="closeDailySummary()">확인</button>
-    </div>
+    <div class="modal-header"><span class="modal-title">📋 ${completedDay}일차 환경평가 업무 결산</span><button class="close-btn" onclick="closeDailySummary()">확인</button></div>
     <div class="dossier-box">
-      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #8c7a5b; padding-bottom:12px; margin-bottom:14px;">
-        <span style="font-size:1.05rem; font-weight:700;">오늘의 환경평가 업무</span>
-        <span style="font-size:1.25rem; font-weight:800; color:#1b4332;">${snapshot.tasks.length}건</span>
-      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #8c7a5b; padding-bottom:12px; margin-bottom:14px;"><span style="font-size:1.05rem; font-weight:700;">오늘의 환경평가 업무</span><span style="font-size:1.25rem; font-weight:800; color:#1b4332;">${snapshot.tasks.length}건</span></div>
       ${taskList}
-      <div class="check-item">
-        <span>지역 추정 온실가스 배출량</span>
-        <strong>${snapshot.co2.toFixed(0)}tCO₂e/일</strong>
-      </div>
+      <div class="check-item"><span>온실가스 추정 배출량</span><strong>${snapshot.co2.toFixed(0)}tCO₂e/일</strong></div>
       <div style="font-size:0.88rem; margin:4px 0 12px 4px; color:#4b453a;">${co2Text}</div>
-      <div class="check-item">
-        <span>사막 지역 물 부족 위험 지수</span>
-        <strong>${snapshot.drought.toFixed(1)}%</strong>
-      </div>
-      <div class="check-item">
-        <span>남은 사막 환경 복원 예산</span>
-        <strong>${snapshot.budget.toFixed(0)}억 디르함</strong>
-      </div>
+      <div class="check-item"><span>누적 환경오염 위험도 (모의 지표)</span><strong>${snapshot.risk.toFixed(1)}%</strong></div>
+      <div class="check-item"><span>평가 예산 잔액</span><strong>${snapshot.budget.toFixed(0)}억 원</strong></div>
       ${pendingDayNotice ? `<div style="margin-top:12px; padding:10px; background:#e6decb; line-height:1.6;">📌 ${pendingDayNotice}</div>` : ''}
+      ${milestone ? `<div style="margin-top:14px; padding:12px; background:#e6decb; color:#30291f; line-height:1.6;"><strong>⚖️ ${siteNo}번 부지 평가 완료</strong><br>5일간의 환경현황 조사, 영향 예측, 대안 및 저감방안 검토를 마쳤습니다. 결산을 닫으면 해당 부지의 환경영향평가 협의 의견을 결정합니다.</div>` : ''}
     </div>
-    <div style="text-align:center; margin-top:18px;">
-      <button class="action-btn btn-yes" onclick="closeDailySummary()">${isFinalDay ? '최종 평가 결과 확인' : '다음 날 업무 시작'}</button>
-    </div>
+    <div style="text-align:center; margin-top:18px;"><button class="action-btn btn-yes" onclick="closeDailySummary()">${milestone ? `${siteNo}번 부지 승인 심의하기` : (isFinalDay ? '최종 심의로 이동' : '다음 날 업무 시작')}</button></div>
   `);
   pendingDayNotice = '';
 }
 
 function closeDailySummary() {
   closeModal();
-  if (pendingFinalDay) {
+  if (pendingMilestoneIndex !== null) {
+    showSiteDecisionModal(pendingMilestoneIndex);
+  } else if (pendingFinalDay) {
     pendingFinalDay = false;
-    checkCampaignEnd();
+    showFinalAssessmentSummary();
   }
 }
 
 function advanceGameDay() {
   const completedDay = day;
-  const snapshot = {
-    tasks: dailyWork.tasks.slice(),
-    co2: weather.co2,
-    previousCo2: previousCo2Emission,
-    drought: droughtLevel,
-    budget: budget
-  };
-
-  if (day >= TOTAL_GAME_DAYS) {
-    showDailySummary(completedDay, snapshot, true);
+  const snapshot = { tasks: dailyWork.tasks.slice(), co2: weather.co2, previousCo2: previousCo2Emission, risk: pollutionRisk, budget: budget };
+  if (completedDay % 5 === 0) {
+    pendingMilestoneIndex = Math.floor(completedDay / 5) - 1;
+    pendingFinalSettlement = completedDay === TOTAL_GAME_DAYS;
+    showDailySummary(completedDay, snapshot, pendingFinalSettlement);
     return;
   }
-
   previousCo2Emission = weather.co2;
   day++;
   gameMinutes = 7 * 60;
@@ -1458,59 +1289,106 @@ function advanceGameDay() {
   showDailySummary(completedDay, snapshot, false);
 }
 
-// --- 15일차 최종 환경평가 결산 및 엔딩 ---
-function checkCampaignEnd() {
-  const status = getChecklistStatus();
-  if (status.check1 && status.check2) {
-    scene = 'ENDING';
-    isPaused = true;
-    document.getElementById('hud-clock').style.display = 'none';
-    document.getElementById('hud-weather').style.display = 'none';
-    document.getElementById('alert-strip').style.display = 'none';
-    openModal(`
-      <div style="text-align:center; padding:15px;">
-        <h2 style="font-family:'Cinzel', serif; font-size:2rem; color:#f3d59b; margin-bottom:10px;">HAPPY ENDING : 사막에 되찾은 희망</h2>
-        <p style="font-family:'Gowun Batang', serif; font-size:1.12rem; line-height:1.8; color:#f0ece1; margin-bottom:20px;">
-          온실가스 배출량 <strong>${weather.co2.toFixed(0)}tCO₂e/일</strong>, 사막 지역 물 부족 위험 지수 <strong>${droughtLevel.toFixed(1)}%</strong>!<br>
-          당신은 온실가스 감축과 물 관리, 토착 식생 복원 대책을 과학적으로 평가해 사막 지역의 환경 회복에 기여했습니다.<br>
-          인공 강우는 적절한 기상 조건에서 제한적으로 검토했고, 근본적인 기후 위기 대응을 위해 온실가스 감축도 함께 추진했습니다.<br>
-          사막에 다시 생명이 깃들 수 있다는 희망을 남기며 15일간의 환경평가 임무를 마쳤습니다.
-        </p>
-        <button class="start-btn" onclick="location.reload()">처음부터 다시하기</button>
-      </div>
-    `);
-  } else if (status.check1 || status.check2) {
-    scene = 'ENDING';
-    isPaused = true;
-    document.getElementById('hud-clock').style.display = 'none';
-    document.getElementById('hud-weather').style.display = 'none';
-    document.getElementById('alert-strip').style.display = 'none';
-    openModal(`
-      <div style="text-align:center; padding:15px;">
-        <h2 style="font-family:'Cinzel', serif; font-size:1.9rem; color:#f3d59b; margin-bottom:10px;">PARTIAL ENDING : 아직 끝나지 않은 사막화 대응</h2>
-        <p style="font-family:'Gowun Batang', serif; font-size:1.1rem; line-height:1.8; color:#f0ece1; margin-bottom:20px;">
-          두 가지 핵심 목표 중 하나를 달성했지만, 사막 지역의 환경 위기를 해결하기에는 아직 부족합니다.<br>
-          인공 강우와 같은 단기적인 수자원 대책뿐 아니라 온실가스 감축과 토양·생태계 복원을 꾸준히 이어가야 합니다.<br>
-          최종 보고서를 보완해 다시 도전해 보세요.
-        </p>
-        <button class="start-btn" onclick="location.reload()">처음부터 다시하기</button>
-      </div>
-    `);
-  } else {
-    scene = 'ENDING';
-    isPaused = true;
-    openModal(`
-      <div style="text-align:center; padding:15px;">
-        <h2 style="font-family:'Cinzel', serif; font-size:1.9rem; color:#ff8fa3; margin-bottom:10px;">BAD ENDING : 사막화 대응 실패</h2>
-        <p style="font-family:'Gowun Batang', serif; font-size:1.1rem; line-height:1.8; color:#f0ece1; margin-bottom:20px;">
-          온실가스 배출량 <strong>${weather.co2.toFixed(0)}tCO₂e/일</strong>, 사막 지역 물 부족 위험 지수 <strong>${droughtLevel.toFixed(1)}%</strong>...<br>
-          기후 위기로 심해진 사막화와 물 부족 문제에 대응하기 위한 대책이 충분히 마련되지 못했습니다.<br>
-          인공 강우만으로는 사막화를 막을 수 없습니다. 온실가스 감축과 수자원 관리, 토양·생태계 복원 대책을 함께 검토해야 합니다.
-        </p>
-        <button class="start-btn" onclick="location.reload()">다시 도전하기</button>
-      </div>
-    `);
+function showSiteDecisionModal(index) {
+  const f = FACTORIES[index];
+  const dayRange = index === 0 ? '1~5일차' : (index === 1 ? '6~10일차' : '11~15일차');
+  const already = facilityDecisions[index];
+  const decisionText = already ? '이미 결정된 부지입니다.' : '평가 결과를 바탕으로 사업 추진 여부를 결정하세요.';
+  openModal(`<div class="modal-header"><span class="modal-title">⚖️ ${index + 1}번 부지 환경영향평가 협의 의견</span><span style="font-size:0.8rem; color:#c9b182;">결정 필요</span></div>
+    <div class="dossier-box"><div style="font-weight:700; margin-bottom:8px;">${dayRange} 평가 대상: ${f.name}</div>
+    <h3>${f.facility}</h3><p style="line-height:1.7; margin:10px 0;">${f.benefit}</p>
+    <p style="line-height:1.7; margin:10px 0;"><strong>주요 예상 환경영향</strong><br>${f.pollutants}</p>
+    <p style="line-height:1.7; margin:10px 0;">${f.role}</p>
+    <p style="color:#e3c891; line-height:1.6;">실제 환경영향평가 담당자는 사업 허가를 직접 내리기보다 환경영향을 검토해 협의 의견과 저감 조건을 제시합니다. 이 게임에서는 그 의견을 바탕으로 사업이 추진되는 상황을 단순화했습니다. 기본 동의는 환경 부담이 크고, 조건부 동의는 저감시설·운영조건을 의무화하며, 부동의는 입지·규모 대안을 다시 검토하게 합니다.</p></div>
+    <div style="display:grid; gap:10px; margin-top:14px;">
+      <button class="choice-btn" onclick="decideFacility(${index}, 'standard')">① 협의 동의 · 기본 계획으로 사업 추진 (환경 부담 큼)</button>
+      <button class="choice-btn" onclick="decideFacility(${index}, 'conditional')">② 조건부 동의 · 저감대책 이행을 전제로 사업 추진 (예산 18억)</button>
+      <button class="choice-btn" onclick="decideFacility(${index}, 'reject')">③ 부동의 의견 · 입지/규모 대안 재검토 (사업 보류)</button>
+    </div>`);
+}
+
+function decideFacility(index, decision) {
+  if (facilityDecisions[index]) return;
+  if (decision === 'conditional' && budget < 18) {
+    showDialogue('나', '조건부 동의에 필요한 환경저감 예산이 부족해. 예산을 확인한 뒤 다른 결정을 선택해야 해.');
+    return;
   }
+  const f = FACTORIES[index];
+  facilityDecisions[index] = decision;
+  if (decision === 'standard') {
+    projectImpactScore += 2.1;
+    recordDailyTask(`${f.facility} 기본 계획 협의 동의`, '시설의 필요성을 인정해 협의 동의 의견을 냈지만, 제시된 환경관리 조건은 기본 수준으로 남았습니다.');
+    pendingDayNotice = `${f.facility} 기본 계획 협의 동의. 시설이 부지에 건설되며 환경 부담이 반영됩니다.`;
+  } else if (decision === 'conditional') {
+    budget -= 18;
+    projectImpactScore += 0.65;
+    recordDailyTask(`${f.facility} 조건부 동의`, '배출 저감시설, 운영관리, 주변 환경 모니터링 등 구체적인 이행조건을 붙여 조건부 동의 의견을 제시했습니다.');
+    pendingDayNotice = `${f.facility} 조건부 동의. 환경관리 조건을 붙여 시설을 건설합니다.`;
+  } else {
+    recordDailyTask(`${f.facility} 부동의 및 대안 재검토`, '현 입지의 환경영향을 피하기 위해 부동의 의견을 제시하고 대체 입지·규모·수요관리 대안을 다시 검토하도록 했습니다.');
+    pendingDayNotice = `${f.facility} 사업은 부동의되었습니다. 해당 부지는 빈 상태로 유지됩니다.`;
+  }
+  closeModal();
+  pendingMilestoneIndex = null;
+  if (pendingFinalSettlement) {
+    pendingFinalSettlement = false;
+    pendingFinalDay = false;
+    showFinalAssessmentSummary();
+    return;
+  }
+  previousCo2Emission = weather.co2;
+  day = (index + 1) * 5 + 1;
+  gameMinutes = 7 * 60;
+  dailyWork = { tasks: [], budgetAtStart: budget };
+  simulateNewDay();
+  updateWeatherHUD();
+  isPaused = false;
+}
+
+function showFinalAssessmentSummary() {
+  const scores = calculateFinalScores();
+  const builtNames = FACTORIES.filter((f, i) => facilityDecisions[i] && facilityDecisions[i] !== 'reject').map(f => f.facility);
+  const rows = [
+    { label: '도시에 꼭 필요한 시설이 모두 들어왔는가?', score: scores.utilityScore, detail: `${scores.builtCount}/3개 시설 건설` },
+    { label: '도시의 환경오염 정도가 악화되지 않고 환경을 보존하였는가?', score: scores.environmentScore, detail: `누적 환경오염 위험도 ${scores.risk}% · 잔여 영향 지수 ${scores.netImpact}` }
+  ];
+  openModal(`<div class="modal-header"><span class="modal-title">📋 15일 최종 환경영향평가 결산</span></div>
+    <div class="dossier-box"><h3>최종 협의 의견</h3>
+      ${FACTORIES.map((f,i)=>`<div class="check-item"><span>${i+1}. ${f.facility}</span><strong>${facilityDecisions[i] === 'standard' ? '협의 동의' : facilityDecisions[i] === 'conditional' ? '조건부 동의' : '부동의'}</strong></div>`).join('')}
+      <h3 style="margin-top:18px;">도시의 최종 평가 체크리스트</h3>
+      ${rows.map(r=>`<div class="check-item" style="align-items:flex-start;"><span style="max-width:76%; line-height:1.6;">${r.label}<br><small>${r.detail}</small></span><strong style="font-size:1.45rem; min-width:34px; text-align:center;">${scoreMark(r.score)}</strong></div>`).join('')}
+      <p style="font-size:0.82rem; margin-top:12px; color:#6b5b46;">평가 표기: x = 1점(기준 미달) · △ = 2점(보통) · O = 3점(우수)</p>
+    </div><div style="text-align:center; margin-top:18px;"><button class="start-btn" onclick="checkCampaignEnd()">엔딩 보기</button></div>`);
+}
+
+// --- 최종 체크리스트 점수에 따른 엔딩 ---
+function checkCampaignEnd() {
+  const status = calculateFinalScores();
+  const hasO = status.utilityScore === 3 || status.environmentScore === 3;
+  const hasTriangle = status.utilityScore === 2 || status.environmentScore === 2;
+  endingType = hasO ? 'green' : (hasTriangle ? 'partial' : 'desert');
+  scene = 'ENDING';
+  isPaused = true;
+  document.getElementById('hud-clock').style.display = 'none';
+  document.getElementById('hud-weather').style.display = 'none';
+  document.getElementById('alert-strip').style.display = 'none';
+
+  let title = '';
+  let message = '';
+  if (hasO) {
+    title = 'GOOD ENDING : 지속 가능한 대한민국';
+    message = `15일 동안의 평가가 끝났어. 평가 결과에서 우수한 성과를 얻은 덕분에 도시는 환경을 보전할 기회를 지켜냈어.<br><br>창밖의 대한민국 도시는 녹지와 깨끗한 공기를 되찾아 가고 있어. 아직 보완할 점은 남아 있지만, 환경을 고려한 선택이 미래를 바꿀 수 있다는 걸 보여줬어.<br><br><em>주인공: "우리의 평가가 도시를 지키는 데 도움이 됐어. 정말 뿌듯하다."</em>`;
+  } else if (hasTriangle) {
+    title = 'PARTIAL ENDING : 버텨내는 도시';
+    message = `도시는 유지되고 있지만, 일부 개발사업의 환경 부담이 남아 미세먼지와 생활환경 문제가 이전보다 심해졌어.<br><br>그래도 도시가 무너지지는 않았어. 앞으로 저감시설을 보완하고 사후환경영향조사를 꾸준히 해야 해.`;
+  } else {
+    title = 'BAD ENDING : 사막이 된 도시';
+    message = `필요한 시설과 환경 보전, 두 가지 모두 놓치고 말았어. 기후 위기와 무분별한 개발이 겹치면서 도시의 녹지는 사라지고 땅은 메말라 사막처럼 변했어.<br><br><em>주인공: "너무 우리의 이득만 생각했나 봐..."</em>`;
+  }
+  openModal(`<div style="text-align:center; padding:15px;"><h2 style="font-family:'Cinzel', serif; font-size:1.8rem; color:#f3d59b; margin-bottom:14px;">${title}</h2>
+    <div style="font-size:1.1rem; line-height:1.9; color:#f0ece1; margin-bottom:22px;">${message}</div>
+    <div class="dossier-box" style="text-align:left;"><div class="check-item"><span>도시에 필요한 시설</span><strong>${scoreMark(status.utilityScore)} (${status.utilityScore}점)</strong></div><div class="check-item"><span>환경 보전</span><strong>${scoreMark(status.environmentScore)} (${status.environmentScore}점)</strong></div></div>
+    <button class="start-btn" onclick="location.reload()">처음부터 다시하기</button></div>`);
 }
 
 // --- 그래픽 렌더링 (픽셀 아트 · 점프킹 + 투더문 감성) ---
@@ -1669,7 +1547,7 @@ const CITY_TONE = {
 function skyVariant() {
   const clockMinutes = gameMinutes % (24 * 60);
   const hour = Math.floor(clockMinutes / 60);
-  if (weather.type === 'DUST') return 'dust';
+  if (weather.type === 'FINE_DUST' || endingType === 'desert') return 'dust';
   if (weather.type === 'RAIN' || weather.type === 'HEAVY_RAIN') return 'rain';
   if (hour >= 5 && hour < 8) return 'morning';
   if (hour >= 8 && hour < 17) return 'day';
@@ -1806,17 +1684,17 @@ function drawCityLayer(variant, green) {
     x += bw + (r() < 0.3 ? 1 + Math.floor(r() * 3) : 0);
   }
 
-  // 모래언덕
+  // 대한민국 도시 외곽의 낮은 산 능선과 도로·녹지
   for (let xx = 0; xx < lw; xx++) {
-    const dy = Math.round(groundY - 2 - 3 * Math.sin(xx * 0.045 + 1) - 2 * Math.sin(xx * 0.11));
-    pr(xx, dy, 1, groundY - dy + 2, '#c9a56a');
-    pr(xx, dy, 1, 1, '#ddbf88');
+    const dy = Math.round(groundY - 2 - 3 * Math.sin(xx * 0.035 + 1) - 2 * Math.sin(xx * 0.09));
+    pr(xx, dy, 1, groundY - dy + 2, endingType === 'desert' ? '#9b805e' : '#526b62');
+    pr(xx, dy, 1, 1, '#82958a');
   }
 
-  // 지면 (가뭄이 풀리면 초록으로)
-  const base = green ? '#4a6b48' : '#b89468';
-  const lite = green ? '#6f9a5a' : '#d3b27f';
-  const dk = green ? '#365236' : '#94724b';
+  // 지면은 한국의 도시 외곽 산업·물류 부지와 녹지로 표현
+  const base = endingType === 'desert' ? '#a88b62' : (green ? '#4a6b48' : '#59615f');
+  const lite = endingType === 'desert' ? '#c4a174' : (green ? '#6f9a5a' : '#78817c');
+  const dk = endingType === 'desert' ? '#806746' : (green ? '#365236' : '#414947');
   pr(0, groundY, lw, groundH, base);
   pr(0, groundY, lw, 1, lite);
   for (let i = 0; i < 170; i++) {
@@ -1824,28 +1702,37 @@ function drawCityLayer(variant, green) {
     const sy = groundY + 2 + Math.floor(r() * Math.max(1, groundH - 2));
     pr(sx, sy, r() < 0.4 ? 2 : 1, 1, r() < 0.5 ? lite : dk);
   }
-  if (green) {
-    [0.05, 0.17, 0.39, 0.6, 0.86, 0.95].forEach((tx, idx) => {
-      const px = Math.round(lw * tx);
-      const py = groundY + 5 + (idx % 2) * 3;
-      pr(px, py, 2, 4, '#5b3a22');
-      pixDisc(px + 1, py - 1, 4, '#2f6b3a');
-      pixDisc(px, py - 2, 2, '#4f9a52');
-    });
-  } else {
-    [0.07, 0.52, 0.93].forEach((tx, idx) => {
-      const px = Math.round(lw * tx);
-      const py = groundY + 8 + idx * 2;
-      pr(px, py - 6, 2, 7, '#3f6b3c');
-      pr(px - 3, py - 4, 3, 1, '#3f6b3c');
-      pr(px - 3, py - 6, 1, 3, '#3f6b3c');
-      pr(px + 2, py - 5, 3, 1, '#3f6b3c');
-      pr(px + 4, py - 7, 1, 3, '#3f6b3c');
-    });
-  }
+  // 도로와 가로수: 나쁜 엔딩에서는 녹지가 마르고, 좋은 엔딩에서는 녹지가 회복
+  const roadY = groundY + Math.round(groundH * 0.62);
+  pr(0, roadY, lw, Math.max(3, Math.round(groundH * 0.22)), endingType === 'desert' ? '#78664e' : '#343b42');
+  pr(0, roadY, lw, 1, '#9a9b91');
+  for (let rx = 5; rx < lw; rx += 18) pr(rx, roadY + 2, 5, 1, '#d9cda4');
+  const treeColor = endingType === 'desert' ? '#74654b' : (green ? '#2f6b3a' : '#596f56');
+  [0.05, 0.17, 0.39, 0.6, 0.86, 0.95].forEach((tx, idx) => {
+    const px = Math.round(lw * tx);
+    const py = groundY + 5 + (idx % 2) * 3;
+    pr(px, py, 2, 4, '#5b3a22');
+    pixDisc(px + 1, py - 1, 4, treeColor);
+    pixDisc(px, py - 2, 2, endingType === 'desert' ? '#8b7856' : '#4f9a52');
+  });
 
-  // 공장 건물
-  FACTORIES.forEach(f => {
+  // 아직 승인되지 않은 세 사업지는 펜스가 둘러진 빈 부지로 표시
+  FACTORIES.forEach((f, idx) => {
+    const q = factoryGeom(f);
+    const decision = facilityDecisions[idx];
+    if (!decision || decision === 'reject') {
+      const py = q.bodyY + q.bodyH - 2;
+      pr(q.x - 2, py, q.w + 4, 2, '#d4b86d');
+      pr(q.x - 2, q.y + 2, 2, py - q.y, '#b9a16a');
+      pr(q.x + q.w, q.y + 2, 2, py - q.y, '#b9a16a');
+      for (let fx = q.x - 2; fx < q.x + q.w + 2; fx += 5) pr(fx, q.y + 2, 2, 2, '#d4b86d');
+    }
+  });
+
+  // 승인된 시설만 공장 형태로 건설
+  FACTORIES.forEach((f, idx) => {
+    const decision = facilityDecisions[idx];
+    if (!decision || decision === 'reject') return;
     const q = factoryGeom(f);
     box(q.x, q.bodyY, q.w, q.bodyH, '#3a3f58');
     for (let row = 0, yy = q.bodyY + 1; yy + 3 < q.bodyY + q.bodyH - 1; yy += 4, row++) {
@@ -1877,7 +1764,8 @@ function drawCityLayer(variant, green) {
     g.globalAlpha = 1;
   }
   const rf = makeRng(31);
-  FACTORIES.forEach(f => {
+  FACTORIES.forEach((f, idx) => {
+    if (!facilityDecisions[idx] || facilityDecisions[idx] === 'reject') return;
     const q = factoryGeom(f);
     for (let wy = q.bodyY + 4; wy < q.bodyY + q.bodyH - 8; wy += 5) {
       for (let wx = q.x + 3; wx < q.x + q.w - 5; wx += 5) {
@@ -1898,6 +1786,8 @@ function drawSmoke() {
   const a = Math.min(0.75, weather.so2 / 140);
   const T = Date.now() / 1000;
   FACTORIES.forEach((f, fi) => {
+    const decision = facilityDecisions[fi];
+    if (!decision || decision === 'reject') return;
     const q = factoryGeom(f);
     const stacks = [[q.x + q.w * 0.27, q.y], [q.x + q.w * 0.72, q.y + q.h * 0.08]];
     stacks.forEach((s, si) => {
@@ -1906,7 +1796,7 @@ function drawSmoke() {
         const px = s[0] + Math.sin(T * 0.8 + k + fi) * 1.5 + prog * 7;
         const py = s[1] - 2 - prog * lh * 0.13;
         const size = 2 + prog * 6;
-        g.globalAlpha = a * (1 - prog);
+        g.globalAlpha = a * (decision === 'conditional' ? 0.28 : 0.75) * (1 - prog);
         pr(px - size / 2, py - size / 2, size, size, '#6a625c');
       }
     });
@@ -2078,7 +1968,7 @@ function drawDeskObjects() {
     }
   }
 
-  // 5. 수질·대기 측정장비 점검 단말기
+  // 5. 대기질·소음 측정장비 점검 단말기
   {
     const r = rr(DESK_ITEMS[4]);
     box(r.x, r.y, r.w, r.h, '#1e222b');
@@ -2098,24 +1988,20 @@ function drawDeskObjects() {
     pr(r.x + Math.min(13, r.w - 4), by, 2, 2, '#4a90d9');
   }
 
-  // 6. 하천 수질 시료 분석 실험 세트 (비커)
+  // 6. 환경영향 예측 도면 (접힌 설계·입지 검토도)
   {
     const r = rr(DESK_ITEMS[5]);
-    g.globalAlpha = 0.35; pr(r.x, r.y, r.w, r.h, '#c8e6ff'); g.globalAlpha = 1;
-    const liqY = r.y + Math.round(r.h * 0.45);
-    const liqH = Math.max(3, Math.round(r.h * 0.5));
-    pr(r.x + 1, liqY, r.w - 2, liqH, (activeTasks.phAlert && blink) ? '#e63946' : '#4cc9f0');
-    pr(r.x + 1, liqY, r.w - 2, 1, 'rgba(255,255,255,0.45)');
-    pr(r.x, r.y, 1, r.h, INK);
-    pr(r.x + r.w - 1, r.y, 1, r.h, INK);
-    pr(r.x, r.y + r.h - 1, r.w, 1, INK);
-    pr(r.x - 1, r.y, r.w + 2, 1, '#bfe0f0');
-    for (let yy = r.y + 4; yy < r.y + r.h - 3; yy += 4) pr(r.x + r.w - 4, yy, 3, 1, 'rgba(22,17,31,0.55)');
-    pr(r.x + 2, r.y + 2, 1, r.h - 5, 'rgba(255,255,255,0.5)');
-    for (let k = 0; k < 2; k++) {
-      const bp = Math.floor((T * 6 + k * 7) % liqH);
-      pr(r.x + 4 + k * 4, liqY + liqH - 1 - bp, 1, 1, 'rgba(255,255,255,0.85)');
-    }
+    box(r.x, r.y, r.w, r.h, '#e9e2c9');
+    pr(r.x + 2, r.y + 2, r.w - 4, r.h - 4, '#f6efd8');
+    const ix = r.x + 3, iy = r.y + 3, iw = r.w - 6, ih = r.h - 6;
+    // 도로, 하천, 주거지, 개발 예정지를 나타내는 도면 기호
+    pline(ix, iy + Math.round(ih * 0.72), ix + Math.round(iw * 0.35), iy + Math.round(ih * 0.48), '#4b9bc4');
+    pline(ix + Math.round(iw * 0.35), iy + Math.round(ih * 0.48), ix + Math.round(iw * 0.78), iy + Math.round(ih * 0.62), '#4b9bc4');
+    pline(ix + 1, iy + Math.round(ih * 0.22), ix + iw - 1, iy + Math.round(ih * 0.22), '#626b78');
+    pr(ix + Math.round(iw * 0.08), iy + Math.round(ih * 0.08), Math.max(2, Math.round(iw * 0.22)), Math.max(2, Math.round(ih * 0.22)), '#8cad75');
+    pr(ix + Math.round(iw * 0.62), iy + Math.round(ih * 0.08), Math.max(2, Math.round(iw * 0.28)), Math.max(2, Math.round(ih * 0.28)), '#b7a58b');
+    pr(ix + Math.round(iw * 0.42), iy + Math.round(ih * 0.42), Math.max(3, Math.round(iw * 0.24)), Math.max(3, Math.round(ih * 0.3)), '#c85a52');
+    pline(ix + Math.round(iw * 0.42), iy + 1, ix + Math.round(iw * 0.42), iy + ih - 1, '#b94b4b');
   }
 
   // 7. 개발사업 대상지 생태·토지이용 지도
@@ -2211,64 +2097,45 @@ function presentBuffer(withText) {
 
 // ---------- 장면 ----------
 function drawTitleSky() {
-  pixelBands(0, lh, [[0, '#0a0d2a'], [0.38, '#222a6b'], [0.62, '#7a4a7c'], [0.8, '#e08a6a'], [1, '#f5b878']], 3);
+  pixelBands(0, lh, [[0, '#0a0d2a'], [0.38, '#222a6b'], [0.62, '#526b86'], [0.8, '#b7a18a'], [1, '#e5c9a6']], 3);
   drawMoon(Math.round(lw * 0.5), Math.round(lh * 0.36), Math.round(Math.min(lw, lh) * 0.15));
 }
 
 function titleDuneY(t) {
-  return Math.round(lh * (0.78 + 0.035 * Math.sin(t * 5.2 + 0.6) + 0.015 * Math.sin(t * 11 + 1)));
+  return Math.round(lh * (0.79 + 0.025 * Math.sin(t * 5.2 + 0.6) + 0.012 * Math.sin(t * 11 + 1)));
 }
 
 function drawTitleCity() {
   const r = makeRng(23);
-  const baseY = Math.round(lh * 0.78);
+  const baseY = Math.round(lh * 0.79);
+  // 한국의 도심 외곽을 떠올리게 하는 아파트·업무시설 실루엣
   const list = [
-    { x: 0.15, w: 0.04, h: 0.22 }, { x: 0.21, w: 0.05, h: 0.32 }, { x: 0.28, w: 0.03, h: 0.19 },
-    { x: 0.34, w: 0.06, h: 0.42 }, { x: 0.42, w: 0.04, h: 0.28 }, { x: 0.48, w: 0.05, h: 0.48 },
-    { x: 0.55, w: 0.06, h: 0.36 }, { x: 0.63, w: 0.04, h: 0.25 }, { x: 0.69, w: 0.05, h: 0.39 },
-    { x: 0.76, w: 0.04, h: 0.21 }
+    { x: 0.12, w: 0.045, h: 0.24 }, { x: 0.19, w: 0.055, h: 0.34 }, { x: 0.27, w: 0.04, h: 0.2 },
+    { x: 0.34, w: 0.06, h: 0.42 }, { x: 0.43, w: 0.045, h: 0.28 }, { x: 0.5, w: 0.06, h: 0.46 },
+    { x: 0.59, w: 0.055, h: 0.32 }, { x: 0.67, w: 0.045, h: 0.25 }, { x: 0.75, w: 0.055, h: 0.38 },
+    { x: 0.84, w: 0.04, h: 0.22 }
   ];
+  // 뒤쪽 산 능선
+  for (let x = 0; x < lw; x++) {
+    const y = Math.round(lh * (0.69 + 0.035 * Math.sin(x / lw * 8 + 0.4) + 0.025 * Math.sin(x / lw * 17)));
+    pr(x, y, 1, lh - y, '#171c3c');
+    pr(x, y, 1, 1, '#3a456e');
+  }
   list.forEach(b => {
-    const bx = Math.round(lw * b.x);
-    const bw = Math.max(6, Math.round(lw * b.w));
-    const bh = Math.round(lh * b.h);
-    const by = baseY - bh;
-    pr(bx, by, bw, bh + 14, '#0e1230');
-    pr(bx + bw - 1, by, 1, bh + 14, '#2a3170');
+    const bx = Math.round(lw * b.x), bw = Math.max(6, Math.round(lw * b.w));
+    const bh = Math.round(lh * b.h), by = baseY - bh;
+    pr(bx, by, bw, bh + 14, '#0e1230'); pr(bx + bw - 1, by, 1, bh + 14, '#2a3170');
     pr(bx, by, bw, 1, '#2a3170');
-    const sp = 8;
-    for (let k = 0; k < sp; k++) {
-      const w2 = Math.max(1, Math.round(bw * 0.3 * (1 - k / sp)));
-      pr(bx + Math.round(bw / 2 - w2 / 2), by - 1 - k, w2, 1, '#0e1230');
-    }
-    for (let wy = by + 4; wy < baseY - 2; wy += 4) {
-      for (let wx = bx + 2; wx < bx + bw - 2; wx += 3) {
-        if (r() < 0.32) pr(wx, wy, 1, 2, r() < 0.8 ? '#f3c76a' : '#6ad0c8');
-      }
-    }
+    for (let wy = by + 4; wy < baseY - 2; wy += 4) for (let wx = bx + 2; wx < bx + bw - 2; wx += 3) if (r() < 0.32) pr(wx, wy, 1, 2, r() < 0.8 ? '#f3c76a' : '#6ad0c8');
+    // 아파트 옥상 구조물
+    if (b.h > 0.3) { pr(bx + 2, by - 2, bw - 4, 2, '#0e1230'); pr(bx + Math.floor(bw / 2), by - 5, 1, 3, '#0e1230'); }
   });
-
-  // 사막 언덕
-  for (let x = 0; x < lw; x++) {
-    const y = titleDuneY(x / lw);
-    pr(x, y, 1, lh - y, '#170e1c');
-    pr(x, y, 1, 1, '#6a3f58');
-  }
-  // 앞쪽 짙은 언덕
-  for (let x = 0; x < lw; x++) {
-    const y = Math.round(lh * (0.9 + 0.02 * Math.sin(x / lw * 7 + 2)));
-    pr(x, y, 1, lh - y, '#0f0913');
-    pr(x, y, 1, 1, '#3a2236');
-  }
-  // 선인장 실루엣
-  [0.08, 0.9].forEach(tx => {
-    const cx = Math.round(lw * tx);
-    const cy = titleDuneY(tx) + 3;
-    pr(cx, cy - 12, 2, 12, '#0d0814');
-    pr(cx - 4, cy - 8, 4, 1, '#0d0814');
-    pr(cx - 4, cy - 11, 1, 4, '#0d0814');
-    pr(cx + 2, cy - 7, 4, 1, '#0d0814');
-    pr(cx + 5, cy - 10, 1, 4, '#0d0814');
+  // 도심 앞쪽 가로수
+  [0.07, 0.91].forEach(tx => {
+    const cx = Math.round(lw * tx), cy = baseY - 2;
+    pr(cx, cy - 10, 2, 10, '#0d0814');
+    pixDisc(cx, cy - 12, 5, '#183b35');
+    pixDisc(cx - 2, cy - 10, 3, '#245346');
   });
 }
 
@@ -2289,18 +2156,21 @@ function drawOfficeScene() {
   const variant = skyVariant();
   const clockMinutes = gameMinutes % (24 * 60);
   const dayProgress = Math.max(0, Math.min(1, (clockMinutes - 7 * 60) / (12 * 60)));
-  const greenFlag = Math.max(0, (100 - droughtLevel) / 100) > 0.6;
+  const greenFlag = endingType === 'green' || (endingType === null && pollutionRisk < 45);
   const size = lw + 'x' + lh;
 
   cachedLayer('sky', variant + '|' + size, () => pixelBands(0, Math.round(lh * 0.68), SKY_STOPS[variant], 3));
   drawCelestial(variant, dayProgress, T);
-  cachedLayer('city', variant + '|' + greenFlag + '|' + size, () => drawCityLayer(variant, greenFlag));
+  const facilityKey = facilityDecisions.map(v => v || '-').join('|');
+  cachedLayer('city', variant + '|' + greenFlag + '|' + endingType + '|' + facilityKey + '|' + size, () => drawCityLayer(variant, greenFlag));
   drawSmoke();
 
-  if (weather.type === 'DUST') {
-    drawParticles('rgba(218, 165, 95, 0.65)', 12);
+  if (weather.type === 'FINE_DUST' || endingType === 'desert') {
+    drawParticles(endingType === 'desert' ? 'rgba(174, 139, 91, 0.55)' : 'rgba(165, 170, 174, 0.55)', 8);
+  } else if (endingType === 'partial') {
+    drawParticles('rgba(145, 150, 155, 0.24)', 4);
   } else if (weather.type === 'RAIN' || weather.type === 'HEAVY_RAIN') {
-    drawRain(weather.type === 'HEAVY_RAIN', weather.ph < 5.6);
+    drawRain(weather.type === 'HEAVY_RAIN', false);
   }
 
   cachedLayer('frame', size, drawFrameAndDesk);
