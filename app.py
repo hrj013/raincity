@@ -713,6 +713,7 @@ const FACTORIES = [
 
 // 세 부지의 최종 결정: standard(협의 동의), conditional(조건부 동의), reject(부동의/대안 재검토)
 let facilityDecisions = [null, null, null];
+let surveyPlanCompleted = [false, false, false];
 let projectImpactScore = 0;
 let assessmentQuality = 0;
 let pendingMilestoneIndex = null;
@@ -728,7 +729,7 @@ const DESK_ITEMS = [
   { id: 'sensor_pad', name: '📡 대기질·소음 측정자료 점검 단말기', relX: 0.62, relY: 0.67, relW: 0.08, relH: 0.12 },
   { id: 'beaker', name: '📐 개발사업 환경영향 예측 도면', relX: 0.72, relY: 0.66, relW: 0.07, relH: 0.14 },
   { id: 'photo', name: '🗺️ 대한민국 사업지 입지·토지이용 지도', relX: 0.80, relY: 0.73, relW: 0.06, relH: 0.10 },
-  { id: 'penholder', name: '✏️ 현장 조사 기록용 필기구', relX: 0.87, relY: 0.72, relW: 0.04, relH: 0.10 },
+  { id: 'penholder', name: '📝 조사 계획 수첩·근거 카드', relX: 0.87, relY: 0.72, relW: 0.04, relH: 0.10 },
   { id: 'phone', name: '☎️ 주민 의견·관계기관 협의 전화기', relX: 0.85, relY: 0.61, relW: 0.07, relH: 0.09 },
   { id: 'calendar', name: '📅 환경조사 및 평가 일정 캘린더', relX: 0.92, relY: 0.71, relW: 0.06, relH: 0.11 }
 ];
@@ -736,27 +737,45 @@ const DESK_ITEMS = [
 // 긴급 환경 감사/민원 시나리오 풀
 const AUDIT_SCENARIOS = [
   {
-    title: "발전시설 배출량 예측 자료 보완 요청",
-    desc: "사업자가 제출한 에너지 사용량과 대기오염 배출량 산정 근거가 불충분합니다. 인근 주거지역의 바람 방향과 대기질 현황도 함께 확인해야 합니다. 어떤 검토 의견을 제시할까요?",
-    choices: [
-      { text: "배출량 산정 근거와 계절별 대기확산 예측을 보완하고 저NOx 설비 대안을 비교한다", effect: () => { budget = Math.max(0, budget - 5); weather.co2 = Math.max(180, weather.co2 - 12); return "배출량 산정 근거와 계절별 대기확산 예측, 저NOx 설비 대안을 보완하도록 의견을 제출했습니다."; } },
-      { text: "사업자가 제출한 단일 예측값만으로 검토를 마무리한다", effect: () => { return "검토는 마무리했지만 계절별 기상 조건과 배출량 산정의 불확실성이 남았습니다."; } }
+    title: "주민 민원 · 발전시설의 대기오염 우려",
+    speaker: "인근 아파트 주민",
+    quote: "요즘 바람이 우리 동네 쪽으로 불 때가 많아요. 발전소가 들어오면 미세먼지나 냄새가 더 심해지는 건 아닌가요?",
+    prompt: "주민의 우려를 확인하기 위해 가장 먼저 확보해야 할 근거는 무엇일까요?",
+    evidence: [
+      { text: "계절별 풍향·풍속 자료와 배출량을 이용한 대기확산 예측 결과", correct: true,
+        effect: () => { budget = Math.max(0, budget - 5); weather.co2 = Math.max(180, weather.co2 - 10); pollutionRisk = Math.max(5, pollutionRisk - 2); return "정확해! 바람 방향과 배출량을 함께 봐야 오염물질이 어느 지역에 영향을 줄지 예측할 수 있어. 사업자에게 계절별 대기확산 예측과 배출량 산정 근거를 보완하도록 요청했어."; } },
+      { text: "사업장 주변의 조경수 종류와 화단 면적", correct: false,
+        effect: () => { return "조경도 중요하지만 주민이 걱정하는 대기오염의 이동과 농도를 판단하기에는 근거가 부족해. 풍향·풍속과 배출량, 대기확산 예측 자료가 더 직접적인 근거야."; } },
+      { text: "공장 건물 외벽의 색상과 지붕 높이", correct: false,
+        effect: () => { pollutionRisk = Math.min(100, pollutionRisk + 1); return "건물 외관은 대기오염 확산을 판단하는 핵심 자료가 아니야. 배출량과 기상 조건을 함께 살펴봐야 해."; } }
     ]
   },
   {
-    title: "물류센터 입지와 생태축 단절 우려",
-    desc: "물류센터 진입도로가 하천 주변 녹지와 야생동물 이동 구간을 통과할 가능성이 있습니다. 어떤 대안을 검토할까요?",
-    choices: [
-      { text: "대체 노선을 비교하고 하천변 완충녹지와 생태 연결 통로를 확보한다 (예산 -8억)", effect: () => { budget = Math.max(0, budget - 8); weather.ecoHealth = Math.min(100, weather.ecoHealth + 10); return "대체 노선과 완충녹지, 생태 연결 통로를 포함하도록 권고했습니다."; } },
-      { text: "현재 노선을 유지하고 공사 후 훼손된 녹지를 복구한다", effect: () => { weather.ecoHealth = Math.max(10, weather.ecoHealth - 5); return "사후 복구만으로는 기존 생태 연결 기능을 충분히 대신하기 어려울 수 있습니다."; } }
+    title: "주민 민원 · 물류센터 차량 소음",
+    speaker: "인근 초등학교 학부모",
+    quote: "물류센터가 생기면 큰 트럭이 새벽에도 다닐 것 같아요. 아이들이 등교할 때 위험하고 소음도 걱정됩니다.",
+    prompt: "교통과 생활환경 영향을 확인할 가장 적절한 근거는 무엇일까요?",
+    evidence: [
+      { text: "시간대별 교통량·차종 자료, 통학로 위치, 소음 예측 결과", correct: true,
+        effect: () => { budget = Math.max(0, budget - 6); pollutionRisk = Math.max(5, pollutionRisk - 2); return "좋은 판단이야! 차량 통행량과 시간대, 통학로, 소음 예측을 함께 봐야 안전한 진출입 동선과 운행시간을 제안할 수 있어."; } },
+      { text: "물류센터 내부 사무실의 책상 배치도", correct: false,
+        effect: () => { return "내부 사무실 배치는 주변 도로의 교통량이나 통학로 안전, 외부 소음을 설명하지 못해. 시간대별 차량 자료와 소음 예측이 필요해."; } },
+      { text: "사업장 직원들의 선호하는 출퇴근 복장", correct: false,
+        effect: () => { pollutionRisk = Math.min(100, pollutionRisk + 1); return "주변 주민에게 미치는 교통·소음 영향과 관련이 적은 자료야. 차량 통행량과 통학로, 소음 예측 자료를 확인해야 해."; } }
     ]
   },
   {
-    title: "주민의 공사 소음·비산먼지 민원",
-    desc: "인근 주민이 공사차량 통행과 야간 소음, 비산먼지에 대한 우려를 전달했습니다. 평가 과정에서 어떤 조치를 할까요?",
-    choices: [
-      { text: "주민 의견을 평가서에 반영하고 공사시간·차량동선·방진시설을 구체화한다 (예산 -7억)", effect: () => { budget = Math.max(0, budget - 7); pollutionRisk = Math.max(5, pollutionRisk - 4); return "주민 의견을 반영해 공사시간 제한, 차량 동선 분리, 방진·소음 저감대책을 구체화하도록 권고했습니다."; } },
-      { text: "공사 중 민원이 접수되면 사업자가 대응하도록 한다", effect: () => { pollutionRisk = Math.min(100, pollutionRisk + 3); return "사후 대응만으로는 공사 초기의 소음과 먼지 영향을 예방하기 어렵습니다."; } }
+    title: "주민 민원 · 하천 주변 녹지 훼손 우려",
+    speaker: "하천 인근 주민",
+    quote: "센터 진입도로가 하천 옆 나무가 많은 곳을 지나간다고 들었어요. 비가 많이 오면 흙탕물이 하천으로 들어갈까 걱정돼요.",
+    prompt: "생태와 빗물 유출 영향을 확인할 가장 직접적인 근거는 무엇일까요?",
+    evidence: [
+      { text: "하천·녹지 현황도, 생태 조사 결과, 불투수면과 우수 유출 예측", correct: true,
+        effect: () => { budget = Math.max(0, budget - 7); weather.ecoHealth = Math.min(100, weather.ecoHealth + 7); pollutionRisk = Math.max(5, pollutionRisk - 2); return "정확해! 녹지와 생태축의 위치, 불투수면 증가, 빗물 유출을 함께 봐야 해. 대체 노선과 완충녹지, 빗물 저류시설을 비교하도록 요청했어."; } },
+      { text: "사업지 주변 상가의 간판 디자인 조사", correct: false,
+        effect: () => { return "상권 경관 자료만으로는 하천 생태와 빗물 유출 영향을 알기 어려워. 생태 현황도와 불투수면, 우수 유출 예측이 필요해."; } },
+      { text: "건설 현장 근로자의 식사 시간표", correct: false,
+        effect: () => { pollutionRisk = Math.min(100, pollutionRisk + 1); return "주민이 우려한 하천 오염과 녹지 훼손을 판단할 근거가 아니야. 생태 조사와 빗물 유출 자료를 살펴봐야 해."; } }
     ]
   }
 ];
@@ -909,7 +928,7 @@ function handleObjectClick(id) {
     recordDailyTask('사업지 입지 및 주변 환경 지도 검토', '주거지, 학교, 하천, 녹지, 기존 도로와 개발 예정 부지의 공간적 관계를 확인했습니다.');
     showDialogue('나', '지도에서 사업지와 주변 주거지, 학교, 하천, 녹지, 기존 도로가 얼마나 가까운지 확인해야 해. 입지를 조금만 조정해도 환경영향을 크게 줄일 수 있는지 비교해 보자.');
   } else if (id === 'penholder') {
-    showDialogue('나', '환경현황 조사 자료는 측정 위치와 날짜, 계절, 기상 조건을 함께 기록해야 해. 자료의 출처와 조사 방법이 분명해야 영향 예측도 신뢰할 수 있어.');
+    openSurveyPlanMinigame();
   } else if (id === 'calendar') {
     const siteIndex = Math.min(2, Math.floor((day - 1) / 5));
     showDialogue('나', `오늘은 전체 15일 중 ${day}일차야. 현재는 ${siteIndex + 1}번 부지 평가 기간이고, ${Math.min(5, (siteIndex + 1) * 5 - day + 1)}일 안에 이 사업의 환경영향 검토를 마쳐야 해.`);
@@ -1047,37 +1066,174 @@ function cleanNode(idx) {
   }
 }
 
+// --- [미니게임] 조사 계획 수립: 사업별 핵심 영향과 조사 근거 연결 ---
+function openSurveyPlanMinigame() {
+  const idx = Math.min(2, Math.floor((day - 1) / 5));
+  const f = FACTORIES[idx];
+  if (surveyPlanCompleted[idx]) {
+    showDialogue('나', `${idx + 1}번 부지의 조사 계획은 이미 검토했어. 이제 다른 자료를 확인하거나 남은 업무를 진행하자.`);
+    return;
+  }
+
+  const planGuides = [
+    {
+      impact: 'air',
+      evidence: 'wind',
+      method: 'dispersion',
+      impactLabel: '대기질·온실가스',
+      evidenceLabel: '계절별 풍향·풍속 및 기존 대기질 자료',
+      methodLabel: '배출량 산정과 계절별 대기확산 예측 비교',
+      hint: '연료를 태우는 시설은 무엇이 배출되는지, 바람을 타고 어디로 이동하는지 확인해야 해.'
+    },
+    {
+      impact: 'airwater',
+      evidence: 'stack',
+      method: 'waste',
+      impactLabel: '대기오염·악취·폐수',
+      evidenceLabel: '주변 대기질, 악취 민감시설, 하천·배수로 현황',
+      methodLabel: '배출가스 처리와 폐수·악취 관리대책 비교',
+      hint: '폐기물 처리시설은 굴뚝 배출뿐 아니라 악취, 폐수, 반입 차량도 함께 살펴봐야 해.'
+    },
+    {
+      impact: 'traffic',
+      evidence: 'traffic',
+      method: 'route',
+      impactLabel: '교통·소음·생태·토지이용',
+      evidenceLabel: '시간대별 교통량, 통학로, 녹지·생태축 지도',
+      methodLabel: '진입도로 대안, 운행시간 조정, 완충녹지 비교',
+      hint: '물류시설은 차량이 언제 어디로 다니는지, 도로가 주거지와 녹지를 어떻게 통과하는지가 중요해.'
+    }
+  ];
+  const guide = planGuides[idx];
+  const options = {
+    impact: [
+      ['air', '대기질·온실가스'], ['airwater', '대기오염·악취·폐수'], ['traffic', '교통·소음·생태·토지이용'], ['visual', '건물 외관·조경 디자인']
+    ],
+    evidence: [
+      ['wind', '계절별 풍향·풍속 및 기존 대기질 자료'],
+      ['stack', '주변 대기질·악취 민감시설·하천 및 배수로 현황'],
+      ['traffic', '시간대별 교통량·통학로·녹지와 생태축 지도'],
+      ['irrelevant', '건물 외벽 색상과 사무실 배치도']
+    ],
+    method: [
+      ['dispersion', '배출량 산정과 계절별 대기확산 예측 비교'],
+      ['waste', '배출가스 처리와 폐수·악취 관리대책 비교'],
+      ['route', '진입도로 대안·운행시간·완충녹지 비교'],
+      ['beauty', '건물 외관과 조경 디자인만 비교']
+    ]
+  };
+  const makeOptions = (key) => `<option value="" selected>선택하세요</option>` + options[key].map(([value, label]) => `<option value="${value}">${label}</option>`).join('');
+  openModal(`
+    <div class="modal-header"><span class="modal-title">📝 ${idx + 1}번 부지 조사 계획 수립</span><button class="close-btn" onclick="closeModal()">닫기</button></div>
+    <div class="dossier-box">
+      <div style="font-size:0.82rem; color:#765d3d; margin-bottom:6px;">${day}일차 · ${f.facility}</div>
+      <h3>무엇을, 어떤 자료로, 어떻게 조사할까?</h3>
+      <p style="line-height:1.65; margin:9px 0;">${f.benefit}</p>
+      <div style="background:#e8dfc9; padding:11px; line-height:1.65; margin:10px 0;">
+        <strong>💡 조사 계획을 세우는 순서</strong><br>
+        ① 시설 특성상 가장 큰 환경영향을 고른다.<br>
+        ② 그 영향을 확인할 수 있는 현황 자료를 고른다.<br>
+        ③ 영향 예측과 대안 비교 방법을 정한다.
+      </div>
+      <p style="font-size:0.9rem; line-height:1.6; color:#5e503d;">힌트: ${guide.hint}</p>
+      <label style="display:block; margin:14px 0 6px; font-weight:700;">1. 우선 조사할 환경영향</label>
+      <select id="plan-impact" style="width:100%; padding:11px; background:#f6efd8; color:#211d18;">${makeOptions('impact')}</select>
+      <label style="display:block; margin:14px 0 6px; font-weight:700;">2. 확보해야 할 현황 자료</label>
+      <select id="plan-evidence" style="width:100%; padding:11px; background:#f6efd8; color:#211d18;">${makeOptions('evidence')}</select>
+      <label style="display:block; margin:14px 0 6px; font-weight:700;">3. 적절한 예측·대안 검토 방법</label>
+      <select id="plan-method" style="width:100%; padding:11px; background:#f6efd8; color:#211d18;">${makeOptions('method')}</select>
+      <div style="font-size:0.82rem; line-height:1.6; margin-top:12px; color:#69583f;">정답을 맞히면 조사 계획이 평가서에 반영되고 평가 품질이 올라가. 틀려도 설명을 확인한 뒤 다시 도전할 수 있어.</div>
+    </div>
+    <div style="text-align:center; margin-top:16px;"><button class="action-btn btn-yes" onclick="submitSurveyPlan(${idx})">조사 계획 제출</button></div>
+  `);
+}
+
+function submitSurveyPlan(idx) {
+  const guide = [
+    { impact: 'air', evidence: 'wind', method: 'dispersion' },
+    { impact: 'airwater', evidence: 'stack', method: 'waste' },
+    { impact: 'traffic', evidence: 'traffic', method: 'route' }
+  ][idx];
+  const impact = document.getElementById('plan-impact')?.value;
+  const evidence = document.getElementById('plan-evidence')?.value;
+  const method = document.getElementById('plan-method')?.value;
+  const correctCount = Number(impact === guide.impact) + Number(evidence === guide.evidence) + Number(method === guide.method);
+  if (correctCount === 3) {
+    surveyPlanCompleted[idx] = true;
+    assessmentQuality += 1.5;
+    pollutionRisk = Math.max(5, pollutionRisk - 2);
+    recordDailyTask('사업 특성에 맞는 환경현황 조사 계획 수립', `${FACTORIES[idx].facility}: 핵심 영향, 현황 자료, 예측·대안 검토 방법을 올바르게 연결했습니다.`);
+    closeModal();
+    showDialogue('나 · 조사 계획 승인', '완벽해! 무엇을 조사할지, 어떤 자료가 필요한지, 어떻게 영향을 예측할지 논리적으로 연결했어. 이 계획을 바탕으로 평가서의 신뢰도를 높일 수 있겠어.');
+  } else {
+    const hints = [
+      impact !== guide.impact ? '① 시설에서 가장 크게 발생할 수 있는 환경영향부터 생각해 봐.' : '',
+      evidence !== guide.evidence ? '② 주민·자연환경에 미치는 영향을 실제로 확인할 수 있는 현황 자료를 골라야 해.' : '',
+      method !== guide.method ? '③ 조사한 자료를 이용해 사업 전후의 변화와 대안을 비교할 수 있는 방법을 골라야 해.' : ''
+    ].filter(Boolean).join('<br>');
+    openModal(`
+      <div class="modal-header"><span class="modal-title">🔎 조사 계획을 조금 더 다듬어 보자</span><button class="close-btn" onclick="closeModal()">닫기</button></div>
+      <div class="dossier-box">
+        <h3>${correctCount}/3개 항목이 적절해</h3>
+        <p style="line-height:1.8; margin-top:10px;">${hints}</p>
+        <p style="line-height:1.7; margin-top:12px; color:#6b5638;">조사 계획은 시설의 특성 → 예상 영향 → 필요한 현황 자료 → 예측 방법 순서로 생각하면 쉬워.</p>
+      </div>
+      <div style="text-align:center; margin-top:16px;"><button class="action-btn btn-yes" onclick="openSurveyPlanMinigame()">다시 계획하기</button></div>
+    `);
+  }
+}
+
 // --- [미니게임 4] 환경평가원 직통 전화기 (돌발 감사 & 민원) ---
 function openAuditPhoneModal() {
   if (!activeTasks.phoneRinging || !activeTasks.currentAudit) {
-    showDialogue('나', '현재 접수된 주민 의견이나 관계기관 협의 요청은 없어. 전화가 오면 개발사업의 환경영향과 대안을 검토하자.');
+    showDialogue('나', '아직 접수된 주민 의견이 없어. 전화가 오면 주민의 말을 듣고, 가장 관련 깊은 자료를 골라 근거를 찾아보자.');
     return;
   }
 
   const audit = activeTasks.currentAudit;
   openModal(`
     <div class="modal-header">
-      <span class="modal-title">☎️ [협의 요청] ${audit.title}</span>
+      <span class="modal-title">☎️ 주민 의견 접수 · ${audit.title}</span>
       <button class="close-btn" onclick="closeModal()">닫기</button>
     </div>
-    <p style="font-size:1.02rem; line-height:1.7; color:#f0ece1; margin-bottom:20px;">
-      "${audit.desc}"
-    </p>
-    <button class="choice-btn" onclick="resolveAudit(0)">1. ${audit.choices[0].text}</button>
-    <button class="choice-btn" onclick="resolveAudit(1)">2. ${audit.choices[1].text}</button>
+    <div style="display:flex; gap:12px; align-items:flex-start; margin:8px 0 16px;">
+      <div style="font-size:2.2rem; flex:0 0 auto;">🧑</div>
+      <div style="position:relative; background:#f6efd8; color:#29251f; border:3px solid #9b835d; padding:14px 16px; line-height:1.8; border-radius:12px; flex:1;">
+        <strong style="display:block; color:#72512c; margin-bottom:5px;">${audit.speaker}</strong>
+        “${audit.quote}”
+      </div>
+    </div>
+    <div class="dossier-box">
+      <h3>🔎 어떤 자료를 확인해야 할까?</h3>
+      <p style="line-height:1.65; margin:8px 0 12px;">${audit.prompt}</p>
+      <p style="font-size:0.85rem; color:#66563f; margin-bottom:10px;">가장 직접적인 근거가 되는 카드를 하나 선택해 봐.</p>
+      ${audit.evidence.map((item, i) => `
+        <button class="choice-btn" style="text-align:left; margin:7px 0; line-height:1.55;" onclick="resolveAudit(${i})">
+          <strong>${String.fromCharCode(65 + i)}.</strong> ${item.text}
+        </button>
+      `).join('')}
+    </div>
   `);
 }
 
 function resolveAudit(choiceIdx) {
-  const auditTitle = activeTasks.currentAudit.title;
-  const resultMsg = activeTasks.currentAudit.choices[choiceIdx].effect();
-  recordDailyTask(auditTitle, resultMsg);
+  const audit = activeTasks.currentAudit;
+  if (!audit || !audit.evidence || !audit.evidence[choiceIdx]) return;
+  const selected = audit.evidence[choiceIdx];
+  const wasCorrect = selected.correct;
+  const resultMsg = selected.effect();
+  if (wasCorrect) {
+    assessmentQuality += 1;
+    recordDailyTask('주민 의견에서 환경영향 근거 찾기 성공', `${audit.title}: ${selected.text}`);
+  } else {
+    recordDailyTask('주민 의견 검토 및 근거 자료 재확인', `${audit.title}: 선택한 자료가 핵심 우려와 직접 연결되지 않아 추가 확인이 필요합니다.`);
+  }
   activeTasks.phoneRinging = false;
   activeTasks.currentAudit = null;
   closeModal();
   updateWeatherHUD();
   updateAlertStrip();
-  showDialogue('나', resultMsg);
+  showDialogue(wasCorrect ? '나 · 근거 확인 성공' : '나 · 자료를 다시 살펴보자', resultMsg);
 }
 
 // --- 노트북 정책 화면 ---
