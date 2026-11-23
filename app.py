@@ -1,9 +1,11 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
+GAME_TITLE = "SEOUL MOONLIGHT"
+
 st.set_page_config(
-    page_title="GREEN HORIZON",
-    page_icon="🌧️",
+    page_title=GAME_TITLE,
+    page_icon="🌙",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -24,14 +26,14 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-game_html = """
+game_html = r"""
 <!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>GREEN HORIZON</title>
+<title>SEOUL MOONLIGHT</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Cinzel:wght@600;800&family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@300;400;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Cinzel:wght@600;800&family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@300;400;600;700;800&display=swap');
 
   :root {
     --ink: #0a0d24;
@@ -45,537 +47,197 @@ game_html = """
     --rose: #e0505a;
   }
 
-  * {
-    box-sizing: border-box;
-    user-select: none;
-    margin: 0;
-    padding: 0;
-  }
+  * { box-sizing: border-box; user-select: none; margin: 0; padding: 0; }
 
   body, html {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
+    width: 100%; height: 100%; overflow: hidden;
     background-color: #070a1c;
     font-family: 'Noto Sans KR', sans-serif;
     color: #f0ece1;
   }
 
-  #game-container {
-    position: relative;
-    width: 100vw;
-    height: 100vh;
-    overflow: hidden;
-    background: #0b0f2a;
-  }
+  #game-container { position: relative; width: 100vw; height: 100vh; overflow: hidden; background: #0b0f2a; }
 
   canvas {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: block;
-    image-rendering: pixelated;
-    image-rendering: crisp-edges;
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: block;
+    image-rendering: pixelated; image-rendering: crisp-edges;
   }
 
-  .hollow-panel,
-  #dialogue-box,
-  #hud-clock,
-  #hud-weather {
-    border: none;
-    border-radius: 0;
+  /* 미니게임용 캔버스: 모달 안에서 비율 유지 */
+  canvas.mg {
+    position: relative !important; width: 100% !important; height: auto !important;
+    display: block; margin: 0 auto; border: 3px solid var(--edge);
+    box-shadow: 0 0 0 3px var(--ink), 0 8px 0 3px var(--ink);
+    image-rendering: pixelated; background: #0d163b; cursor: pointer; touch-action: none;
+  }
+
+  .hollow-panel, #dialogue-box, #hud-clock, #hud-weather {
+    border: none; border-radius: 0;
     box-shadow:
       -4px 0 0 0 var(--edge), 4px 0 0 0 var(--edge), 0 -4px 0 0 var(--edge), 0 4px 0 0 var(--edge),
       -8px 0 0 0 var(--ink), 8px 0 0 0 var(--ink), 0 -8px 0 0 var(--ink), 0 8px 0 0 var(--ink),
       0 14px 0 0 rgba(0, 0, 0, 0.35);
   }
 
-  .hollow-panel {
-    background: linear-gradient(180deg, #16215a 0%, #0f1744 100%);
-    padding: 24px;
-    position: relative;
-  }
-
+  .hollow-panel { background: linear-gradient(180deg, #16215a 0%, #0f1744 100%); padding: 24px; position: relative; }
   .hollow-panel::before {
-    content: "★";
-    position: absolute;
-    top: -14px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #14205a;
-    padding: 0 10px;
-    color: var(--gold);
-    font-size: 14px;
+    content: "🌙"; position: absolute; top: -16px; left: 50%; transform: translateX(-50%);
+    background: #14205a; padding: 0 10px; color: var(--gold); font-size: 14px;
   }
 
   #title-overlay {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    z-index: 20;
-    transition: opacity 1.2s ease, transform 2.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 20; transition: opacity 1.2s ease, transform 2.2s cubic-bezier(0.25, 0.8, 0.25, 1);
   }
-
   #title-overlay::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: -1;
+    content: ''; position: absolute; inset: 0; z-index: -1;
     background: radial-gradient(ellipse 42% 30% at 50% 50%, rgba(6, 8, 28, 0.78) 0%, rgba(6, 8, 28, 0.45) 55%, rgba(6, 8, 28, 0) 100%);
     pointer-events: none;
   }
-
-  #title-overlay.zooming {
-    transform: scale(4.5) translate(5%, -5%);
-    opacity: 0;
-    pointer-events: none;
-  }
+  #title-overlay.zooming { transform: scale(4.5) translate(5%, -5%); opacity: 0; pointer-events: none; }
 
   .title-logo {
     font-family: 'Press Start 2P', 'Cinzel', monospace;
-    font-size: clamp(1.7rem, 5.2vw, 3.6rem);
-    font-weight: 400;
-    letter-spacing: 0.06em;
-    color: #ffe9a8;
-    text-shadow: 4px 4px 0 #b4533a, 8px 8px 0 #0a0d24;
-    margin-bottom: 26px;
+    font-size: clamp(1.5rem, 4.6vw, 3.3rem); font-weight: 400; letter-spacing: 0.06em;
+    color: #ffe9a8; text-shadow: 4px 4px 0 #b4533a, 8px 8px 0 #0a0d24; margin-bottom: 26px;
   }
-
   .title-sub {
-    font-family: 'Noto Sans KR', sans-serif;
-    font-weight: 600;
-    font-size: 1.1rem;
-    letter-spacing: 0.22em;
-    color: #d6e4ff;
-    margin-bottom: 45px;
-    text-shadow: 2px 2px 0 #0a0d24;
+    font-weight: 600; font-size: 1.1rem; letter-spacing: 0.22em; color: #d6e4ff;
+    margin-bottom: 45px; text-shadow: 2px 2px 0 #0a0d24;
   }
 
   .start-btn {
-    font-family: 'Press Start 2P', 'Cinzel', monospace;
-    font-size: 1.05rem;
-    letter-spacing: 0.15em;
-    padding: 16px 44px;
-    background: var(--gold);
-    color: #1a1030;
-    border: none;
-    border-radius: 0;
-    cursor: pointer;
+    font-family: 'Press Start 2P', 'Cinzel', monospace; font-size: 1.05rem; letter-spacing: 0.15em;
+    padding: 16px 44px; background: var(--gold); color: #1a1030; border: none; border-radius: 0; cursor: pointer;
     transition: transform 0.08s steps(2), box-shadow 0.08s steps(2);
-    box-shadow:
-      -4px 0 0 0 var(--ink), 4px 0 0 0 var(--ink), 0 -4px 0 0 var(--ink), 0 4px 0 0 var(--ink),
-      0 10px 0 0 var(--gold-dk), 0 10px 0 4px var(--ink);
+    box-shadow: -4px 0 0 0 var(--ink), 4px 0 0 0 var(--ink), 0 -4px 0 0 var(--ink), 0 4px 0 0 var(--ink), 0 10px 0 0 var(--gold-dk), 0 10px 0 4px var(--ink);
   }
-
-  .start-btn:hover {
-    background: #ffd978;
-    transform: translateY(-2px);
-  }
-
+  .start-btn:hover { background: #ffd978; transform: translateY(-2px); }
   .start-btn:active {
     transform: translateY(6px);
-    box-shadow:
-      -4px 0 0 0 var(--ink), 4px 0 0 0 var(--ink), 0 -4px 0 0 var(--ink), 0 4px 0 0 var(--ink),
-      0 4px 0 0 var(--gold-dk), 0 4px 0 4px var(--ink);
+    box-shadow: -4px 0 0 0 var(--ink), 4px 0 0 0 var(--ink), 0 -4px 0 0 var(--ink), 0 4px 0 0 var(--ink), 0 4px 0 0 var(--gold-dk), 0 4px 0 4px var(--ink);
   }
 
   #hud-clock {
-    position: absolute;
-    top: 24px;
-    right: 28px;
-    z-index: 15;
+    position: absolute; top: 24px; right: 28px; z-index: 15;
     background: linear-gradient(180deg, #1a2766 0%, #101847 100%);
-    padding: 10px 18px;
-    display: none;
-    align-items: center;
-    gap: 12px;
+    padding: 10px 18px; display: none; align-items: center; gap: 12px;
   }
-
-  .clock-day {
-    font-family: 'Noto Sans KR', sans-serif;
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: #ffe08a;
-  }
-
-  .clock-time {
-    font-family: 'Noto Sans KR', sans-serif;
-    font-size: 1.05rem;
-    font-weight: 700;
-    color: #ffffff;
-    background: rgba(0, 0, 0, 0.35);
-    padding: 4px 10px;
-    border-radius: 0;
-    letter-spacing: 0.04em;
-  }
-
+  .clock-day { font-size: 1.1rem; font-weight: 700; color: #ffe08a; }
+  .clock-time { font-size: 1.05rem; font-weight: 700; color: #ffffff; background: rgba(0, 0, 0, 0.35); padding: 4px 10px; letter-spacing: 0.04em; }
   .speed-btn {
-    background: #26357f;
-    border: none;
-    color: #cfdcff;
-    font-size: 0.78rem;
-    padding: 5px 9px;
-    border-radius: 0;
-    cursor: pointer;
-    box-shadow: 0 0 0 2px var(--ink), 0 4px 0 2px var(--ink);
-    margin-right: 3px;
+    background: #26357f; border: none; color: #cfdcff; font-size: 0.78rem; padding: 5px 9px; border-radius: 0; cursor: pointer;
+    box-shadow: 0 0 0 2px var(--ink), 0 4px 0 2px var(--ink); margin-right: 3px;
   }
-
-  .speed-btn.active {
-    background: var(--gold);
-    color: #1a1030;
-    font-weight: 700;
-  }
+  .speed-btn.active { background: var(--gold); color: #1a1030; font-weight: 700; }
 
   #hud-weather {
-    position: absolute;
-    top: 24px;
-    left: 28px;
-    z-index: 15;
+    position: absolute; top: 24px; left: 28px; z-index: 15;
     background: linear-gradient(180deg, #16215a 0%, #0f1744 100%);
-    padding: 10px 18px;
-    display: none;
-    font-size: 0.9rem;
-    line-height: 1.55;
+    padding: 10px 18px; display: none; font-size: 0.9rem; line-height: 1.55;
   }
 
-  #alert-strip {
-    position: absolute;
-    top: 120px;
-    left: 28px;
-    z-index: 15;
-    display: none;
-    flex-direction: column;
-    gap: 12px;
-  }
-
+  #alert-strip { position: absolute; top: 120px; left: 28px; z-index: 15; display: none; flex-direction: column; gap: 12px; }
   .alert-pill {
-    background: #b3262e;
-    border: none;
-    border-radius: 0;
-    color: #fff;
-    padding: 7px 14px;
-    font-size: 0.85rem;
-    font-weight: 700;
-    cursor: pointer;
-    animation: pulse 1.3s steps(2) infinite;
-    box-shadow:
-      -3px 0 0 0 #ffccd5, 3px 0 0 0 #ffccd5, 0 -3px 0 0 #ffccd5, 0 3px 0 0 #ffccd5,
-      -6px 0 0 0 var(--ink), 6px 0 0 0 var(--ink), 0 -6px 0 0 var(--ink), 0 6px 0 0 var(--ink);
+    background: #b3262e; border: none; border-radius: 0; color: #fff; padding: 7px 14px; font-size: 0.85rem; font-weight: 700;
+    cursor: pointer; animation: pulse 1.3s steps(2) infinite;
+    box-shadow: -3px 0 0 0 #ffccd5, 3px 0 0 0 #ffccd5, 0 -3px 0 0 #ffccd5, 0 3px 0 0 #ffccd5, -6px 0 0 0 var(--ink), 6px 0 0 0 var(--ink), 0 -6px 0 0 var(--ink), 0 6px 0 0 var(--ink);
   }
-
-  @keyframes pulse {
-    0%, 100% { transform: translateY(0); filter: brightness(0.92); }
-    50% { transform: translateY(-2px); filter: brightness(1.15); }
-  }
+  @keyframes pulse { 0%, 100% { transform: translateY(0); filter: brightness(0.92); } 50% { transform: translateY(-2px); filter: brightness(1.15); } }
 
   #dialogue-box {
-    position: absolute;
-    bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: min(820px, 88vw);
-    z-index: 25;
-    background: linear-gradient(180deg, #17235f 0%, #0d1540 100%);
-    padding: 18px 26px;
-    display: none;
-    cursor: pointer;
+    position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); width: min(820px, 88vw); z-index: 25;
+    background: linear-gradient(180deg, #17235f 0%, #0d1540 100%); padding: 18px 26px; display: none; cursor: pointer;
   }
-
   .speaker-tag {
-    display: inline-block;
-    background: var(--gold);
-    color: #1a1030;
-    font-weight: 700;
-    font-size: 0.88rem;
-    padding: 3px 14px;
-    border-radius: 0;
-    margin-bottom: 10px;
-    box-shadow: 0 0 0 2px var(--ink), 0 4px 0 2px var(--ink);
+    display: inline-block; background: var(--gold); color: #1a1030; font-weight: 700; font-size: 0.88rem; padding: 3px 14px;
+    margin-bottom: 10px; box-shadow: 0 0 0 2px var(--ink), 0 4px 0 2px var(--ink);
   }
+  .dialogue-text { font-size: 1.05rem; font-weight: 400; line-height: 1.7; letter-spacing: 0.01em; color: #f4f1e6; }
+  .dialogue-next { text-align: right; font-size: 0.8rem; color: var(--gold); margin-top: 6px; animation: blink 1s steps(2) infinite; }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
 
-  .dialogue-text {
-    font-family: 'Noto Sans KR', sans-serif;
-    font-size: 1.05rem;
-    font-weight: 400;
-    line-height: 1.7;
-    letter-spacing: 0.01em;
-    color: #f4f1e6;
-  }
-
-  .dialogue-next {
-    text-align: right;
-    font-size: 0.8rem;
-    color: var(--gold);
-    margin-top: 6px;
-    animation: blink 1s steps(2) infinite;
-  }
-
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.25; }
-  }
-
-  #modal-backdrop {
-    position: absolute;
-    inset: 0;
-    background: rgba(4, 6, 20, 0.78);
-    z-index: 30;
-    display: none;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .modal-card {
-    width: min(820px, 92vw);
-    max-height: 88vh;
-    overflow-y: auto;
-  }
-
+  #modal-backdrop { position: absolute; inset: 0; background: rgba(4, 6, 20, 0.78); z-index: 30; display: none; align-items: center; justify-content: center; }
+  .modal-card { width: min(820px, 92vw); max-height: 88vh; overflow-y: auto; }
   .modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 4px solid rgba(233, 239, 255, 0.25);
-    padding-bottom: 12px;
-    margin-bottom: 16px;
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 4px solid rgba(233, 239, 255, 0.25); padding-bottom: 12px; margin-bottom: 16px;
   }
-
-  .modal-title {
-    font-family: 'Noto Sans KR', sans-serif;
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: #ffe08a;
-    text-shadow: 2px 2px 0 var(--ink);
-  }
-
+  .modal-title { font-size: 1.25rem; font-weight: 700; color: #ffe08a; text-shadow: 2px 2px 0 var(--ink); }
   .close-btn {
-    background: #26357f;
-    border: none;
-    color: #dbe6ff;
-    font-size: 0.95rem;
-    padding: 5px 14px;
-    border-radius: 0;
-    cursor: pointer;
+    background: #26357f; border: none; color: #dbe6ff; font-size: 0.95rem; padding: 5px 14px; border-radius: 0; cursor: pointer;
     box-shadow: 0 0 0 3px var(--ink), 0 5px 0 3px var(--ink);
   }
+  .close-btn:hover { background: var(--gold); color: #1a1030; }
 
-  .close-btn:hover {
-    background: var(--gold);
-    color: #1a1030;
-  }
-
-  .newspaper-sheet {
-    background: #e8dec8;
-    color: #241f18;
-    padding: 26px;
-    border-radius: 0;
-    font-family: 'Gowun Batang', serif;
-    box-shadow: 0 0 0 3px var(--ink), 0 6px 0 3px var(--ink);
-  }
-
-  .news-head {
-    text-align: center;
-    border-top: 3px double #241f18;
-    border-bottom: 3px double #241f18;
-    padding: 10px 0;
-    margin-bottom: 16px;
-  }
-
-  .dossier-box {
-    background: #f4efe4;
-    color: #222;
-    padding: 20px;
-    border-radius: 0;
-    font-family: 'Gowun Batang', serif;
-    box-shadow: 0 0 0 3px var(--ink), 0 6px 0 3px var(--ink);
-  }
-
+  .newspaper-sheet { background: #e8dec8; color: #241f18; padding: 26px; font-family: 'Gowun Batang', serif; box-shadow: 0 0 0 3px var(--ink), 0 6px 0 3px var(--ink); }
+  .news-head { text-align: center; border-top: 3px double #241f18; border-bottom: 3px double #241f18; padding: 10px 0; margin-bottom: 16px; }
+  .dossier-box { background: #f4efe4; color: #222; padding: 20px; font-family: 'Gowun Batang', serif; box-shadow: 0 0 0 3px var(--ink), 0 6px 0 3px var(--ink); }
   .check-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px;
-    margin: 9px 0;
-    background: #e6decb;
-    border-left: 6px solid #7d6844;
-    border-radius: 0;
-    font-size: 1.02rem;
-    font-weight: 700;
+    display: flex; align-items: center; justify-content: space-between; padding: 12px; margin: 9px 0;
+    background: #e6decb; border-left: 6px solid #7d6844; font-size: 1.02rem; font-weight: 700;
   }
 
-  .policy-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
-    gap: 16px;
-  }
-
+  .policy-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 16px; }
   .policy-card {
-    background: #1b2766;
-    border: none;
-    border-radius: 0;
-    padding: 14px;
-    cursor: pointer;
-    transition: transform 0.08s steps(2);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+    background: #1b2766; border: none; padding: 14px; cursor: pointer; transition: transform 0.08s steps(2);
+    display: flex; flex-direction: column; justify-content: space-between;
     box-shadow: 0 0 0 3px #4b63c9, 0 0 0 6px var(--ink), 0 9px 0 6px var(--ink);
   }
-
   .policy-card:hover:not(.disabled) {
-    box-shadow: 0 0 0 3px var(--gold), 0 0 0 6px var(--ink), 0 9px 0 6px var(--ink);
-    transform: translateY(-3px);
-    background: #25348a;
+    box-shadow: 0 0 0 3px var(--gold), 0 0 0 6px var(--ink), 0 9px 0 6px var(--ink); transform: translateY(-3px); background: #25348a;
   }
-
-  .policy-card.disabled {
-    opacity: 0.52;
-    cursor: not-allowed;
-  }
-
-  .badge-status {
-    display: inline-block;
-    font-size: 0.78rem;
-    padding: 2px 8px;
-    border-radius: 0;
-    margin-top: 8px;
-  }
-
+  .policy-card.disabled { opacity: 0.52; cursor: not-allowed; }
+  .badge-status { display: inline-block; font-size: 0.78rem; padding: 2px 8px; margin-top: 8px; }
   .badge-active { background: #2d6a4f; color: #d8f3dc; }
   .badge-pending { background: #b58328; color: #fff3b0; }
   .badge-ready { background: #3d405b; color: #e0e1dd; }
 
-  .sensor-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 18px;
-    margin: 16px 0;
-  }
-
+  .sensor-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; margin: 16px 0; }
   .sensor-node {
-    background: #1b2250;
-    border: none;
-    border-radius: 0;
-    padding: 16px;
-    text-align: center;
-    cursor: pointer;
-    transition: transform 0.08s steps(2);
+    background: #1b2250; padding: 16px; text-align: center; cursor: pointer; transition: transform 0.08s steps(2);
     box-shadow: 0 0 0 3px #6c757d, 0 0 0 6px var(--ink);
   }
-
-  .sensor-node.dirty {
-    background: #4a3420;
-    box-shadow: 0 0 0 3px #e09f3e, 0 0 0 6px var(--ink);
-  }
-
-  .sensor-node.clean {
-    background: #17402f;
-    box-shadow: 0 0 0 3px #52b788, 0 0 0 6px var(--ink);
-  }
+  .sensor-node.dirty { background: #4a3420; box-shadow: 0 0 0 3px #e09f3e, 0 0 0 6px var(--ink); }
+  .sensor-node.clean { background: #17402f; box-shadow: 0 0 0 3px #52b788, 0 0 0 6px var(--ink); }
 
   .action-btn {
-    padding: 10px 22px;
-    border-radius: 0;
-    font-size: 0.98rem;
-    font-weight: 700;
-    cursor: pointer;
-    border: none;
-    transition: transform 0.08s steps(2);
-    box-shadow: 0 0 0 3px var(--ink), 0 7px 0 3px var(--ink);
+    padding: 10px 22px; font-size: 0.98rem; font-weight: 700; cursor: pointer; border: none;
+    transition: transform 0.08s steps(2); box-shadow: 0 0 0 3px var(--ink), 0 7px 0 3px var(--ink);
   }
-
   .action-btn:active { transform: translateY(4px); }
-
   .btn-yes { background: var(--gold); color: #1a1030; }
   .btn-yes:hover { background: #ffd978; }
   .btn-no { background: #3b4a9a; color: #e6e9f8; }
   .btn-no:hover { background: #4d5fbd; }
 
   .choice-btn {
-    display: block;
-    width: 100%;
-    text-align: left;
-    background: #1d2a70;
-    border: none;
-    color: #f0ece1;
-    padding: 13px 16px;
-    border-radius: 0;
-    margin-bottom: 12px;
-    cursor: pointer;
-    font-size: 0.96rem;
+    display: block; width: 100%; text-align: left; background: #1d2a70; border: none; color: #f0ece1;
+    padding: 13px 16px; margin-bottom: 12px; cursor: pointer; font-size: 0.96rem;
     box-shadow: 0 0 0 3px #4b63c9, 0 0 0 6px var(--ink);
   }
+  .choice-btn:hover { background: #2a3a94; box-shadow: 0 0 0 3px var(--gold), 0 0 0 6px var(--ink); }
 
-  .choice-btn:hover {
-    background: #2a3a94;
-    box-shadow: 0 0 0 3px var(--gold), 0 0 0 6px var(--ink);
+  /* 평가서 검토 미니게임 */
+  .timebar { height: 12px; background: #0b1236; border: 3px solid var(--ink); margin: 6px 0 12px; }
+  .timebar > div { height: 100%; background: var(--gold); width: 100%; }
+  .rv-line {
+    position: relative; padding: 11px 86px 11px 14px; margin: 9px 0; background: #e6decb; border-left: 6px solid #7d6844;
+    font-size: 0.98rem; font-weight: 700; line-height: 1.5; cursor: pointer; color: #241f18;
   }
-
-  .speaker-bubble-card {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    background: #f6efd8;
-    color: #221d17;
-    border: 3px solid #9b835d;
-    border-radius: 14px;
-    padding: 12px 16px;
-    margin: 12px 0;
-    cursor: pointer;
-    box-shadow: 0 5px 0 var(--ink);
-    transition: transform 0.08s steps(2), background 0.08s steps(2), border-color 0.08s steps(2);
-    text-align: left;
-    width: 100%;
+  .rv-line:hover { background: #f3ead2; }
+  .rv-line.hit { background: #f4d3cf; border-left-color: #b3262e; cursor: default; }
+  .rv-line.hit::after {
+    content: '반려'; position: absolute; right: 12px; top: 50%; transform: translateY(-50%) rotate(-8deg);
+    border: 3px solid #b3262e; color: #b3262e; padding: 2px 8px; font-weight: 800; animation: stamp .25s steps(3);
   }
-
-  .speaker-bubble-card:hover {
-    background: #fff8e3;
-    border-color: var(--gold);
-    transform: translateY(-2px);
-  }
-
-  .pixel-person-box {
-    width: 48px;
-    height: 48px;
-    flex: 0 0 48px;
-    background: #1a2766;
-    border: 3px solid var(--ink);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.65rem;
-    box-shadow: inset 0 0 0 2px #4b63c9;
-  }
-
-  .speech-text-box {
-    position: relative;
-    flex: 1;
-    font-family: 'Noto Sans KR', sans-serif;
-    font-size: 0.98rem;
-    font-weight: 600;
-    line-height: 1.55;
-  }
+  .rv-line.miss { animation: shake .3s steps(4); background: #f1e0a8; }
+  @keyframes stamp { 0% { transform: translateY(-50%) rotate(-8deg) scale(3); opacity: 0; } 100% { transform: translateY(-50%) rotate(-8deg) scale(1); opacity: 1; } }
+  @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
 
   #hover-tooltip {
-    position: absolute;
-    pointer-events: none;
-    background: #101846;
-    border: none;
-    color: #fff4d2;
-    padding: 5px 12px;
-    border-radius: 0;
-    font-size: 0.86rem;
-    font-weight: 600;
-    z-index: 18;
-    display: none;
-    transform: translate(-50%, -140%);
-    white-space: nowrap;
+    position: absolute; pointer-events: none; background: #101846; color: #fff4d2; padding: 5px 12px;
+    font-size: 0.86rem; font-weight: 600; z-index: 18; display: none; transform: translate(-50%, -140%); white-space: nowrap;
     box-shadow: 0 0 0 3px var(--edge), 0 0 0 6px var(--ink);
   }
 </style>
@@ -586,8 +248,8 @@ game_html = """
   <canvas id="gameCanvas"></canvas>
 
   <div id="title-overlay">
-    <div class="title-logo">GREEN HORIZON</div>
-    <div class="title-sub">기후 위기 속, 지속 가능한 대한민국의 미래를 평가하다</div>
+    <div class="title-logo">SEOUL MOONLIGHT</div>
+    <div class="title-sub">달빛 아래, 서울의 환경을 평가하다</div>
     <button class="start-btn" onclick="startGame()">START</button>
   </div>
 
@@ -646,10 +308,7 @@ let timeMultiplier = 1;
 let lastTimestamp = 0;
 let isPaused = false;
 
-let dailyWork = {
-  tasks: [],
-  budgetAtStart: 250
-};
+let dailyWork = { tasks: [], budgetAtStart: 250 };
 let pendingFinalDay = false;
 let pendingDayNotice = '';
 let previousCo2Emission = 280;
@@ -658,25 +317,11 @@ let budget = 250;
 let pollutionRisk = 38;
 
 let weather = {
-  type: 'CLEAR',
-  windDir: '서풍',
-  windSpeed: 2.4,
-  humidity: 55,
-  temp: 19,
-  so2: 18,
-  nox: 24,
-  pm25: 32,
-  ecoHealth: 72,
-  co2: 280
+  type: 'CLEAR', windDir: '서풍', windSpeed: 2.4, humidity: 55, temp: 19,
+  so2: 18, nox: 24, pm25: 32, ecoHealth: 72, co2: 280
 };
 
-let activeTasks = {
-  seedingReady: true,
-  phAlert: false,
-  sensorDirty: false,
-  phoneRinging: false,
-  currentAudit: null
-};
+let activeTasks = { seedingReady: true, phAlert: false, sensorDirty: false, phoneRinging: false, currentAudit: null };
 
 const POLICIES = [
   { id: 'fgd', name: '저NOx 연소·배출가스 방지시설', cost: 45, desc: '연소 효율을 높이고 질소산화물·황산화물 저감시설을 설치하도록 사업계획에 반영합니다.', status: 'READY', applyDay: null },
@@ -689,9 +334,9 @@ const POLICIES = [
 ];
 
 const FACTORIES = [
-  { id: 'factory1', name: '제1 에너지 공급시설 부지', facility: 'LNG 열병합발전소', benefit: '도시와 산업시설에 안정적인 전력과 열을 공급합니다.', role: '전력 공급은 필요하지만 연료 연소 과정에서 온실가스와 질소산화물 등이 발생할 수 있습니다. 주거지와의 이격거리, 배출구 높이, 저NOx 연소기술, 방지시설, 대체 에너지 입지를 비교해야 합니다.', pollutants: '온실가스(CO₂), 질소산화물(NOx), 황산화물(SOx), 소음 및 냉각수 영향', relX: 0.22, relY: 0.42, relW: 0.13, relH: 0.16 },
-  { id: 'factory2', name: '제2 자원순환시설 부지', facility: '폐기물 소각·자원회수시설', benefit: '도시에서 발생하는 폐기물을 처리하고 열과 자원을 회수합니다.', role: '폐기물 처리시설은 도시 운영에 필요하지만 대기배출, 악취, 폐수, 폐기물 운반차량과 주민 수용성 문제가 발생할 수 있습니다. 재활용·감량 대안, 배출가스 처리, 밀폐형 반입시설, 교통 동선을 함께 비교해야 합니다.', pollutants: '질소산화물(NOx), 먼지, 악취, 폐수, 운반차량 배출가스 및 소음', relX: 0.44, relY: 0.43, relW: 0.14, relH: 0.15 },
-  { id: 'factory3', name: '제3 물류지원시설 부지', facility: '대형 물류센터', benefit: '생활물자와 산업 원료를 공급하고 지역 일자리와 물류 기능을 지원합니다.', role: '물류시설은 지역경제와 생활에 필요하지만 대형 화물차 통행, 야간 소음, 대기오염, 넓은 불투수면과 녹지 훼손을 유발할 수 있습니다. 기존 도로 활용, 대중교통·친환경 차량, 완충녹지, 빗물관리 대안을 검토해야 합니다.', pollutants: '화물차 배출가스(PM2.5·NOx), 교통소음, 불투수면 증가, 녹지 훼손', relX: 0.68, relY: 0.41, relW: 0.13, relH: 0.17 }
+  { id: 'factory1', name: '제1 에너지 공급시설 부지 (한강 북단)', facility: 'LNG 열병합발전소', benefit: '서울 도심과 산업시설에 안정적인 전력과 열을 공급합니다.', role: '전력 공급은 필요하지만 연료 연소 과정에서 온실가스와 질소산화물 등이 발생할 수 있습니다. 주거지와의 이격거리, 배출구 높이, 저NOx 연소기술, 방지시설, 대체 에너지 입지를 비교해야 합니다.', pollutants: '온실가스(CO₂), 질소산화물(NOx), 황산화물(SOx), 소음 및 냉각수 영향', relX: 0.22, relY: 0.42, relW: 0.13, relH: 0.16 },
+  { id: 'factory2', name: '제2 자원순환시설 부지 (중랑천변)', facility: '폐기물 소각·자원회수시설', benefit: '서울에서 발생하는 폐기물을 처리하고 열과 자원을 회수합니다.', role: '폐기물 처리시설은 도시 운영에 필요하지만 대기배출, 악취, 폐수, 폐기물 운반차량과 주민 수용성 문제가 발생할 수 있습니다. 재활용·감량 대안, 배출가스 처리, 밀폐형 반입시설, 교통 동선을 함께 비교해야 합니다.', pollutants: '질소산화물(NOx), 먼지, 악취, 폐수, 운반차량 배출가스 및 소음', relX: 0.44, relY: 0.43, relW: 0.14, relH: 0.15 },
+  { id: 'factory3', name: '제3 물류지원시설 부지 (안양천변)', facility: '대형 물류센터', benefit: '생활물자와 산업 원료를 공급하고 지역 일자리와 물류 기능을 지원합니다.', role: '물류시설은 지역경제와 생활에 필요하지만 대형 화물차 통행, 야간 소음, 대기오염, 넓은 불투수면과 녹지 훼손을 유발할 수 있습니다. 기존 도로 활용, 대중교통·친환경 차량, 완충녹지, 빗물관리 대안을 검토해야 합니다.', pollutants: '화물차 배출가스(PM2.5·NOx), 교통소음, 불투수면 증가, 녹지 훼손', relX: 0.68, relY: 0.41, relW: 0.13, relH: 0.17 }
 ];
 
 let facilityDecisions = [null, null, null];
@@ -708,147 +353,112 @@ let pendingFinalSettlement = false;
 let endingType = null;
 
 const DESK_ITEMS = [
-  { id: 'radio', name: '🏭 배출기준 초과 사업장 현장 점검 무전기', relX: 0.04, relY: 0.65, relW: 0.07, relH: 0.13 },
-  { id: 'newspaper', name: '📰 대한민국 개발사업 평가 공고', relX: 0.13, relY: 0.74, relW: 0.14, relH: 0.12 },
+  { id: 'radio', name: '📟 배출허용기준 판정 계측기 (대기오염 측정값)', relX: 0.04, relY: 0.65, relW: 0.07, relH: 0.13 },
+  { id: 'newspaper', name: '📰 서울시 개발사업 환경영향평가 공고', relX: 0.13, relY: 0.74, relW: 0.14, relH: 0.12 },
   { id: 'documents', name: '📁 환경영향평가서·조사 체크리스트', relX: 0.29, relY: 0.70, relW: 0.13, relH: 0.14 },
   { id: 'laptop', name: '💻 환경 데이터 분석 노트북', relX: 0.44, relY: 0.64, relW: 0.16, relH: 0.17 },
   { id: 'sensor_pad', name: '📡 대기질·소음 측정자료 점검 단말기', relX: 0.62, relY: 0.67, relW: 0.08, relH: 0.12 },
-  { id: 'beaker', name: '📝 환경영향평가서 초안 작성 도면', relX: 0.72, relY: 0.66, relW: 0.07, relH: 0.14 },
-  { id: 'photo', name: '⛰️ 현장 사면·완충대 드래그 조사 지도', relX: 0.80, relY: 0.73, relW: 0.06, relH: 0.10 },
-  { id: 'penholder', name: '🏭 배출기준 초과 사업장 점검 수첩', relX: 0.87, relY: 0.72, relW: 0.04, relH: 0.10 },
-  { id: 'phone', name: '☎️ 주민 의견 말풍선 접수 전화기', relX: 0.85, relY: 0.61, relW: 0.07, relH: 0.09 },
+  { id: 'beaker', name: '📝 평가서 초안 검토 (오류 찾기)', relX: 0.72, relY: 0.66, relW: 0.07, relH: 0.14 },
+  { id: 'photo', name: '⛰️ 북한산 자락 사면·완충대 현장 조사 지도', relX: 0.80, relY: 0.73, relW: 0.06, relH: 0.10 },
+  { id: 'penholder', name: '🏭 배출허용기준 점검 수첩', relX: 0.87, relY: 0.72, relW: 0.04, relH: 0.10 },
+  { id: 'phone', name: '☎️ 주민 민원 전화 (말풍선 고르기)', relX: 0.85, relY: 0.61, relW: 0.07, relH: 0.09 },
   { id: 'calendar', name: '📅 환경조사 및 평가 일정 캘린더', relX: 0.92, relY: 0.71, relW: 0.06, relH: 0.11 },
-  { id: 'ecology_game', name: '🌿 서식지 교란 차단 현장 조사', relX: 0.04, relY: 0.85, relW: 0.10, relH: 0.09 },
-  { id: 'noise_game', name: '🔊 소음 파형 피크 측정 점검', relX: 0.36, relY: 0.85, relW: 0.11, relH: 0.09 },
+  { id: 'ecology_game', name: '🌙 야간 보호종 현장 조사', relX: 0.04, relY: 0.85, relW: 0.10, relH: 0.09 },
+  { id: 'noise_game', name: '🔊 최대소음도(Lmax) 측정', relX: 0.36, relY: 0.85, relW: 0.11, relH: 0.09 },
   { id: 'mitigation_game', name: '🧱 완충·저감시설 배치 시뮬레이터', relX: 0.68, relY: 0.85, relW: 0.11, relH: 0.09 },
-  { id: 'wind_game', name: '💨 바람길·확산 경로 저감 대응', relX: 0.86, relY: 0.85, relW: 0.10, relH: 0.09 }
+  { id: 'wind_game', name: '💨 풍향·대기확산 예측', relX: 0.86, relY: 0.85, relW: 0.10, relH: 0.09 }
 ];
 
+// ---- 주민 민원 전화: 말풍선 3개 중 평가에 반영할 근거를 고르는 시나리오 ----
+function wrongFx(msg, riskUp) {
+  return () => { if (riskUp) pollutionRisk = Math.min(100, pollutionRisk + riskUp); return msg; };
+}
 const AUDIT_SCENARIOS = [
   {
-    title: "주민 의견 수렴 · 발전시설 대기확산 우려",
-    situation: "주거지 방향 바람이 잦은 시기입니다. 각 주민의 말풍선을 직접 클릭해 환경영향평가에서 우선 검토할 핵심 근거 발언을 고르세요.",
+    title: '주민 민원 · 한강변 발전소 대기확산 우려',
+    situation: '한강변 아파트 단지 주민들이 연기가 단지로 들어올까 걱정하며 전화했습니다. 세 주민의 말풍선 중 환경영향평가에 반영할 만한 근거를 고르세요.',
     speakers: [
-      {
-        avatar: "🧑",
-        name: "인근 주민 A",
-        bubble: "계절별 풍향·풍속과 배출량으로 만든 대기확산 예측부터 먼저 확인해야 우리 동네 미세먼지 영향을 알 수 있어요!",
-        correct: true,
-        effect: () => {
-          budget = Math.max(0, budget - 5);
-          weather.co2 = Math.max(180, weather.co2 - 10);
-          pollutionRisk = Math.max(5, pollutionRisk - 2);
-          return "정확해! 풍향·풍속과 배출량 자료를 함께 봐야 오염물질 이동과 농도를 예측할 수 있어.";
-        }
-      },
-      {
-        avatar: "👩",
-        name: "행인 B",
-        bubble: "공장 울타리 페인트 색깔만 파란색으로 바꾸면 연기도 시원해 보이지 않을까요?",
-        correct: false,
-        effect: () => "외벽 색상은 대기오염 농도나 확산 경로를 줄이지 못해. 배출량과 기상 조건, 확산 예측이 필요해."
-      },
-      {
-        avatar: "🧔",
-        name: "주민 C",
-        bubble: "근처 편의점 도시락 종류가 늘어나면 발전소 연기가 줄어들 것 같아요!",
-        correct: false,
-        effect: () => {
-          pollutionRisk = Math.min(100, pollutionRisk + 1);
-          return "편의점 상품과 대기오염 확산은 관련이 없어. 풍향·풍속과 배출량 자료를 봐야 해.";
-        }
-      }
+      { name: '아파트 주민', look: { hair: '#d8d8e0', hs: 'bun', shirt: '#8a5a9a', shirt2: '#74487f', pants: '#3b3550', cane: true },
+        bubble: '여름이랑 겨울은 바람 방향이 달라요. 계절별 바람 자료로 우리 단지까지 연기가 오는지 예측해 주세요.', correct: true,
+        effect: () => { budget = Math.max(0, budget - 5); weather.co2 = Math.max(180, weather.co2 - 10); pollutionRisk = Math.max(5, pollutionRisk - 2); return '정확해! 계절별 풍향·풍속과 배출량을 함께 넣어야 오염물질 이동과 농도를 예측할 수 있어.'; } },
+      { name: '지나가던 행인', look: { hair: '#2b2230', hs: 'short', shirt: '#c0613a', shirt2: '#a24f2e', pants: '#35384f', glasses: true },
+        bubble: '옆 동네 발전소는 괜찮았다던데, 여기도 조사 없이 그냥 통과시켜도 되지 않나요?', correct: false,
+        effect: wrongFx('다른 지역의 결과로 이 부지를 대신할 수는 없어. 지형·바람·주거지 거리가 다르니 이 부지의 자료로 따로 예측해야 해.', 1) },
+      { name: '동네 청년', look: { hair: '#3a2a1a', hs: 'cap', cap: '#2b6cb0', shirt: '#4b9a6b', shirt2: '#3a7e56', pants: '#2b2d42' },
+        bubble: '굴뚝을 파란색으로 칠하면 연기가 덜 위험해 보일 거예요!', correct: false,
+        effect: wrongFx('굴뚝 색은 배출량이나 확산 경로를 바꾸지 못해. 필요한 건 기상 자료와 확산 예측이야.', 1) }
     ]
   },
   {
-    title: "주민 의견 수렴 · 물류차량 소음·통학로 안전",
-    situation: "새벽 대형차 통행과 등굣길 안전에 관한 주민 의견입니다. 평가 근거가 담긴 말풍선을 직접 클릭하세요.",
+    title: '주민 민원 · 물류센터 새벽 소음과 통학로',
+    situation: '학부모들이 새벽 대형 화물차 소음과 등굣길 안전을 걱정하며 전화했습니다. 평가 근거가 되는 말풍선을 고르세요.',
     speakers: [
-      {
-        avatar: "👵",
-        name: "할머니 주민",
-        bubble: "시간대별 교통량과 통학로 위치, 소음 예측 자료를 봐야 새벽 트럭 동선과 방음 대책을 제대로 세울 수 있죠!",
-        correct: true,
-        effect: () => {
-          budget = Math.max(0, budget - 6);
-          pollutionRisk = Math.max(5, pollutionRisk - 2);
-          return "맞아! 시간대별 교통량·통학로·소음 예측을 함께 봐야 안전과 소음을 동시에 검토할 수 있어.";
-        }
-      },
-      {
-        avatar: "👨",
-        name: "지나가는 시민",
-        bubble: "트럭 운전기사님들이 좋아하는 멜빵바지 스타일을 조사하면 소음이 줄어들 거예요!",
-        correct: false,
-        effect: () => "복장 취향은 교통량이나 소음 예측과 무관해. 통학로와 시간대별 교통·소음 자료가 핵심이야."
-      },
-      {
-        avatar: "🧑",
-        name: "주민 D",
-        bubble: "물류센터 휴게실 의자 쿠션 두께를 재보면 도로 소음 문제가 해결될까요?",
-        correct: false,
-        effect: () => {
-          pollutionRisk = Math.min(100, pollutionRisk + 1);
-          return "실내 의자 쿠션은 외부 도로 소음이나 통학로 안전을 설명하지 못해.";
-        }
-      }
+      { name: '학부모', look: { hair: '#4a2c20', hs: 'long', shirt: '#d98aa0', shirt2: '#bd6f86', pants: '#3d3a52', bag: '#a8603c' },
+        bubble: '새벽 트럭이 다니는 시간에 학교 앞 소음을 직접 재서 환경기준과 비교해 주세요.', correct: true,
+        effect: () => { budget = Math.max(0, budget - 6); pollutionRisk = Math.max(5, pollutionRisk - 2); return '맞아! 시간대별 소음을 현장에서 측정해 환경기준과 비교해야 방음 대책의 근거가 생겨.'; } },
+      { name: '상가 주인', look: { hair: '#5a5a66', hs: 'perm', shirt: '#7a8a4a', shirt2: '#667439', pants: '#4a3c30' },
+        bubble: '소음은 어차피 어디나 비슷하니까 측정은 건너뛰어도 괜찮아요.', correct: false,
+        effect: wrongFx('측정 없이 비슷할 거라고 가정하면 기준 초과 여부를 알 수 없어. 평가는 실제 측정값이 출발점이야.', 1) },
+      { name: '택시 기사', look: { hair: '#2b2230', hs: 'short', shirt: '#e0b13e', shirt2: '#c4982a', pants: '#2b2d42' },
+        bubble: '트럭 경적을 노랫소리로 바꾸면 해결되지 않을까요?', correct: false,
+        effect: wrongFx('경적 소리를 바꾼다고 소음도가 기준 이하로 내려가진 않아. 통행 시간과 소음도를 따져야 해.', 1) }
     ]
   },
   {
-    title: "주민 의견 수렴 · 하천 녹지 훼손 및 우수 유출",
-    situation: "집중호우 시 하천 인근 녹지 훼손과 초기우수 유입 우려가 제기되었습니다. 핵심 근거 말풍선을 직접 클릭하세요.",
+    title: '주민 민원 · 중랑천변 호우 시 오염수 유입',
+    situation: '하천 산책로 주민들이 집중호우 때 부지에서 흘러나오는 물이 하천을 오염시킬까 걱정합니다. 평가 근거를 고르세요.',
     speakers: [
-      {
-        avatar: "👩‍🌾",
-        name: "하천 인근 주민",
-        bubble: "하천·녹지 현황도와 생태 조사, 불투수면·우수 유출 예측을 봐야 완충녹지와 저류시설을 제대로 배치할 수 있어요!",
-        correct: true,
-        effect: () => {
-          budget = Math.max(0, budget - 7);
-          weather.ecoHealth = Math.min(100, weather.ecoHealth + 7);
-          pollutionRisk = Math.max(5, pollutionRisk - 2);
-          return "정확해! 생태 현황도와 불투수면·우수 유출 예측을 함께 봐야 하천과 녹지를 지킬 수 있어.";
-        }
-      },
-      {
-        avatar: "🧔",
-        name: "주민 E",
-        bubble: "공사장 밥차 메뉴에 떡볶이가 나오면 빗물 유출량이 확 줄어들 걸요!",
-        correct: false,
-        effect: () => "식단 메뉴로는 빗물 유출이나 생태축 훼손을 막을 수 없어. 하천·녹지 현황과 유출 예측이 필요해."
-      },
-      {
-        avatar: "👩",
-        name: "주민 F",
-        bubble: "사업부지 담벼락에 스티커를 많이 붙이면 하천 수질이 깨끗해질까요?",
-        correct: false,
-        effect: () => {
-          pollutionRisk = Math.min(100, pollutionRisk + 1);
-          return "담벼락 스티커는 수질이나 비점오염 저감과 관련이 적어.";
-        }
-      }
+      { name: '산책 주민', look: { hair: '#2b2230', hs: 'cap', cap: '#c0392b', shirt: '#3b6ea5', shirt2: '#2f5985', pants: '#35384f' },
+        bubble: '비가 많이 올 때 부지에서 하천으로 흘러드는 물의 양과 오염 정도를 예측해서 저류시설 위치를 정해 주세요.', correct: true,
+        effect: () => { budget = Math.max(0, budget - 7); weather.ecoHealth = Math.min(100, weather.ecoHealth + 7); pollutionRisk = Math.max(5, pollutionRisk - 2); return '정확해! 유출량·오염 부하를 예측해야 저류시설과 완충녹지를 알맞은 곳에 둘 수 있어.'; } },
+      { name: '낚시 어르신', look: { hair: '#d8d8e0', hs: 'bald', shirt: '#6a7a5a', shirt2: '#566448', pants: '#4a4036', cane: true },
+        bubble: '하천은 원래 지저분하니까 새로 생기는 오염은 신경 안 써도 돼요.', correct: false,
+        effect: wrongFx('이미 오염됐다고 추가 오염을 허용할 순 없어. 현재 수질을 기준으로 영향 증가분을 평가해야 해.', 1) },
+      { name: '공사장 인부', look: { hair: '#2b2230', hs: 'helmet', shirt: '#e07a2f', shirt2: '#c4651f', pants: '#35384f', vest: '#f2c14e' },
+        bubble: '공사장 담벼락에 그림을 그리면 수질이 맑아질 거예요!', correct: false,
+        effect: wrongFx('담벼락 그림은 수질과 아무 상관이 없어. 유출수 관리와 저류시설이 핵심이야.', 1) }
+    ]
+  },
+  {
+    title: '주민 민원 · 습지 인근 야간 공사와 서식지',
+    situation: '천변 습지 근처에서 야간 공사가 계획되자 주민들이 전화했습니다. 평가에 반영할 만한 말풍선을 고르세요.',
+    speakers: [
+      { name: '생태 모임 회원', look: { hair: '#4a2c20', hs: 'long', shirt: '#4b9a6b', shirt2: '#3a7e56', pants: '#3b3a52', glasses: true },
+        bubble: '이 습지에 맹꽁이와 수달이 산다는 말이 있어요. 계절별 서식 조사부터 하고 공사 시기를 정해 주세요.', correct: true,
+        effect: () => { budget = Math.max(0, budget - 6); weather.ecoHealth = Math.min(100, weather.ecoHealth + 8); pollutionRisk = Math.max(5, pollutionRisk - 2); return '맞아! 보호종 서식 여부는 현장조사로 확인하고, 번식기를 피해 공사 시기를 조정해야 해.'; } },
+      { name: '근처 주민', look: { hair: '#5a5a66', hs: 'short', shirt: '#8a6a4a', shirt2: '#74583b', pants: '#2b2d42' },
+        bubble: '동물은 알아서 이사 가니까 조사할 필요 없어요.', correct: false,
+        effect: wrongFx('이동하지 못하는 개체나 번식지는 공사로 사라질 수 있어. 서식 현황을 먼저 확인해야 해.', 1) },
+      { name: '편의점 직원', look: { hair: '#2b2230', hs: 'short', shirt: '#6ad0c8', shirt2: '#52b0a8', pants: '#3a3a4a' },
+        bubble: '맹꽁이한테 공사 일정표를 보내서 양해를 구하면 되죠!', correct: false,
+        effect: wrongFx('개구리에게 일정표를 보낼 순 없어! 서식지 조사와 공사 시기 조정이 필요해.', 1) }
+    ]
+  },
+  {
+    title: '주민 민원 · 공사 비산먼지와 아파트 창문',
+    situation: '공사장 바로 옆 아파트 주민들이 먼지 때문에 창문을 못 연다고 전화했습니다. 평가 근거가 되는 말풍선을 고르세요.',
+    speakers: [
+      { name: '저층 주민', look: { hair: '#d8d8e0', hs: 'bun', shirt: '#c0613a', shirt2: '#a24f2e', pants: '#3b3550', cane: true },
+        bubble: '공사 구간 가까운 우리 집 창문 높이에서 먼지 농도를 재고, 살수·세륜 계획도 확인해 주세요.', correct: true,
+        effect: () => { budget = Math.max(0, budget - 5); pollutionRisk = Math.max(5, pollutionRisk - 2.5); return '정확해! 민감한 지점에서 농도를 측정하고 살수·세륜 같은 저감 계획을 확인해야 해.'; } },
+      { name: '건너편 상인', look: { hair: '#2b2230', hs: 'perm', shirt: '#7a8ab4', shirt2: '#64739a', pants: '#4a3c30' },
+        bubble: '공사 먼지는 비 오면 없어지니까 계획 같은 건 필요 없죠.', correct: false,
+        effect: wrongFx('비가 안 오는 날에도 공사는 계속돼. 날씨에 맡기지 말고 저감 계획을 점검해야 해.', 1) },
+      { name: '중학생', look: { hair: '#3a2a1a', hs: 'short', shirt: '#e0505a', shirt2: '#c0404a', pants: '#2b3a5a', bag: '#2b6cb0' },
+        bubble: '공사장 입구에 방향제 화분을 놓으면 먼지가 사라지지 않을까요?', correct: false,
+        effect: wrongFx('방향제는 냄새를 가릴 뿐 먼지를 줄이진 못해. 발생원 관리가 먼저야.', 1) }
     ]
   }
 ];
 
 let particles = [];
 for (let i = 0; i < 120; i++) {
-  particles.push({
-    x: Math.random() * 2000,
-    y: Math.random() * 1200,
-    speedX: 2 + Math.random() * 5,
-    speedY: -0.5 + Math.random() * 1.5,
-    size: 1 + Math.random() * 2.5,
-    alpha: 0.2 + Math.random() * 0.5
-  });
+  particles.push({ x: Math.random() * 2000, y: Math.random() * 1200, speedX: 2 + Math.random() * 5, speedY: -0.5 + Math.random() * 1.5, size: 1 + Math.random() * 2.5, alpha: 0.2 + Math.random() * 0.5 });
 }
 
 let activeMinigameCleanup = null;
-
 function stopActiveMinigame() {
-  if (typeof activeMinigameCleanup === 'function') {
-    activeMinigameCleanup();
-  }
+  if (typeof activeMinigameCleanup === 'function') activeMinigameCleanup();
   activeMinigameCleanup = null;
 }
 
@@ -862,7 +472,6 @@ function startGame() {
   const overlay = document.getElementById('title-overlay');
   overlay.classList.add('zooming');
   scene = 'ZOOMING';
-
   setTimeout(() => {
     overlay.style.display = 'none';
     scene = 'OFFICE';
@@ -870,7 +479,7 @@ function startGame() {
     document.getElementById('hud-weather').style.display = 'block';
     updateWeatherHUD();
     updateAlertStrip();
-    showDialogue('나', '기후 위기로 폭염과 집중호우, 미세먼지 문제가 심해진 대한민국의 한 도시야. 환경평가원 실무로서 배출기준 초과 사업장 점검, 사면·완충대 드래그 조사, 주민 말풍선 근거 확인, 저감시설 배치 등을 진행해 보자!');
+    showDialogue('나', '기후 위기로 폭염과 집중호우, 미세먼지 문제가 심해진 서울이야. 환경평가원 실무자로서 배출기준 판정, 사면 현장조사, 평가서 검토, 야간 보호종 조사, 소음 측정, 저감시설 배치, 주민 민원 응대를 해 나가 보자!');
   }, 1800);
 }
 
@@ -883,9 +492,7 @@ function showDialogue(speaker, text) {
 
 function closeDialogue() {
   document.getElementById('dialogue-box').style.display = 'none';
-  if (document.getElementById('modal-backdrop').style.display !== 'flex') {
-    isPaused = false;
-  }
+  if (document.getElementById('modal-backdrop').style.display !== 'flex') isPaused = false;
 }
 
 function openModal(htmlContent) {
@@ -898,30 +505,20 @@ function openModal(htmlContent) {
 function closeModal() {
   stopActiveMinigame();
   document.getElementById('modal-backdrop').style.display = 'none';
-  if (document.getElementById('dialogue-box').style.display !== 'block') {
-    isPaused = false;
-  }
+  if (document.getElementById('dialogue-box').style.display !== 'block') isPaused = false;
 }
 
 function updateAlertStrip() {
   const strip = document.getElementById('alert-strip');
   let alerts = [];
-  if (activeTasks.phAlert) {
-    alerts.push(`<div class="alert-pill" onclick="handleObjectClick('beaker')">📝 평가서 초안 작성 필요 [예측 도면] 클릭</div>`);
-  }
-  if (activeTasks.sensorDirty) {
-    alerts.push(`<div class="alert-pill" onclick="handleObjectClick('sensor_pad')">📡 경고: 환경 측정장비 데이터 오류 발생! [점검 단말기] 클릭</div>`);
-  }
-  if (activeTasks.phoneRinging) {
-    alerts.push(`<div class="alert-pill" onclick="handleObjectClick('phone')">☎️ 수신 중: 주민 말풍선 의견 도착! [전화기] 클릭</div>`);
-  }
+  if (activeTasks.phAlert) alerts.push(`<div class="alert-pill" onclick="handleObjectClick('beaker')">📝 호우 영향 검토: 평가서 초안 검토 필요 [서류] 클릭</div>`);
+  if (activeTasks.sensorDirty) alerts.push(`<div class="alert-pill" onclick="handleObjectClick('sensor_pad')">📡 경고: 환경 측정장비 데이터 오류 발생! [점검 단말기] 클릭</div>`);
+  if (activeTasks.phoneRinging) alerts.push(`<div class="alert-pill" onclick="handleObjectClick('phone')">☎️ 수신 중: 주민 민원 전화가 왔습니다! [전화기] 클릭</div>`);
   strip.innerHTML = alerts.join('');
   strip.style.display = alerts.length > 0 ? 'flex' : 'none';
 }
 
-function recordDailyTask(title, detail) {
-  dailyWork.tasks.push({ title, detail });
-}
+function recordDailyTask(title, detail) { dailyWork.tasks.push({ title, detail }); }
 
 function calculateFinalScores() {
   const builtCount = facilityDecisions.filter(d => d && d !== 'reject').length;
@@ -930,27 +527,19 @@ function calculateFinalScores() {
   const netImpact = Math.max(0, projectImpactScore - activePolicyCount * 0.65 - assessmentQuality * 0.25);
   const risk = pollutionRisk;
   const environmentScore = (netImpact <= 1.5 && risk <= 48) ? 3 : ((netImpact <= 5 && risk <= 72) ? 2 : 1);
-  return {
-    utilityScore,
-    environmentScore,
-    builtCount,
-    netImpact: +netImpact.toFixed(1),
-    risk: +risk.toFixed(1)
-  };
+  return { utilityScore, environmentScore, builtCount, netImpact: +netImpact.toFixed(1), risk: +risk.toFixed(1) };
 }
 
-function scoreMark(score) {
-  return score === 3 ? 'O' : (score === 2 ? '△' : 'x');
-}
+function scoreMark(score) { return score === 3 ? 'O' : (score === 2 ? '△' : 'x'); }
 
 function handleObjectClick(id) {
   if (id === 'newspaper') {
     recordDailyTask('개발사업 평가 공고 및 사업계획 확인', '사업 목적, 규모, 입지, 공사·운영 계획과 환경영향평가 대상 항목을 확인했습니다.');
     openModal(`
-      <div class="modal-header"><span class="modal-title">📰 대한민국 개발사업 환경영향평가 공고</span><button class="close-btn" onclick="closeModal()">닫기</button></div>
-      <div class="newspaper-sheet"><div class="news-head"><div style="font-size:0.85rem; letter-spacing:0.2em;">대한민국 환경영향평가팀</div>
+      <div class="modal-header"><span class="modal-title">📰 서울시 개발사업 환경영향평가 공고</span><button class="close-btn" onclick="closeModal()">닫기</button></div>
+      <div class="newspaper-sheet"><div class="news-head"><div style="font-size:0.85rem; letter-spacing:0.2em;">서울 환경영향평가팀</div>
       <h2 style="font-size:1.45rem; margin-top:4px;">"필요한 개발과 환경 보전, 두 가지를 함께 검토합니다"</h2></div>
-      <p style="line-height:1.8; font-size:1.02rem;">기후 위기로 폭염과 집중호우, 대기오염 위험이 커진 대한민국의 한 도시. 도시 외곽에 에너지 공급시설, 자원순환시설, 물류지원시설의 입지가 제안되었다. 세 시설은 도시 운영에 필요하지만 온실가스와 대기오염, 소음, 교통량 증가, 녹지 훼손 등의 영향을 일으킬 수 있다.</p></div>
+      <p style="line-height:1.8; font-size:1.02rem;">기후 위기로 폭염과 집중호우, 대기오염 위험이 커진 서울. 한강과 중랑천, 안양천변에 에너지 공급시설, 자원순환시설, 물류지원시설의 입지가 제안되었다. 세 시설은 도시 운영에 필요하지만 온실가스와 대기오염, 소음, 교통량 증가, 녹지 훼손 등의 영향을 일으킬 수 있다.</p></div>
     `);
   } else if (id === 'documents') {
     recordDailyTask('환경영향평가서 및 조사 체크리스트 검토', '환경현황, 영향예측, 대안 비교, 저감방안, 주민 의견 반영 여부를 점검했습니다.');
@@ -1005,801 +594,7 @@ function openSiteInfoModal(id) {
     <div class="check-item"><span>현재 사업 결정</span><strong>${status}</strong></div></div>`);
 }
 
-// --- [업무 1] 배출허용기준 초과 사업장 현장 점검 ---
-function openEmissionInspectionGame() {
-  if (!activeTasks.seedingReady) {
-    showDialogue('나', '오늘의 배출시설 현장 점검은 이미 마쳤어. 내일 다시 점검해 보자.');
-    return;
-  }
-
-  let inspected = 0;
-  let falseChecks = 0;
-  let running = true;
-
-  const sites = [
-    { x: 110, y: 85, vx: 1.5, vy: 1.0, exceed: true, label: 'NOx 기준초과' },
-    { x: 280, y: 155, vx: -1.8, vy: 1.2, exceed: true, label: 'PM2.5 기준초과' },
-    { x: 450, y: 95, vx: 1.4, vy: -1.3, exceed: false, label: '기준적합 사업장' },
-    { x: 560, y: 185, vx: -1.5, vy: -1.0, exceed: true, label: 'SOx 기준초과' }
-  ];
-
-  openModal(`
-    <div class="modal-header"><span class="modal-title">🏭 배출허용기준 초과 사업장 점검 (${inspected}/3 조치)</span><button class="close-btn" onclick="closeModal()">닫기</button></div>
-    <p style="line-height:1.65; color:#d9d1bd; margin-bottom:10px;">
-      현장 모니터링에서 <strong>기준 초과(붉은 마커)</strong>로 잡힌 사업장을 클릭해 저감·개선 조치를 지시하세요! (기준적합 사업장은 불필요한 제재를 피하세요)
-    </p>
-    <canvas id="shooterCanvas" width="700" height="270" style="position:relative; width:100%; height:260px; border:3px solid #e9efff; background:#0d163b; cursor:pointer;"></canvas>
-    <p id="shooter-status" style="min-height:24px; color:#ffd166; font-weight:700; margin-top:10px;">기준 초과 사업장을 클릭해 개선 조치를 내리세요!</p>
-  `);
-
-  const c = document.getElementById('shooterCanvas');
-  const sctx = c.getContext('2d');
-
-  c.onclick = (e) => {
-    if (!running) return;
-    const rect = c.getBoundingClientRect();
-    const sx = ((e.clientX - rect.left) / rect.width) * c.width;
-    const sy = ((e.clientY - rect.top) / rect.height) * c.height;
-    const stEl = document.getElementById('shooter-status');
-
-    for (let i = sites.length - 1; i >= 0; i--) {
-      const t = sites[i];
-      const dist = Math.hypot(sx - t.x, sy - t.y);
-      if (dist <= 30) {
-        if (t.exceed) {
-          sites.splice(i, 1);
-          inspected++;
-          const titleEl = document.querySelector('.modal-title');
-          if (titleEl) titleEl.innerText = `🏭 배출허용기준 초과 사업장 점검 (${inspected}/3 조치)`;
-          if (stEl) stEl.innerText = `✅ ${t.label} 사업장 개선 조치 완료! (${inspected}/3)`;
-          if (inspected >= 3) {
-            running = false;
-            clearInterval(iv);
-            activeTasks.seedingReady = false;
-            assessmentQuality += 1.5;
-            pollutionRisk = Math.max(5, pollutionRisk - 2.5);
-            recordDailyTask('배출허용기준 초과 사업장 점검 완료', '기준 초과 사업장 3곳을 확인하고 배출저감 개선 조치를 기록했습니다.');
-            closeModal();
-            updateWeatherHUD();
-            showDialogue('나 · 현장 점검 완료', '기준 초과 사업장 3곳에 개선 조치를 지시했어! 대기오염 관리 실적이 올랐어.');
-          }
-        } else {
-          falseChecks++;
-          if (stEl) stEl.innerText = `⚠️ 해당 사업장은 배출기준 적합 상태입니다! (오점검 ${falseChecks}회)`;
-        }
-        break;
-      }
-    }
-  };
-
-  const iv = setInterval(() => {
-    if (!running) return;
-    sites.forEach(t => {
-      t.x += t.vx;
-      t.y += t.vy;
-      if (t.x < 48 || t.x > c.width - 48) t.vx *= -1;
-      if (t.y < 36 || t.y > c.height - 36) t.vy *= -1;
-    });
-
-    sctx.clearRect(0, 0, c.width, c.height);
-    sctx.fillStyle = '#0d163b';
-    sctx.fillRect(0, 0, c.width, c.height);
-
-    sctx.fillStyle = '#18275c';
-    for (let gx = 0; gx < c.width; gx += 35) sctx.fillRect(gx, 0, 1, c.height);
-    for (let gy = 0; gy < c.height; gy += 35) sctx.fillRect(0, gy, c.width, 1);
-
-    sites.forEach(t => {
-      sctx.fillStyle = t.exceed ? '#e0505a' : '#52b788';
-      sctx.beginPath();
-      sctx.arc(t.x, t.y, 24, 0, Math.PI * 2);
-      sctx.fill();
-      sctx.lineWidth = 3;
-      sctx.strokeStyle = '#16111f';
-      sctx.stroke();
-
-      sctx.fillStyle = '#ffffff';
-      sctx.font = 'bold 11px "Noto Sans KR", sans-serif';
-      sctx.textAlign = 'center';
-      sctx.fillText(t.label, t.x, t.y + 4);
-    });
-  }, 16);
-
-  activeMinigameCleanup = () => {
-    running = false;
-    clearInterval(iv);
-  };
-}
-
-// --- [업무 2 · 드래그 조작 개선] 현장 사면·완충대 드래그 조사 ---
-function openDragClimbMinigame() {
-  const idx = Math.min(2, Math.floor((day - 1) / 5));
-  const f = FACTORIES[idx];
-
-  openModal(`
-    <div class="modal-header">
-      <span class="modal-title">⛰️ 현장 사면·완충대 드래그 조사 · ${f.facility}</span>
-      <button class="close-btn" onclick="closeModal()">닫기</button>
-    </div>
-    <p style="line-height:1.65; color:#d9d1bd; margin-bottom:10px;">
-      조사원 위에서 <strong>마우스를 원하는 방향과 길이만큼 뒤로 당긴 뒤 놓으세요</strong>! 당기는 길이와 각도에 따라 <strong>점프 높이와 방향</strong>이 달라지며, 노란 점선으로 궤적을 미리 볼 수 있습니다.
-    </p>
-    <div style="display:flex; justify-content:space-between; background:#0d1438; padding:8px 14px; border:2px solid #4b63c9; margin-bottom:10px; font-size:0.9rem;">
-      <span>도달 고도: <strong id="drag-climb-pct" style="color:#ffd166;">0%</strong></span>
-      <span>조작: <strong style="color:#6ad0c8;">드래그 길이 = 세기 · 드래그 반대 방향 = 각도</strong></span>
-      <span>상태: <strong id="drag-climb-status" style="color:#a8e6cf;">현장 조사 중</strong></span>
-    </div>
-    <canvas id="dragClimbCanvas" width="700" height="360" style="position:relative; width:100%; height:340px; border:3px solid #e9efff; background:#101942; cursor:grab;"></canvas>
-    <div style="text-align:right; margin-top:10px;">
-      <button class="action-btn btn-no" id="drag-reset-btn">출발 지점 복귀</button>
-    </div>
-  `);
-
-  const c = document.getElementById('dragClimbCanvas');
-  const dctx = c.getContext('2d');
-  const W = c.width;
-  const H = c.height;
-
-  const platforms = [
-    { x: 0, y: H - 26, w: W, h: 26, type: 'ground' },
-    { x: 85, y: H - 82, w: 150, h: 14, type: 'plat' },
-    { x: 300, y: H - 134, w: 145, h: 14, type: 'plat' },
-    { x: 495, y: H - 188, w: 145, h: 14, type: 'plat' },
-    { x: 265, y: H - 242, w: 155, h: 14, type: 'plat' },
-    { x: 75, y: H - 294, w: 140, h: 14, type: 'plat' },
-    { x: 450, y: H - 332, w: 185, h: 16, type: 'goal' }
-  ];
-
-  const player = { x: 120, y: H - 52, w: 22, h: 26, vx: 0, vy: 0, grounded: true };
-  let dragging = false;
-  let dragStart = { x: 0, y: 0 };
-  let dragCurr = { x: 0, y: 0 };
-  let maxPct = 0;
-  let cleared = false;
-  let running = true;
-
-  const GRAVITY = 1150;
-  const MAX_DRAG = 160;
-
-  function toCanvasCoords(evt) {
-    const rect = c.getBoundingClientRect();
-    return {
-      x: ((evt.clientX - rect.left) / rect.width) * W,
-      y: ((evt.clientY - rect.top) / rect.height) * H
-    };
-  }
-
-  // 드래그 벡터를 실제 초기 속도 (vx, vy)로 변환
-  function computeLaunchVelocity() {
-    const pullX = dragStart.x - dragCurr.x;
-    const pullY = dragStart.y - dragCurr.y;
-    const rawDist = Math.hypot(pullX, pullY);
-    if (rawDist < 8) return null;
-    const clampedDist = Math.min(MAX_DRAG, rawDist);
-    const ratio = clampedDist / MAX_DRAG;
-    const nx = pullX / rawDist;
-    const ny = pullY / rawDist;
-
-    // 수평·수직 방향 모두 드래그 방향과 세기에 비례하게 반응
-    const speed = 140 + ratio * 520;
-    let vx = nx * speed;
-    let vy = ny * speed;
-    // 아래로 당겨 위로 쏘는 기본 감각을 유지하되, 드래그 각도에 따라 높이·방향이 확실히 변하도록 조정
-    if (vy > -110 && ratio > 0.25) {
-      vy = -110 - ratio * 260;
-    }
-    return { vx, vy, powerPct: Math.round(ratio * 100) };
-  }
-
-  c.onmousedown = (evt) => {
-    if (!running || !player.grounded) return;
-    const pt = toCanvasCoords(evt);
-    dragging = true;
-    dragStart = { x: player.x + player.w / 2, y: player.y + player.h / 2 };
-    dragCurr = pt;
-    c.style.cursor = 'grabbing';
-  };
-
-  window.addEventListener('mousemove', onDragMove);
-  function onDragMove(evt) {
-    if (!dragging) return;
-    dragCurr = toCanvasCoords(evt);
-  }
-
-  window.addEventListener('mouseup', onDragRelease);
-  function onDragRelease() {
-    if (!dragging) return;
-    dragging = false;
-    c.style.cursor = 'grab';
-    if (!player.grounded) return;
-
-    const vel = computeLaunchVelocity();
-    if (!vel) return;
-    player.vx = vel.vx;
-    player.vy = vel.vy;
-    player.grounded = false;
-  }
-
-  document.getElementById('drag-reset-btn').onclick = () => {
-    player.x = 120;
-    player.y = H - 52;
-    player.vx = 0;
-    player.vy = 0;
-    player.grounded = true;
-    dragging = false;
-  };
-
-  let prevT = performance.now();
-  function loop(now) {
-    if (!running) return;
-    const dt = Math.min(0.033, (now - prevT) / 1000);
-    prevT = now;
-
-    if (!player.grounded) {
-      player.vy += GRAVITY * dt;
-    }
-    const prevBottom = player.y + player.h;
-    player.x += player.vx * dt;
-    player.y += player.vy * dt;
-
-    if (player.x < 0) { player.x = 0; player.vx = Math.abs(player.vx) * 0.5; }
-    if (player.x + player.w > W) { player.x = W - player.w; player.vx = -Math.abs(player.vx) * 0.5; }
-    if (player.y < 0) { player.y = 0; player.vy = 0; }
-
-    let landed = false;
-    if (player.vy >= 0) {
-      for (const p of platforms) {
-        const overlapX = (player.x + player.w - 2) > p.x && (player.x + 2) < (p.x + p.w);
-        if (overlapX && prevBottom <= p.y + 12 && (player.y + player.h) >= p.y) {
-          player.y = p.y - player.h;
-          player.vy = 0;
-          player.vx = 0;
-          player.grounded = true;
-          landed = true;
-          if (p.type === 'goal' && !cleared) {
-            cleared = true;
-            dragClimbCompleted[idx] = true;
-            assessmentQuality += 2;
-            pollutionRisk = Math.max(5, pollutionRisk - 3);
-            weather.ecoHealth = Math.min(100, weather.ecoHealth + 5);
-            recordDailyTask('현장 사면·완충대 조사 완료', `${f.facility} 주변 상부 완충녹지 관측 지점에 도달했습니다.`);
-            updateWeatherHUD();
-            const stEl = document.getElementById('drag-climb-status');
-            if (stEl) stEl.innerText = '상부 관측 지점 도달! (+2 평가품질)';
-          }
-          break;
-        }
-      }
-    }
-    if (!landed) player.grounded = false;
-
-    const pct = Math.max(0, Math.min(100, Math.round(((H - 26 - (player.y + player.h)) / (H - 358)) * 100)));
-    if (pct > maxPct) maxPct = pct;
-    const pctEl = document.getElementById('drag-climb-pct');
-    if (pctEl) pctEl.innerText = `${pct}% (최고 ${maxPct}%)`;
-
-    dctx.clearRect(0, 0, W, H);
-    dctx.fillStyle = '#101942';
-    dctx.fillRect(0, 0, W, H);
-
-    // 상부 관측 지점 표식
-    const goal = platforms[platforms.length - 1];
-    dctx.fillStyle = '#95d5b2';
-    dctx.fillRect(goal.x + goal.w - 32, goal.y - 22, 5, 22);
-    dctx.fillStyle = '#ffd166';
-    dctx.fillRect(goal.x + goal.w - 27, goal.y - 22, 18, 10);
-
-    platforms.forEach(p => {
-      dctx.fillStyle = p.type === 'goal' ? '#2d6a4f' : (p.type === 'ground' ? '#4f3a28' : '#5e74a6');
-      dctx.fillRect(p.x, p.y, p.w, p.h);
-      dctx.fillStyle = p.type === 'goal' ? '#95d5b2' : '#9bb3e6';
-      dctx.fillRect(p.x, p.y, p.w, 3);
-    });
-
-    // 드래그 조준선 및 포물선 미리보기
-    if (dragging && player.grounded) {
-      const cx = player.x + player.w / 2;
-      const cy = player.y + player.h / 2;
-      const vel = computeLaunchVelocity();
-      if (vel) {
-        dctx.strokeStyle = '#ffd166';
-        dctx.lineWidth = 3;
-        dctx.beginPath();
-        dctx.moveTo(cx, cy);
-        dctx.lineTo(dragCurr.x, dragCurr.y);
-        dctx.stroke();
-
-        // 예상 궤적 점선
-        dctx.fillStyle = '#6ad0c8';
-        for (let step = 1; step <= 10; step++) {
-          const tSim = step * 0.065;
-          const pxSim = cx + vel.vx * tSim;
-          const pySim = cy + vel.vy * tSim + 0.5 * GRAVITY * tSim * tSim;
-          dctx.fillRect(pxSim - 2, pySim - 2, 4, 4);
-        }
-
-        dctx.fillStyle = '#ffe9a8';
-        dctx.font = 'bold 12px "Noto Sans KR", sans-serif';
-        dctx.fillText(`출력 ${vel.powerPct}%`, cx + 10, cy - 12);
-      }
-    }
-
-    // 조사원 캐릭터
-    dctx.fillStyle = '#f2c14e';
-    dctx.fillRect(player.x, player.y, player.w, player.h);
-    dctx.fillStyle = '#16111f';
-    dctx.fillRect(player.x + 5, player.y + 6, 4, 4);
-    dctx.fillRect(player.x + 13, player.y + 6, 4, 4);
-
-    requestAnimationFrame(loop);
-  }
-  requestAnimationFrame(loop);
-
-  activeMinigameCleanup = () => {
-    running = false;
-    window.removeEventListener('mousemove', onDragMove);
-    window.removeEventListener('mouseup', onDragRelease);
-  };
-}
-
-// --- [업무 3] 환경영향평가서 초안 작성 타자 ---
-const TYPING_PROMPTS = [
-  "배출가스 저감시설과 완충녹지를 확보해 환경영향을 줄입니다",
-  "주민 의견과 계절별 풍향 자료를 반영해 입지 대안을 비교합니다",
-  "저영향개발과 빗물관리로 집중호우 유출과 녹지 훼손을 막습니다"
-];
-
-function openTypingChallengeGame() {
-  const idx = Math.min(2, Math.floor((day - 1) / 5));
-  const targetText = TYPING_PROMPTS[idx % TYPING_PROMPTS.length];
-  let submitted = false;
-  let startedAt = performance.now();
-  let timeLeft = 30.0;
-
-  openModal(`
-    <div class="modal-header">
-      <span class="modal-title">📝 환경영향평가서 초안 작성 · ${FACTORIES[idx].facility}</span>
-      <button class="close-btn" onclick="closeModal()">닫기</button>
-    </div>
-    <p style="line-height:1.65; color:#d9d1bd; margin-bottom:12px;">
-      제한 시간 <strong>30초</strong> 안에 평가서 검토 문장을 입력하세요!
-    </p>
-    <div class="dossier-box">
-      <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-weight:700;">
-        <span>남은 시간: <strong id="typing-time-left" style="color:#b3262e;">30.0초</strong></span>
-        <span>정확도: <strong id="typing-acc-label" style="color:#1b4332;">0%</strong></span>
-      </div>
-      <div style="background:#e6decb; padding:14px; border-left:6px solid #1b2766; font-size:1.05rem; font-weight:700; line-height:1.6; margin-bottom:14px;">${targetText}</div>
-      <input id="typing-input-box" type="text" placeholder="여기에 평가서 문장을 입력하세요..."
-        style="width:100%; padding:12px 14px; font-size:1rem; background:#fffdf7; color:#181512; border:3px solid #16111f; outline:none;" />
-    </div>
-    <div style="text-align:center; margin-top:16px; display:flex; justify-content:center; gap:12px;">
-      <button class="action-btn btn-yes" id="typing-submit-btn">초안 반영</button>
-      <button class="action-btn btn-no" onclick="openTypingChallengeGame()">다시 작성</button>
-    </div>
-  `);
-
-  function calcAcc(typed) {
-    if (!targetText.length) return 0;
-    let matches = 0;
-    const len = Math.max(typed.length, targetText.length);
-    for (let i = 0; i < typed.length; i++) {
-      if (i < targetText.length && typed[i] === targetText[i]) matches++;
-    }
-    return Math.max(0, Math.min(100, Math.round((matches / len) * 100)));
-  }
-
-  function finish() {
-    if (submitted) return;
-    submitted = true;
-    clearInterval(iv);
-    const inp = document.getElementById('typing-input-box');
-    const typed = inp ? inp.value.trim() : '';
-    const acc = calcAcc(typed);
-    const elapsedSec = Math.max(1, (performance.now() - startedAt) / 1000);
-    const cpm = Math.round((typed.length / elapsedSec) * 60);
-    activeTasks.phAlert = false;
-    typingGameCompleted[idx] = true;
-    if (acc >= 70) {
-      assessmentQuality += 1.5;
-      pollutionRisk = Math.max(5, pollutionRisk - 2.5);
-      recordDailyTask('환경영향평가서 초안 작성 완료', `정확도 ${acc}%, 타수 ${cpm}타/분으로 검토 문장을 반영했습니다.`);
-      closeModal();
-      updateWeatherHUD();
-      updateAlertStrip();
-      showDialogue('나 · 초안 반영 완료', `정확도 ${acc}% (${cpm}타/분)로 평가서 초안을 정리했어.`);
-    } else {
-      recordDailyTask('환경영향평가서 초안 입력', `정확도 ${acc}%로 초안을 입력했습니다.`);
-      closeModal();
-      updateWeatherHUD();
-      updateAlertStrip();
-      showDialogue('나 · 초안 입력 완료', `정확도 ${acc}%였어. 정확도를 더 높이면 검토 완성도가 올라가.`);
-    }
-  }
-
-  const inp = document.getElementById('typing-input-box');
-  if (inp) {
-    inp.focus();
-    inp.addEventListener('input', () => {
-      const accEl = document.getElementById('typing-acc-label');
-      if (accEl) accEl.innerText = `${calcAcc(inp.value)}%`;
-    });
-  }
-  const subBtn = document.getElementById('typing-submit-btn');
-  if (subBtn) subBtn.addEventListener('click', finish);
-
-  const iv = setInterval(() => {
-    if (submitted) return;
-    timeLeft = Math.max(0, +(timeLeft - 0.1).toFixed(1));
-    const tEl = document.getElementById('typing-time-left');
-    if (tEl) tEl.innerText = `${timeLeft.toFixed(1)}초`;
-    if (timeLeft <= 0) finish();
-  }, 100);
-
-  activeMinigameCleanup = () => {
-    submitted = true;
-    clearInterval(iv);
-  };
-}
-
-// --- [업무 4] 서식지 교란 차단 현장 조사 ---
-function openHabitatShieldArcadeGame() {
-  const idx = Math.min(2, Math.floor((day - 1) / 5));
-  if (ecologyGameCompleted[idx]) {
-    showDialogue('나', '이 부지의 생태 서식지 교란 점검은 이미 마쳤어.');
-    return;
-  }
-
-  let saved = 0;
-  let running = true;
-  const threats = [
-    { x: 130, y: 30, vx: 0.7, vy: 1.5, tag: '토사유출' },
-    { x: 350, y: 20, vx: -0.9, vy: 1.7, tag: '식생훼손' },
-    { x: 540, y: 40, vx: 0.8, vy: 1.4, tag: '동선침범' }
-  ];
-
-  openModal(`
-    <div class="modal-header"><span class="modal-title">🌿 서식지 교란 차단 조사 (${saved}/4 조치)</span><button class="close-btn" onclick="closeModal()">닫기</button></div>
-    <p style="line-height:1.65; color:#d9d1bd; margin-bottom:10px;">
-      하단 <strong>생태 보전 구역</strong>으로 접근하는 교란 요인(토사유출·식생훼손·동선침범)을 클릭해 4번 저지하세요!
-    </p>
-    <canvas id="ecoArcadeCanvas" width="700" height="250" style="position:relative; width:100%; height:240px; border:3px solid #e9efff; background:#0d1838; cursor:pointer;"></canvas>
-    <p id="eco-arcade-status" style="min-height:24px; color:#ffd166; font-weight:700; margin-top:10px;">교란 요인을 클릭해 보전 대책을 적용하세요!</p>
-  `);
-
-  const c = document.getElementById('ecoArcadeCanvas');
-  const ectx = c.getContext('2d');
-
-  c.onclick = (e) => {
-    if (!running) return;
-    const rect = c.getBoundingClientRect();
-    const mx = ((e.clientX - rect.left) / rect.width) * c.width;
-    const my = ((e.clientY - rect.top) / rect.height) * c.height;
-    const stEl = document.getElementById('eco-arcade-status');
-
-    for (let i = threats.length - 1; i >= 0; i--) {
-      const t = threats[i];
-      if (Math.hypot(mx - t.x, my - t.y) <= 30) {
-        saved++;
-        t.y = 15;
-        t.x = 80 + Math.random() * (c.width - 160);
-        const titleEl = document.querySelector('.modal-title');
-        if (titleEl) titleEl.innerText = `🌿 서식지 교란 차단 조사 (${saved}/4 조치)`;
-        if (stEl) stEl.innerText = `✅ ${t.tag} 차단 대책 반영! (${saved}/4)`;
-        if (saved >= 4) {
-          running = false;
-          clearInterval(iv);
-          ecologyGameCompleted[idx] = true;
-          assessmentQuality += 1;
-          pollutionRisk = Math.max(5, pollutionRisk - 2);
-          weather.ecoHealth = Math.min(100, weather.ecoHealth + 5);
-          recordDailyTask('생태 서식지 교란 차단 조사 완료', '서식지 보전 구역으로 향하던 교란 요인 4건을 저지했습니다.');
-          closeModal();
-          updateWeatherHUD();
-          showDialogue('나 · 서식지 보전 완료', '서식지 교란 요인 4건을 모두 막아냈어! 생태 연결축 보전 점수가 올랐어.');
-        }
-        break;
-      }
-    }
-  };
-
-  const iv = setInterval(() => {
-    if (!running) return;
-    threats.forEach(t => {
-      t.x += t.vx;
-      t.y += t.vy;
-      if (t.x < 45 || t.x > c.width - 45) t.vx *= -1;
-      if (t.y > c.height - 46) {
-        t.y = 18;
-        t.x = 70 + Math.random() * (c.width - 140);
-      }
-    });
-
-    ectx.clearRect(0, 0, c.width, c.height);
-    ectx.fillStyle = '#0d1838';
-    ectx.fillRect(0, 0, c.width, c.height);
-
-    ectx.fillStyle = '#2d6a4f';
-    ectx.fillRect(0, c.height - 28, c.width, 28);
-    ectx.fillStyle = '#95d5b2';
-    ectx.fillRect(0, c.height - 28, c.width, 3);
-
-    threats.forEach(t => {
-      ectx.fillStyle = '#e0505a';
-      ectx.beginPath();
-      ectx.arc(t.x, t.y, 22, 0, Math.PI * 2);
-      ectx.fill();
-      ectx.lineWidth = 2;
-      ectx.strokeStyle = '#16111f';
-      ectx.stroke();
-      ectx.fillStyle = '#fff';
-      ectx.font = 'bold 10px "Noto Sans KR", sans-serif';
-      ectx.textAlign = 'center';
-      ectx.fillText(t.tag, t.x, t.y + 4);
-    });
-  }, 16);
-
-  activeMinigameCleanup = () => {
-    running = false;
-    clearInterval(iv);
-  };
-}
-
-// --- [업무 5] 소음 파형 피크 측정 점검 ---
-function openNoisePeakTimingGame() {
-  const idx = Math.min(2, Math.floor((day - 1) / 5));
-  if (noiseGameCompleted[idx]) {
-    showDialogue('나', '이 부지의 소음 피크 측정은 이미 완료했어.');
-    return;
-  }
-
-  let cursorX = 12;
-  let dir = 1;
-  let captures = 0;
-  let running = true;
-
-  openModal(`
-    <div class="modal-header"><span class="modal-title">🔊 소음 파형 피크 측정 (${captures}/3 포착)</span><button class="close-btn" onclick="closeModal()">닫기</button></div>
-    <p style="line-height:1.65; color:#d9d1bd; margin-bottom:10px;">움직이는 <strong>노란 커서</strong>가 <strong>초록 고소음 피크 구간</strong>에 들어왔을 때 <strong>[피크 포착!]</strong>을 눌러 3번 측정하세요.</p>
-    <div style="position:relative; width:100%; height:56px; background:#0b1236; border:3px solid #e9efff; margin:16px 0; overflow:hidden;">
-      <div style="position:absolute; left:22%; width:18%; top:0; bottom:0; background:rgba(82,183,136,0.45); border-left:2px solid #95d5b2; border-right:2px solid #95d5b2;"></div>
-      <div style="position:absolute; left:58%; width:20%; top:0; bottom:0; background:rgba(82,183,136,0.45); border-left:2px solid #95d5b2; border-right:2px solid #95d5b2;"></div>
-      <div id="peak-cursor" style="position:absolute; left:12px; top:0; width:10px; height:100%; background:#ffd166; box-shadow:0 0 0 2px #0a0d24;"></div>
-    </div>
-    <p id="peak-status" style="min-height:24px; color:#ffd166; font-weight:700; margin-bottom:12px;">커서를 초록 구간에 맞춰 포착하세요!</p>
-    <div style="text-align:center;">
-      <button class="action-btn btn-yes" id="peak-capture-btn">🎯 피크 포착!</button>
-    </div>
-  `);
-
-  const iv = setInterval(() => {
-    if (!running) return;
-    cursorX += dir * 2.1;
-    if (cursorX >= 96) { cursorX = 96; dir = -1; }
-    if (cursorX <= 2) { cursorX = 2; dir = 1; }
-    const cur = document.getElementById('peak-cursor');
-    if (cur) cur.style.left = `${cursorX}%`;
-  }, 16);
-
-  document.getElementById('peak-capture-btn').onclick = () => {
-    if (!running) return;
-    const inZone1 = cursorX >= 22 && cursorX <= 40;
-    const inZone2 = cursorX >= 58 && cursorX <= 78;
-    const stEl = document.getElementById('peak-status');
-    if (inZone1 || inZone2) {
-      captures++;
-      const tEl = document.querySelector('.modal-title');
-      if (tEl) tEl.innerText = `🔊 소음 파형 피크 측정 (${captures}/3 포착)`;
-      if (stEl) stEl.innerText = `✅ 고소음 피크 포착 성공! (${captures}/3)`;
-      if (captures >= 3) {
-        running = false;
-        clearInterval(iv);
-        noiseGameCompleted[idx] = true;
-        assessmentQuality += 1;
-        pollutionRisk = Math.max(5, pollutionRisk - 2);
-        recordDailyTask('소음 파형 피크 측정 완료', '고소음 발생 구간의 최대 소음 피크를 3회 포착해 방음 대책 근거를 확보했습니다.');
-        closeModal();
-        updateWeatherHUD();
-        showDialogue('나 · 소음 피크 측정 완료', '고소음 피크를 3번 정확히 포착했어!');
-      }
-    } else if (stEl) {
-      stEl.innerText = '❌ 초록 구간 밖에서 눌렀어요! 초록 구역에 들어올 때 다시 시도하세요.';
-    }
-  };
-
-  activeMinigameCleanup = () => {
-    running = false;
-    clearInterval(iv);
-  };
-}
-
-// --- [업무 6] 완충·저감시설 배치 시뮬레이터 ---
-function openMitigationPlacementGame() {
-  const idx = Math.min(2, Math.floor((day - 1) / 5));
-  if (mitigationGameCompleted[idx]) {
-    showDialogue('나', '이 부지의 완충·저감시설 배치는 이미 마쳤어.');
-    return;
-  }
-  const tools = [
-    { id: 'buffer', label: '🌳 완충녹지', effect: '주변 완충·생태 보호' },
-    { id: 'rain', label: '💧 투수·저류시설', effect: '빗물 유출 저감' },
-    { id: 'wall', label: '🧱 방음벽', effect: '소음 차단' }
-  ];
-  let selectedTool = 'buffer';
-  const slots = [
-    { name: '주거지 경계', placed: null },
-    { name: '하천 수변부', placed: null },
-    { name: '학교 통학로 옆', placed: null },
-    { name: '도로변 완충대', placed: null }
-  ];
-
-  function renderPlacement() {
-    const placedCount = slots.filter(s => s.placed).length;
-    openModal(`
-      <div class="modal-header"><span class="modal-title">🧱 완충·저감시설 배치 시뮬레이터 (${placedCount}/3 설치)</span><button class="close-btn" onclick="closeModal()">닫기</button></div>
-      <p style="line-height:1.65; color:#d9d1bd; margin-bottom:12px;">아래에서 <strong>저감 도구</strong>를 고른 뒤, 보호가 필요한 구역 <strong>3곳</strong>에 차례로 설치하세요.</p>
-      <div class="dossier-box">
-        <div style="display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap;">
-          ${tools.map(t => `<button class="action-btn ${selectedTool === t.id ? 'btn-yes' : 'btn-no'}" onclick="pickPlaceTool('${t.id}')">${t.label}</button>`).join('')}
-        </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-          ${slots.map((s, i) => `
-            <button class="choice-btn" style="margin:0; background:${s.placed ? '#286b4c' : '#1d2a70'};" onclick="placeOnSlot(${i})">
-              <strong>${s.name}</strong><br><small>${s.placed ? '설치됨: ' + s.placed.label : '클릭하여 설치'}</small>
-            </button>
-          `).join('')}
-        </div>
-        <p id="place-fb" style="color:#b3262e; min-height:22px; margin-top:10px; font-weight:700;"></p>
-      </div>
-      <div style="text-align:center; margin-top:14px;">
-        <button class="action-btn btn-yes" id="place-confirm-btn">배치안 적용</button>
-      </div>
-    `);
-
-    window.pickPlaceTool = (tid) => { selectedTool = tid; renderPlacement(); };
-    window.placeOnSlot = (si) => {
-      const currentPlacedCount = slots.filter(x => x.placed).length;
-      if (slots[si].placed) {
-        slots[si].placed = null;
-      } else if (currentPlacedCount < 3) {
-        slots[si].placed = tools.find(t => t.id === selectedTool);
-      }
-      renderPlacement();
-    };
-    document.getElementById('place-confirm-btn').onclick = () => {
-      const fb = document.getElementById('place-fb');
-      const done = slots.filter(s => s.placed);
-      if (done.length < 3) {
-        if (fb) fb.innerText = '저감시설 3곳을 모두 배치해야 합니다.';
-        return;
-      }
-      mitigationGameCompleted[idx] = true;
-      assessmentQuality += 1;
-      pollutionRisk = Math.max(5, pollutionRisk - 3);
-      weather.ecoHealth = Math.min(100, weather.ecoHealth + 4);
-      recordDailyTask('완충·저감시설 공간 배치 완료', `3개 구역(${done.map(d => d.placed.label).join(', ')})에 저감시설을 배치했습니다.`);
-      closeModal();
-      updateWeatherHUD();
-      showDialogue('나 · 시설 배치 완료', '주변 민감 구역에 저감시설을 배치했어!');
-    };
-  }
-
-  renderPlacement();
-}
-
-// --- [업무 7] 바람길·확산 경로 저감 대응 ---
-function openWindPlumeDefenseGame() {
-  const idx = Math.min(2, Math.floor((day - 1) / 5));
-  if (windGameCompleted[idx]) {
-    showDialogue('나', '이 부지의 대기확산 저감 점검은 이미 마쳤어.');
-    return;
-  }
-
-  let plumeX = 12;
-  let blockedCount = 0;
-  let running = true;
-
-  openModal(`
-    <div class="modal-header"><span class="modal-title">💨 바람길·확산 경로 저감 대응 (${blockedCount}/2 제어)</span><button class="close-btn" onclick="closeModal()">닫기</button></div>
-    <p style="line-height:1.65; color:#d9d1bd; margin-bottom:10px;">바람을 타고 오른쪽 <strong>주거·녹지 구역</strong>으로 이동하는 <strong>오염 확산 기둥</strong>이 <strong>중간 저감 구역(45%~68%)</strong>에 있을 때 <strong>[차단막 전개!]</strong>를 눌러 2번 제어하세요.</p>
-    <div style="position:relative; width:100%; height:64px; background:#0d163b; border:3px solid #e9efff; margin:16px 0; overflow:hidden;">
-      <div style="position:absolute; left:0; top:0; bottom:0; width:14%; background:#4a3f55; display:flex; align-items:center; justify-content:center; font-size:0.75rem;">배출원</div>
-      <div style="position:absolute; left:45%; top:0; bottom:0; width:23%; background:rgba(106,208,200,0.35); border-left:2px dashed #6ad0c8; border-right:2px dashed #6ad0c8;"></div>
-      <div style="position:absolute; right:0; top:0; bottom:0; width:16%; background:#2d6a4f; display:flex; align-items:center; justify-content:center; font-size:0.75rem;">주거·녹지</div>
-      <div id="plume-token" style="position:absolute; left:12%; top:14px; width:34px; height:34px; background:#b5a692; border:2px solid #16111f; display:flex; align-items:center; justify-content:center; font-size:1.1rem;">☁️</div>
-    </div>
-    <p id="plume-status" style="min-height:24px; color:#ffd166; font-weight:700; margin-bottom:12px;">확산 기둥이 점선 저감 구역에 오면 전개하세요!</p>
-    <div style="text-align:center;">
-      <button class="action-btn btn-yes" id="plume-block-btn">🛡️ 차단막 전개!</button>
-    </div>
-  `);
-
-  const iv = setInterval(() => {
-    if (!running) return;
-    plumeX += 0.95;
-    if (plumeX > 84) plumeX = 12;
-    const tok = document.getElementById('plume-token');
-    if (tok) tok.style.left = `${plumeX}%`;
-  }, 20);
-
-  document.getElementById('plume-block-btn').onclick = () => {
-    if (!running) return;
-    const stEl = document.getElementById('plume-status');
-    if (plumeX >= 42 && plumeX <= 70) {
-      blockedCount++;
-      plumeX = 12;
-      const tEl = document.querySelector('.modal-title');
-      if (tEl) tEl.innerText = `💨 바람길·확산 경로 저감 대응 (${blockedCount}/2 제어)`;
-      if (stEl) stEl.innerText = `✅ 확산 경로 제어 성공! (${blockedCount}/2)`;
-      if (blockedCount >= 2) {
-        running = false;
-        clearInterval(iv);
-        windGameCompleted[idx] = true;
-        assessmentQuality += 1;
-        pollutionRisk = Math.max(5, pollutionRisk - 2);
-        recordDailyTask('바람길·확산 경로 저감 대응 완료', '확산 경로상에서 오염 기둥을 2회 제어해 대기오염 대응 방안을 검증했습니다.');
-        closeModal();
-        updateWeatherHUD();
-        showDialogue('나 · 확산 제어 완료', '오염 확산 기둥을 2번 제어했어!');
-      }
-    } else if (stEl) {
-      stEl.innerText = '❌ 아직 점선 저감 구역(45%~68%)에 들어오지 않았어요!';
-    }
-  };
-
-  activeMinigameCleanup = () => {
-    running = false;
-    clearInterval(iv);
-  };
-}
-
-// --- 주민 의견 말풍선 직접 선택 ---
-function openAuditPhoneModal() {
-  const audit = (activeTasks.phoneRinging && activeTasks.currentAudit)
-    ? activeTasks.currentAudit
-    : AUDIT_SCENARIOS[(day + Math.floor(gameMinutes / 60)) % AUDIT_SCENARIOS.length];
-
-  openModal(`
-    <div class="modal-header">
-      <span class="modal-title">☎️ ${audit.title}</span>
-      <button class="close-btn" onclick="closeModal()">닫기</button>
-    </div>
-    <p style="line-height:1.65; color:#d9d1bd; margin-bottom:10px;">${audit.situation}</p>
-    ${audit.speakers.map((sp, i) => `
-      <button class="speaker-bubble-card" onclick="pickSpeakerBubble(${i}, '${encodeURIComponent(audit.title)}')">
-        <div class="pixel-person-box">${sp.avatar}</div>
-        <div class="speech-text-box">
-          <div style="font-size:0.82rem; color:#72512c; font-weight:700; margin-bottom:3px;">${sp.name}의 말풍선 (클릭하여 선택)</div>
-          “${sp.bubble}”
-        </div>
-      </button>
-    `).join('')}
-  `);
-}
-
-function pickSpeakerBubble(idx, encodedTitle) {
-  const title = decodeURIComponent(encodedTitle);
-  const audit = (activeTasks.currentAudit && activeTasks.currentAudit.title === title)
-    ? activeTasks.currentAudit
-    : (AUDIT_SCENARIOS.find(s => s.title === title) || AUDIT_SCENARIOS[0]);
-  const sp = audit.speakers[idx];
-  if (!sp) return;
-  const msg = sp.effect();
-  if (sp.correct) {
-    assessmentQuality += 1;
-    recordDailyTask('주민 말풍선 근거 선택 성공', `${audit.title} — ${sp.name}: ${sp.bubble}`);
-  } else {
-    recordDailyTask('주민 말풍선 검토 및 재확인', `${audit.title} — ${sp.name}의 발언을 검토했습니다.`);
-  }
-  activeTasks.phoneRinging = false;
-  activeTasks.currentAudit = null;
-  closeModal();
-  updateWeatherHUD();
-  updateAlertStrip();
-  showDialogue(sp.correct ? `나 · ${sp.name} 근거 채택` : `나 · ${sp.name} 발언 검토`, msg);
-}
-
-// --- 센서 점검 ---
+// ===== 센서 점검 =====
 let cleanedCount = 0;
 function openSensorRepairMinigame() {
   if (!activeTasks.sensorDirty) {
@@ -1839,7 +634,7 @@ function cleanNode(idx) {
   }
 }
 
-// --- 노트북 정책 ---
+// ===== 노트북 정책 =====
 function renderLaptopModal() {
   let cardsHtml = POLICIES.map(p => {
     let badge = '';
@@ -2010,12 +805,8 @@ function showDailySummary(completedDay, snapshot, isFinalDay) {
 
 function closeDailySummary() {
   closeModal();
-  if (pendingMilestoneIndex !== null) {
-    showSiteDecisionModal(pendingMilestoneIndex);
-  } else if (pendingFinalDay) {
-    pendingFinalDay = false;
-    showFinalAssessmentSummary();
-  }
+  if (pendingMilestoneIndex !== null) showSiteDecisionModal(pendingMilestoneIndex);
+  else if (pendingFinalDay) { pendingFinalDay = false; showFinalAssessmentSummary(); }
 }
 
 function advanceGameDay() {
@@ -2117,18 +908,1342 @@ function checkCampaignEnd() {
   let title = '';
   let message = '';
   if (hasO) {
-    title = 'GOOD ENDING : 지속 가능한 대한민국';
-    message = `15일 동안의 평가가 끝났어. 평가 결과에서 우수한 성과를 얻은 덕분에 도시는 환경을 보전할 기회를 지켜냈어.`;
+    title = 'GOOD ENDING : 달빛이 맑은 서울';
+    message = `15일 동안의 평가가 끝났어. 평가 결과에서 우수한 성과를 얻은 덕분에 서울은 환경을 보전할 기회를 지켜냈어.`;
   } else if (hasTriangle) {
-    title = 'PARTIAL ENDING : 버텨내는 도시';
-    message = `도시는 유지되고 있지만, 일부 개발사업의 환경 부담이 남아 있어.`;
+    title = 'PARTIAL ENDING : 버텨내는 서울';
+    message = `서울은 유지되고 있지만, 일부 개발사업의 환경 부담이 남아 있어.`;
   } else {
-    title = 'BAD ENDING : 사막이 된 도시';
+    title = 'BAD ENDING : 먼지 속에 가려진 달';
     message = `필요한 시설과 환경 보전, 두 가지 모두 놓치고 말았어.`;
   }
   openModal(`<div style="text-align:center; padding:15px;"><h2 style="font-family:'Cinzel', serif; font-size:1.8rem; color:#f3d59b; margin-bottom:14px;">${title}</h2>
     <div style="font-size:1.1rem; line-height:1.9; color:#f0ece1; margin-bottom:22px;">${message}</div>
     <button class="start-btn" onclick="location.reload()">처음부터 다시하기</button></div>`);
+}
+
+// =====================================================================
+//  픽셀 미니게임 공용 도우미 (점프킹 · 투더문 풍의 도트 그래픽)
+// =====================================================================
+const MG_INK = '#0a0d24';
+
+function mgR(c, x, y, w, h, col) {
+  c.fillStyle = col;
+  c.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
+}
+
+function mgDisc(c, cx, cy, r, col, s) {
+  s = s || 4;
+  c.fillStyle = col;
+  for (let yy = -r; yy <= r; yy += s) {
+    const half = Math.round(Math.sqrt(Math.max(0, r * r - yy * yy)) / s) * s;
+    c.fillRect(Math.round(cx - half), Math.round(cy + yy), half * 2 + s, s);
+  }
+}
+
+function mgPt(e, cv) {
+  const rect = cv.getBoundingClientRect();
+  return { x: (e.clientX - rect.left) / rect.width * cv.width, y: (e.clientY - rect.top) / rect.height * cv.height };
+}
+
+// 투더문 풍 밤하늘 + 달
+function mgSky(c, W, horizon, moon) {
+  const n = Math.ceil(horizon / 8);
+  for (let i = 0; i < n; i++) {
+    c.fillStyle = colorAt(SKY_STOPS.night, n === 1 ? 0 : i / (n - 1));
+    c.fillRect(0, i * 8, W, 8);
+  }
+  const r = makeRng(9);
+  for (let i = 0; i < 50; i++) {
+    const x = Math.floor(r() * W / 4) * 4, y = Math.floor(r() * horizon * 0.8 / 4) * 4;
+    c.fillStyle = r() < 0.2 ? '#fff6c8' : '#c9d3f5';
+    c.fillRect(x, y, r() < 0.2 ? 4 : 2, r() < 0.2 ? 4 : 2);
+  }
+  if (moon) {
+    c.globalAlpha = 0.10; mgDisc(c, moon.x, moon.y, moon.r + 22, '#cfe0ff');
+    c.globalAlpha = 0.18; mgDisc(c, moon.x, moon.y, moon.r + 10, '#cfe0ff');
+    c.globalAlpha = 1;
+    mgDisc(c, moon.x, moon.y, moon.r, '#f6f0cf');
+    mgDisc(c, moon.x - moon.r * 0.35, moon.y - moon.r * 0.25, Math.max(2, moon.r * 0.2), '#dcd5ab', 2);
+    mgDisc(c, moon.x + moon.r * 0.3, moon.y + moon.r * 0.3, Math.max(2, moon.r * 0.26), '#e3dcb4', 2);
+  }
+}
+
+// 서울 아파트 스카이라인
+function mgSkyline(c, W, baseY, seed, col, win, scale) {
+  const r = makeRng(seed);
+  scale = scale || 1;
+  let x = 0;
+  while (x < W) {
+    const bw = 24 + Math.floor(r() * 5) * 8;
+    const bh = Math.round((40 + Math.floor(r() * 6) * 10) * scale);
+    mgR(c, x, baseY - bh, bw, bh, col);
+    if (win) {
+      for (let wy = baseY - bh + 8; wy < baseY - 6; wy += 12) {
+        for (let wx = x + 6; wx < x + bw - 8; wx += 10) if (r() < 0.35) mgR(c, wx, wy, 4, 6, win);
+      }
+    }
+    x += bw + (r() < 0.4 ? 8 : 0);
+  }
+}
+
+// 남산서울타워
+function mgTower(c, x, baseY, col) {
+  col = col || '#9aa6cc';
+  mgR(c, x - 16, baseY - 6, 32, 6, col);
+  mgR(c, x - 2, baseY - 70, 4, 64, col);
+  mgR(c, x - 10, baseY - 54, 20, 8, col);
+  mgR(c, x - 7, baseY - 62, 14, 6, col);
+  mgR(c, x - 1, baseY - 92, 2, 22, col);
+  mgR(c, x - 1, baseY - 94, 2, 2, '#e0505a');
+}
+
+function mgHeart(c, x, y, s, on) {
+  const rows = [[0, 1, 0, 1, 0], [1, 1, 1, 1, 1], [0, 1, 1, 1, 0], [0, 0, 1, 0, 0]];
+  rows.forEach((row, j) => row.forEach((v, i) => { if (v) mgR(c, x + i * s, y + j * s, s, s, on ? '#e0505a' : '#3b3f5c'); }));
+}
+
+function mgHouse(c, x, y, s, wall, roof) {
+  mgR(c, x - 1, y + 3 * s - 1, 8 * s + 2, 5 * s + 2, MG_INK);
+  mgR(c, x, y + 3 * s, 8 * s, 5 * s, wall);
+  for (let i = 0; i < 3; i++) mgR(c, x + (3 - i) * s - 1, y + i * s, (2 + 2 * i) * s + 2, s, i === 0 ? MG_INK : roof);
+  mgR(c, x + s, y + 4 * s, 2 * s, 2 * s, '#ffd166');
+  mgR(c, x + 5 * s, y + 5 * s, 2 * s, 3 * s, '#5b3a22');
+}
+
+// 파라미터형 도트 사람 (12 x 22 격자)
+function mgPerson(c, x, y, s, o) {
+  const skin = o.skin || '#f1c7a0', hair = o.hair || '#2b2230', shirt = o.shirt || '#4b6fb5';
+  const sh2 = o.shirt2 || shirt, pants = o.pants || '#35384f';
+  const R = (gx, gy, w, h, col) => mgR(c, x + gx * s, y + gy * s, w * s, h * s, col);
+  R(2, 0, 8, 10, MG_INK); R(0, 9, 12, 9, MG_INK); R(2, 17, 8, 5, MG_INK);
+  R(3, 17, 3, 4, pants); R(6, 17, 3, 4, pants); R(3, 21, 3, 1, '#1a1a24'); R(6, 21, 3, 1, '#1a1a24');
+  R(2, 10, 8, 7, shirt); R(0, 10, 2, 6, sh2); R(10, 10, 2, 6, sh2); R(0, 16, 2, 2, skin); R(10, 16, 2, 2, skin);
+  if (o.vest) { R(2, 10, 2, 7, o.vest); R(8, 10, 2, 7, o.vest); }
+  if (o.bag) { R(8, 12, 4, 5, o.bag); R(8, 12, 4, 1, MG_INK); }
+  if (o.cane) R(11, 13, 1, 9, '#8a5a2b');
+  R(3, 3, 6, 6, skin);
+  const hs = o.hs || 'short';
+  if (hs === 'bald') { R(3, 2, 6, 1, skin); R(4, 2, 2, 1, '#fff4e0'); }
+  else if (hs === 'cap') { R(3, 1, 6, 3, o.cap || '#c0392b'); R(2, 3, 9, 1, o.cap || '#c0392b'); }
+  else if (hs === 'helmet') { R(2, 1, 8, 3, '#f2c14e'); R(2, 3, 8, 1, '#c99a2e'); }
+  else {
+    R(3, 1, 6, 3, hair); R(3, 3, 1, 2, hair); R(8, 3, 1, 2, hair);
+    if (hs === 'long') { R(2, 3, 2, 7, hair); R(8, 3, 2, 7, hair); }
+    if (hs === 'bun') { R(5, 0, 2, 1, hair); R(4, 1, 4, 1, hair); }
+    if (hs === 'perm') { R(2, 1, 8, 4, hair); R(2, 3, 2, 3, hair); R(8, 3, 2, 3, hair); }
+  }
+  if (o.glasses) { R(3, 5, 3, 2, '#a8dadc'); R(6, 5, 3, 2, '#a8dadc'); }
+  R(4, 5, 1, 1, MG_INK); R(7, 5, 1, 1, MG_INK);
+  if (o.talk) { R(5, 7, 2, 2, '#7a2c3a'); R(5, 7, 2, 1, '#e0605e'); } else R(5, 8, 2, 1, '#a8606a');
+}
+
+// 도트 말풍선 (계단형 모서리 + 꼬리)
+function mgBubble(c, x, y, w, h, fill, line, tailX) {
+  const s = 4;
+  mgR(c, x + s, y, w - 2 * s, h, line); mgR(c, x, y + s, w, h - 2 * s, line);
+  mgR(c, x + s, y + 3, w - 2 * s, h - 6, fill); mgR(c, x + 3, y + s, w - 6, h - 2 * s, fill);
+  for (let i = 0; i < 4; i++) { const ww = (7 - 2 * i) * 4; mgR(c, tailX - ww / 2, y + h - 2 + i * 4, ww, 4, line); }
+  for (let i = 0; i < 3; i++) { const ww = (5 - 2 * i) * 4 - 2; mgR(c, tailX - ww / 2, y + h - 3 + i * 4, ww, 4, fill); }
+}
+
+function mgWrap(c, text, maxW) {
+  const words = text.split(' ');
+  const lines = [];
+  let cur = '';
+  words.forEach(w => {
+    const t = cur ? cur + ' ' + w : w;
+    if (c.measureText(t).width > maxW && cur) { lines.push(cur); cur = w; } else cur = t;
+  });
+  if (cur) lines.push(cur);
+  return lines;
+}
+
+function mgCreature(c, k, x, y, s) {
+  const R = (gx, gy, w, h, col) => mgR(c, x + gx * s, y + gy * s, w * s, h * s, col);
+  if (k === 'frog') {
+    R(-3, -4, 6, 4, '#4f9a52'); R(-2, -5, 4, 2, '#6fbf6a'); R(-3, -6, 1, 1, '#fff'); R(2, -6, 1, 1, '#fff');
+    R(-4, -1, 2, 1, '#3a7a3e'); R(2, -1, 2, 1, '#3a7a3e'); R(-1, -3, 2, 1, '#e0e8a0');
+  } else if (k === 'otter') {
+    R(-5, -3, 8, 3, '#7a5230'); R(2, -5, 4, 4, '#8b6038'); R(5, -3, 2, 2, '#d8c3a0'); R(3, -4, 1, 1, MG_INK);
+    R(-8, -2, 3, 1, '#5e3e22'); R(-4, 0, 1, 1, '#5e3e22'); R(0, 0, 1, 1, '#5e3e22');
+  } else if (k === 'owl') {
+    R(-3, -8, 6, 8, '#a8793e'); R(-3, -9, 1, 2, '#7a5230'); R(2, -9, 1, 2, '#7a5230');
+    R(-2, -6, 2, 2, '#f2c14e'); R(0, -6, 2, 2, '#f2c14e'); R(-1, -5, 1, 1, MG_INK); R(1, -5, 1, 1, MG_INK);
+    R(-1, -4, 2, 1, '#e07a2f'); R(-2, -3, 4, 3, '#d8b890');
+  } else if (k === 'duck') {
+    R(-4, -3, 7, 3, '#e6e6e6'); R(1, -6, 3, 3, '#2b7a4a'); R(4, -5, 2, 1, '#f2c14e'); R(2, -5, 1, 1, MG_INK);
+  } else if (k === 'pigeon') {
+    R(-3, -3, 6, 3, '#8a8fa0'); R(1, -5, 3, 3, '#6a6f80'); R(4, -4, 1, 1, '#e0b13e'); R(3, -4, 1, 1, '#e0505a');
+    R(-1, 0, 1, 1, '#e0b13e'); R(1, 0, 1, 1, '#e0b13e');
+  } else {
+    R(-4, -2, 7, 2, '#8a7a6e'); R(2, -4, 3, 3, '#9a8a7e'); R(3, -5, 1, 1, '#d8a0a0'); R(-8, -1, 4, 1, '#c9a0a0'); R(4, -3, 1, 1, MG_INK);
+  }
+}
+
+// =====================================================================
+// [업무 1] 대기오염물질 배출허용기준 판정 (계측기 바늘 vs 기준선)
+// =====================================================================
+function openEmissionInspectionGame() {
+  if (!activeTasks.seedingReady) {
+    showDialogue('나', '오늘의 배출시설 현장 점검은 이미 마쳤어. 내일 다시 점검해 보자.');
+    return;
+  }
+  const NEED = 5;
+  const GASES = [['NOx', 100], ['SOx', 80], ['PM2.5', 35], ['먼지', 60], ['CO', 120], ['NH₃', 50]];
+  let ok = 0, lives = 3, combo = 0, running = true, lock = false, over = false;
+  let reading = null, left = 7, needle = 0, flashT = 0, flashGood = true, flashTxt = '';
+
+  openModal(`
+    <div class="modal-header"><span class="modal-title" id="em-title">📟 배출허용기준 판정 (0/${NEED})</span><button class="close-btn" onclick="closeModal()">닫기</button></div>
+    <p style="line-height:1.65; color:#d9d1bd; margin-bottom:10px;">
+      굴뚝 계측기의 <strong>측정값이 붉은 기준선을 넘었는지</strong> 판단하세요. 기준 초과면 <strong>개선 조치</strong>, 이내면 <strong>적합</strong>! ${NEED}번 맞히면 점검 완료 (하트 3개) <span style="color:#a89f88;">※ 모의 수치입니다</span>
+    </p>
+    <canvas id="emCanvas" class="mg" width="700" height="280"></canvas>
+    <div style="display:flex; gap:14px; justify-content:center; margin-top:16px;">
+      <button class="action-btn btn-yes" id="em-ok">✅ 기준 이내 · 적합 (←)</button>
+      <button class="action-btn btn-no" id="em-bad">🚨 기준 초과 · 개선 조치 (→)</button>
+    </div>
+    <p id="em-status" style="min-height:24px; color:#ffd166; font-weight:700; margin-top:12px; text-align:center;">바늘이 붉은 구간에 들어갔는지 확인하세요!</p>
+  `);
+
+  const cv = document.getElementById('emCanvas'), cx = cv.getContext('2d'), W = cv.width, H = cv.height;
+  const GCX = 470, GCY = 250, GR = 150;
+
+  const bg = document.createElement('canvas'); bg.width = W; bg.height = H;
+  const b = bg.getContext('2d');
+  mgSky(b, W, 220, { x: 205, y: 40, r: 18 });
+  mgSkyline(b, W, 232, 5, '#1b2358', '#f3c76a', 0.7);
+  mgR(b, 0, 232, W, H - 232, '#141a3a'); mgR(b, 0, 232, W, 3, '#3a456e');
+  mgR(b, 14, 176, 150, 60, MG_INK); mgR(b, 16, 178, 146, 56, '#3a3f58');
+  for (let wx = 24; wx < 150; wx += 18) { mgR(b, wx, 190, 10, 8, '#f3c76a'); mgR(b, wx, 208, 10, 8, '#6f80a6'); }
+  mgR(b, 60, 86, 30, 96, MG_INK); mgR(b, 62, 88, 26, 92, '#4a4f6a');
+  [96, 118, 140].forEach((yy, i) => mgR(b, 62, yy, 26, 10, i % 2 ? '#e8e2d0' : '#c0392b'));
+  mgR(b, 62, 88, 3, 92, '#6a708c');
+  mgR(b, 236, 62, 458, 210, MG_INK); mgR(b, 240, 66, 450, 202, '#101847');
+  mgR(b, 240, 66, 450, 4, '#26357f');
+
+  function newReading() {
+    const gs = GASES[Math.floor(Math.random() * GASES.length)];
+    const exceed = Math.random() < 0.5, hard = ok >= 3;
+    const ratio = exceed ? (hard ? 1.04 + Math.random() * 0.16 : 1.12 + Math.random() * 0.45) : (hard ? 0.78 + Math.random() * 0.18 : 0.45 + Math.random() * 0.4);
+    reading = { gas: gs[0], limit: gs[1], value: Math.round(gs[1] * ratio), exceed };
+    left = 7; lock = false; needle = 0;
+  }
+  function updTitle() { const t = document.getElementById('em-title'); if (t) t.innerText = `📟 배출허용기준 판정 (${ok}/${NEED})`; }
+  function setStatus(s) { const e = document.getElementById('em-status'); if (e) e.innerText = s; }
+
+  function finish() {
+    running = false;
+    activeTasks.seedingReady = false;
+    assessmentQuality += 1.5;
+    pollutionRisk = Math.max(5, pollutionRisk - 2.5);
+    recordDailyTask('배출허용기준 판정 점검 완료', `측정값과 기준을 비교해 ${NEED}건을 정확히 판정하고, 기준 초과 사업장에 개선 조치를 기록했습니다.`);
+    closeModal();
+    updateWeatherHUD();
+    showDialogue('나 · 배출기준 판정 완료', '측정값을 기준과 정확히 비교해 판정했어! 기준 초과 사업장에는 개선 조치를 내렸고, 대기오염 관리 실적이 올랐어.');
+  }
+
+  function answer(guess) {
+    if (lock || over || !running || !reading) return;
+    lock = true;
+    const good = (guess === reading.exceed);
+    if (good) { ok++; combo++; flashTxt = combo >= 2 ? `정답! COMBO x${combo}` : '정답!'; }
+    else { lives--; combo = 0; flashTxt = guess === null ? '시간 초과!' : '오답!'; }
+    flashGood = good; flashT = 0.9;
+    setStatus(`${reading.gas} 측정값 ${reading.value} / 기준 ${reading.limit} → ${reading.exceed ? '기준 초과 (개선 조치 대상)' : '기준 이내 (적합)'}`);
+    updTitle();
+    setTimeout(() => {
+      if (!running) return;
+      if (ok >= NEED) finish();
+      else if (lives <= 0) { over = true; setStatus('하트를 모두 잃었어요. 화면을 클릭해 다시 점검하세요!'); }
+      else newReading();
+    }, 900);
+  }
+
+  document.getElementById('em-ok').onclick = () => answer(false);
+  document.getElementById('em-bad').onclick = () => answer(true);
+  cv.onclick = () => { if (over) { over = false; ok = 0; lives = 3; combo = 0; updTitle(); setStatus('다시 시작! 바늘이 붉은 구간에 들어갔는지 확인하세요.'); newReading(); } };
+  const onKey = (e) => {
+    if (e.key === 'ArrowLeft') answer(false);
+    else if (e.key === 'ArrowRight') answer(true);
+  };
+  window.addEventListener('keydown', onKey);
+
+  newReading();
+  let prevT = performance.now();
+  function frame(now) {
+    if (!running) return;
+    const dt = Math.min(0.05, (now - prevT) / 1000); prevT = now;
+    const T = now / 1000;
+    if (!lock && !over && reading) { left -= dt; if (left <= 0) answer(null); }
+    cx.drawImage(bg, 0, 0);
+
+    // 굴뚝 연기: 기준 초과 사업장이면 검은 연기
+    for (let k = 0; k < 7; k++) {
+      const prog = (T * 0.4 + k / 7) % 1;
+      const px = 76 + prog * 44 + Math.sin(k * 2) * 4, py = 86 - prog * 70, sz = 8 + prog * 18;
+      cx.globalAlpha = (1 - prog) * 0.75;
+      mgR(cx, px - sz / 2, py - sz / 2, sz, sz, (reading && reading.exceed) ? '#3a3640' : '#aab0c4');
+    }
+    cx.globalAlpha = 1;
+
+    if (reading) {
+      const maxV = reading.limit * 1.8;
+      const ang = (v) => Math.PI - Math.min(v, maxV) / maxV * Math.PI;
+      const limA = ang(reading.limit);
+      for (let d = 0; d <= 180; d += 2) {
+        const a = Math.PI * d / 180;
+        for (let rr = GR - 16; rr <= GR; rr += 5) {
+          mgR(cx, GCX + Math.cos(a) * rr - 2, GCY - Math.sin(a) * rr - 2, 5, 5, a > limA ? '#52b788' : '#e0505a');
+        }
+      }
+      // 기준선
+      for (let rr = 40; rr <= GR + 12; rr += 5) mgR(cx, GCX + Math.cos(limA) * rr - 3, GCY - Math.sin(limA) * rr - 3, 6, 6, '#ffffff');
+      cx.fillStyle = '#ffe9a8'; cx.font = '700 13px "Noto Sans KR", sans-serif'; cx.textAlign = 'center';
+      cx.fillText(`기준 ${reading.limit}`, GCX + Math.cos(limA) * (GR + 34), GCY - Math.sin(limA) * (GR + 24));
+      cx.fillStyle = '#9ab0e8'; cx.fillText('0', GCX - GR + 8, GCY + 18);
+      // 바늘
+      needle += (reading.value - needle) * Math.min(1, dt * 5);
+      const nv = needle + Math.sin(T * 18) * maxV * 0.006;
+      const na = ang(nv);
+      for (let i = 0; i < GR - 22; i += 4) mgR(cx, GCX + Math.cos(na) * i - 3, GCY - Math.sin(na) * i - 3, 6, 6, '#ffd166');
+      mgDisc(cx, GCX, GCY, 12, '#f2c14e', 4);
+      // 정보창
+      cx.fillStyle = '#f4f1e6'; cx.font = '800 19px "Noto Sans KR", sans-serif'; cx.textAlign = 'center';
+      cx.fillText(`${reading.gas}  측정값 ${reading.value}  /  기준 ${reading.limit}`, 465, 96);
+      mgR(cx, 262, 108, 406, 10, MG_INK);
+      mgR(cx, 264, 110, 402 * Math.max(0, left / 7), 6, left < 2 ? '#e0505a' : '#f2c14e');
+    }
+    for (let i = 0; i < 3; i++) mgHeart(cx, 252 + i * 28, 132, 4, i < lives);
+    cx.fillStyle = '#9ab0e8'; cx.font = '700 13px "Noto Sans KR", sans-serif'; cx.textAlign = 'right';
+    cx.fillText(`조치 ${ok}/${NEED}`, 676, 30);
+    if (flashT > 0) {
+      flashT -= dt;
+      cx.fillStyle = flashGood ? '#7bf0b0' : '#ff7b7b'; cx.font = '800 34px "Noto Sans KR", sans-serif'; cx.textAlign = 'center';
+      cx.fillText(flashTxt, 465, 190);
+    }
+    if (over) {
+      cx.fillStyle = 'rgba(5,8,28,0.78)'; cx.fillRect(0, 0, W, H);
+      cx.fillStyle = '#ffd166'; cx.font = '800 26px "Noto Sans KR", sans-serif'; cx.textAlign = 'center';
+      cx.fillText('점검 실패! 클릭해서 다시 도전', W / 2, H / 2);
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  activeMinigameCleanup = () => { running = false; window.removeEventListener('keydown', onKey); };
+}
+
+// =====================================================================
+// [업무 2] 북한산 자락 사면·완충대 현장 조사 (점프킹 풍 드래그 점프)
+// =====================================================================
+function openDragClimbMinigame() {
+  const idx = Math.min(2, Math.floor((day - 1) / 5));
+  const f = FACTORIES[idx];
+
+  openModal(`
+    <div class="modal-header">
+      <span class="modal-title">⛰️ 사면·완충대 현장 조사 · ${f.facility}</span>
+      <button class="close-btn" onclick="closeModal()">닫기</button>
+    </div>
+    <p style="line-height:1.65; color:#d9d1bd; margin-bottom:10px;">
+      조사원을 <strong>뒤로 당겼다 놓아</strong> 점프하세요! 당긴 길이는 <strong>세기</strong>, 반대 방향은 <strong>각도</strong>가 됩니다. 가는 길의 <strong>⭐ 조사 지점 3곳</strong>에서 표본을 채취하고 꼭대기 관측 지점에 도달하세요.
+    </p>
+    <div style="display:flex; justify-content:space-between; background:#0d1438; padding:8px 14px; border:2px solid #4b63c9; margin-bottom:10px; font-size:0.9rem;">
+      <span>도달 고도: <strong id="drag-climb-pct" style="color:#ffd166;">0%</strong></span>
+      <span>표본 채취: <strong id="drag-climb-sample" style="color:#6ad0c8;">0/3</strong></span>
+      <span>상태: <strong id="drag-climb-status" style="color:#a8e6cf;">현장 조사 중</strong></span>
+    </div>
+    <canvas id="dragClimbCanvas" class="mg" width="700" height="360" style="cursor:grab;"></canvas>
+    <div style="text-align:right; margin-top:14px;">
+      <button class="action-btn btn-no" id="drag-reset-btn">출발 지점 복귀</button>
+    </div>
+  `);
+
+  const c = document.getElementById('dragClimbCanvas');
+  const dctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+
+  const platforms = [
+    { x: 0, y: H - 26, w: W, h: 26, type: 'ground' },
+    { x: 85, y: H - 82, w: 150, h: 14, type: 'plat' },
+    { x: 300, y: H - 134, w: 145, h: 14, type: 'plat' },
+    { x: 495, y: H - 188, w: 145, h: 14, type: 'plat' },
+    { x: 265, y: H - 242, w: 155, h: 14, type: 'plat' },
+    { x: 75, y: H - 294, w: 140, h: 14, type: 'plat' },
+    { x: 450, y: H - 332, w: 185, h: 16, type: 'goal' }
+  ];
+  const samples = [
+    { x: 160, y: H - 100, got: false },
+    { x: 567, y: H - 206, got: false },
+    { x: 342, y: H - 260, got: false }
+  ];
+
+  // 정적 배경: 달빛이 드는 돌탑 내부 + 이끼 낀 돌 발판
+  const bg = document.createElement('canvas'); bg.width = W; bg.height = H;
+  const b = bg.getContext('2d');
+  for (let y = 0; y < H; y += 8) { b.fillStyle = colorAt(SKY_STOPS.night, y / H); b.fillRect(0, y, W, 8); }
+  for (let y = 0; y < H; y += 14) {
+    const off = ((y / 14) | 0) % 2 ? 18 : 0;
+    b.fillStyle = 'rgba(6,8,30,0.5)'; b.fillRect(0, y, W, 2);
+    for (let x = -off; x < W; x += 36) b.fillRect(x, y, 2, 14);
+  }
+  mgR(b, 548, 20, 120, 112, MG_INK); mgR(b, 552, 24, 112, 104, '#16225a');
+  mgDisc(b, 608, 76, 28, '#f6f0cf', 2); mgDisc(b, 598, 68, 6, '#dcd5ab', 2);
+  mgR(b, 606, 24, 4, 104, MG_INK); mgR(b, 552, 74, 112, 4, MG_INK);
+  const rw = makeRng(3);
+  [[0, 14], [W - 14, 14]].forEach(([x0, ww]) => {
+    mgR(b, x0, 0, ww, H, '#2a2942');
+    for (let y = 0; y < H; y += 14) mgR(b, x0, y, ww, 2, '#14132a');
+    for (let i = 0; i < 40; i++) mgR(b, x0 + Math.floor(rw() * ww), Math.floor(rw() * H), 3, 2, rw() < 0.5 ? '#3f7a4a' : '#4a4965');
+  });
+  platforms.forEach(p => {
+    const goal = p.type === 'goal', gr = p.type === 'ground';
+    mgR(b, p.x, p.y, p.w, p.h, MG_INK);
+    mgR(b, p.x + 2, p.y + 2, p.w - 4, p.h - 4, goal ? '#7a6a3a' : '#5d6080');
+    for (let x = p.x + 10; x < p.x + p.w - 2; x += 14) mgR(b, x, p.y + 2, 2, p.h - 4, 'rgba(10,13,36,.45)');
+    mgR(b, p.x + 2, p.y + 2, p.w - 4, 4, goal ? '#e9c46a' : (gr ? '#5a8f4e' : '#58a05a'));
+    for (let x = p.x + 4; x < p.x + p.w - 4; x += 8) mgR(b, x, p.y + 6, 3, 2, goal ? '#e9c46a' : '#3f7a4a');
+  });
+  const goal = platforms[platforms.length - 1];
+  mgR(b, goal.x + goal.w - 34, goal.y - 26, 4, 26, '#c9ccd8');
+  mgR(b, goal.x + goal.w - 30, goal.y - 26, 20, 12, '#2d6a4f');
+  mgR(b, goal.x + goal.w - 24, goal.y - 22, 8, 4, '#95d5b2');
+
+  const player = { x: 120, y: H - 52, w: 22, h: 26, vx: 0, vy: 0, grounded: true, dir: 1 };
+  let dragging = false, dragStart = { x: 0, y: 0 }, dragCurr = { x: 0, y: 0 };
+  let maxPct = 0, cleared = false, running = true, sampleCount = 0;
+  const trail = [];
+  const GRAVITY = 1150, MAX_DRAG = 160;
+
+  function computeLaunchVelocity() {
+    const pullX = dragStart.x - dragCurr.x, pullY = dragStart.y - dragCurr.y;
+    const rawDist = Math.hypot(pullX, pullY);
+    if (rawDist < 8) return null;
+    const ratio = Math.min(MAX_DRAG, rawDist) / MAX_DRAG;
+    const nx = pullX / rawDist, ny = pullY / rawDist;
+    const speed = 140 + ratio * 520;
+    let vx = nx * speed, vy = ny * speed;
+    if (vy > -110 && ratio > 0.25) vy = -110 - ratio * 260;
+    return { vx, vy, powerPct: Math.round(ratio * 100) };
+  }
+
+  c.onpointerdown = (evt) => {
+    if (!running || !player.grounded) return;
+    dragging = true;
+    dragStart = { x: player.x + player.w / 2, y: player.y + player.h / 2 };
+    dragCurr = mgPt(evt, c);
+    c.style.cursor = 'grabbing';
+  };
+  const onDragMove = (evt) => { if (dragging) dragCurr = mgPt(evt, c); };
+  const onDragRelease = () => {
+    if (!dragging) return;
+    dragging = false;
+    c.style.cursor = 'grab';
+    if (!player.grounded) return;
+    const vel = computeLaunchVelocity();
+    if (!vel) return;
+    player.vx = vel.vx; player.vy = vel.vy; player.grounded = false;
+    if (Math.abs(vel.vx) > 20) player.dir = vel.vx > 0 ? 1 : -1;
+  };
+  window.addEventListener('pointermove', onDragMove);
+  window.addEventListener('pointerup', onDragRelease);
+
+  document.getElementById('drag-reset-btn').onclick = () => {
+    player.x = 120; player.y = H - 52; player.vx = 0; player.vy = 0; player.grounded = true; dragging = false; trail.length = 0;
+  };
+
+  let prevT = performance.now();
+  function loop(now) {
+    if (!running) return;
+    const dt = Math.min(0.033, (now - prevT) / 1000);
+    prevT = now;
+
+    if (!player.grounded) player.vy += GRAVITY * dt;
+    const prevBottom = player.y + player.h;
+    player.x += player.vx * dt;
+    player.y += player.vy * dt;
+    if (player.x < 14) { player.x = 14; player.vx = Math.abs(player.vx) * 0.5; }
+    if (player.x + player.w > W - 14) { player.x = W - 14 - player.w; player.vx = -Math.abs(player.vx) * 0.5; }
+    if (player.y < 0) { player.y = 0; player.vy = 0; }
+
+    let landed = false;
+    if (player.vy >= 0) {
+      for (const p of platforms) {
+        const overlapX = (player.x + player.w - 2) > p.x && (player.x + 2) < (p.x + p.w);
+        if (overlapX && prevBottom <= p.y + 12 && (player.y + player.h) >= p.y) {
+          player.y = p.y - player.h; player.vy = 0; player.vx = 0; player.grounded = true; landed = true;
+          if (p.type === 'goal' && !cleared) {
+            cleared = true;
+            dragClimbCompleted[idx] = true;
+            assessmentQuality += 2 + (sampleCount >= 3 ? 0.5 : 0);
+            pollutionRisk = Math.max(5, pollutionRisk - 3);
+            weather.ecoHealth = Math.min(100, weather.ecoHealth + 5);
+            recordDailyTask('현장 사면·완충대 조사 완료', `${f.facility} 주변 상부 완충녹지 관측 지점에 도달해 표본 ${sampleCount}/3곳을 채취했습니다.`);
+            updateWeatherHUD();
+            const stEl = document.getElementById('drag-climb-status');
+            if (stEl) stEl.innerText = sampleCount >= 3 ? '관측 지점 도달! 표본 완비 (+2.5 평가품질)' : '관측 지점 도달! (+2 평가품질)';
+          }
+          break;
+        }
+      }
+    }
+    if (!landed) player.grounded = false;
+    if (!player.grounded) { trail.push({ x: player.x + 11, y: player.y + 13 }); if (trail.length > 9) trail.shift(); }
+    else if (trail.length) trail.shift();
+
+    samples.forEach(s => {
+      if (!s.got && Math.hypot(player.x + 11 - s.x, player.y + 13 - s.y) < 22) {
+        s.got = true; sampleCount++;
+        const el = document.getElementById('drag-climb-sample'); if (el) el.innerText = `${sampleCount}/3`;
+      }
+    });
+
+    const pct = Math.max(0, Math.min(100, Math.round(((H - 26 - (player.y + player.h)) / (H - 358)) * 100)));
+    if (pct > maxPct) maxPct = pct;
+    const pctEl = document.getElementById('drag-climb-pct');
+    if (pctEl) pctEl.innerText = `${pct}% (최고 ${maxPct}%)`;
+
+    dctx.drawImage(bg, 0, 0);
+    const blink = Math.floor(now / 350) % 2 === 0;
+    samples.forEach(s => {
+      if (s.got) { mgR(dctx, s.x - 4, s.y - 4, 8, 8, '#2d6a4f'); mgR(dctx, s.x - 2, s.y - 2, 4, 4, '#95d5b2'); return; }
+      const k = blink ? 1 : 0;
+      mgR(dctx, s.x - 2, s.y - 10 - k, 4, 20 + 2 * k, '#f2c14e');
+      mgR(dctx, s.x - 10 - k, s.y - 2, 20 + 2 * k, 4, '#f2c14e');
+      mgR(dctx, s.x - 4, s.y - 4, 8, 8, '#fff4c0');
+    });
+    trail.forEach((t, i) => { dctx.globalAlpha = (i + 1) / trail.length * 0.45; mgR(dctx, t.x - 3, t.y - 3, 6, 6, '#f2c14e'); });
+    dctx.globalAlpha = 1;
+
+    if (dragging && player.grounded) {
+      const cx0 = player.x + player.w / 2, cy0 = player.y + player.h / 2;
+      const vel = computeLaunchVelocity();
+      if (vel) {
+        for (let i = 1; i <= 10; i++) {
+          const tS = i * 0.065;
+          mgR(dctx, cx0 + vel.vx * tS - 2, cy0 + vel.vy * tS + 0.5 * GRAVITY * tS * tS - 2, 4, 4, '#6ad0c8');
+        }
+        for (let i = 1; i <= 6; i++) mgR(dctx, cx0 + (dragCurr.x - cx0) * i / 6 - 2, cy0 + (dragCurr.y - cy0) * i / 6 - 2, 4, 4, '#ffd166');
+        dctx.fillStyle = '#ffe9a8'; dctx.font = '700 12px "Noto Sans KR", sans-serif'; dctx.textAlign = 'left';
+        dctx.fillText(`출력 ${vel.powerPct}%`, cx0 + 12, cy0 - 14);
+      }
+    }
+
+    // 조사원 (안전모 + 형광 조끼)
+    const crouch = dragging && player.grounded;
+    const px = Math.round(player.x), py = Math.round(player.y) + (crouch ? 4 : 0);
+    const S = (gx, gy, w, h, col) => mgR(dctx, px + gx * 2, py + gy * 2, w * 2, h * 2, col);
+    mgR(dctx, px - 2, py - 2, 26, crouch ? 26 : 30, MG_INK);
+    S(1, 0, 9, 3, '#f2c14e'); S(0, 2, 11, 1, '#c99a2e');
+    S(2, 3, 7, 4, '#f1c7a0'); S(3, 4, 1, 1, MG_INK); S(7, 4, 1, 1, MG_INK);
+    S(1, 7, 9, 4, '#e07a2f'); S(3, 7, 1, 4, '#f6efd8'); S(7, 7, 1, 4, '#f6efd8');
+    if (!crouch) { S(2, 11, 3, 2, '#35384f'); S(6, 11, 3, 2, '#35384f'); }
+    S(player.dir > 0 ? 9 : 0, 8, 2, 3, '#f1c7a0');
+
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  activeMinigameCleanup = () => {
+    running = false;
+    window.removeEventListener('pointermove', onDragMove);
+    window.removeEventListener('pointerup', onDragRelease);
+  };
+}
+
+// =====================================================================
+// [업무 3] 환경영향평가서 초안 검토 — 잘못된 문장 찾아 '반려' 도장 찍기
+// =====================================================================
+const REVIEW_SETS = [
+  [
+    { t: '사업지 반경 3km의 대기질을 계절별로 나누어 측정한 자료를 현황으로 제시함.', bad: false },
+    { t: '현황조사는 맑은 날 하루 한 번만 측정한 값을 연평균으로 대표함.', bad: true, why: '하루치 측정값은 계절·기상 변화를 반영하지 못해 대표성이 부족해요.' },
+    { t: '풍향·풍속 자료를 확산 모델에 입력해 주거지의 농도 증가분을 예측함.', bad: false },
+    { t: '방지시설을 설치할 예정이므로 영향 예측 없이 "영향 없음"으로 결론 내림.', bad: true, why: '저감시설이 있어도 예측과 검증 없이 영향이 없다고 단정할 수는 없어요.' },
+    { t: '주민 의견 수렴 결과와 반영 여부를 표로 정리함.', bad: false },
+    { t: '기준 초과가 예상되는 지점은 "적합"으로 기재하고 사유는 생략함.', bad: true, why: '기준 초과 예상 지점은 사유와 저감방안을 반드시 밝혀야 해요.' }
+  ],
+  [
+    { t: '반입 차량 동선과 소음 영향을 시간대별로 예측함.', bad: false },
+    { t: '악취는 민원이 생기면 그때 조사하기로 하고 평가서에는 넣지 않음.', bad: true, why: '악취는 사전에 예측하고 저감방안을 평가서에 담아야 해요.' },
+    { t: '폐수 처리 계획과 방류 수질 기준 비교표를 제시함.', bad: false },
+    { t: '재활용 확대 등 대안은 비교하지 않고 단일안만 제시함.', bad: true, why: '평가에는 입지·규모·공법 대안 비교가 포함되어야 해요.' },
+    { t: '배출가스 연속측정 자료를 사후 모니터링 계획에 포함함.', bad: false },
+    { t: '인근 학교는 지도에서 눈에 띄지 않아 보전 대상에서 제외함.', bad: true, why: '학교 같은 민감 시설은 현장 확인을 거쳐 보호 대상에 반드시 포함해야 해요.' }
+  ],
+  [
+    { t: '새벽 시간대 화물차 통행량을 현장에서 직접 계수해 소음 예측에 입력함.', bad: false },
+    { t: '불투수면이 늘어도 빗물은 땅속으로 흡수되므로 유출 증가는 없다고 봄.', bad: true, why: '포장면이 늘면 빗물이 스며들지 못해 유출량이 늘어나요.' },
+    { t: '통학로와 인접한 구간에 방음벽·완충녹지 설치안을 제시함.', bad: false },
+    { t: '하천변 식생 훼손은 공사 후 풀을 심으면 되므로 영향 항목에서 삭제함.', bad: true, why: '훼손은 서식지 기능 손실과 복원 기간까지 함께 평가해야 해요.' },
+    { t: '법정보호종 서식 여부를 계절별 현장조사로 확인함.', bad: false },
+    { t: '저감 대책의 효과는 검증하지 않고 설치했다는 사실만 기재함.', bad: true, why: '저감 대책은 효과를 예측하고 사후 모니터링 계획까지 제시해야 해요.' }
+  ]
+];
+
+function openTypingChallengeGame() {
+  const idx = Math.min(2, Math.floor((day - 1) / 5));
+  const set = REVIEW_SETS[idx].slice().sort(() => Math.random() - 0.5);
+  const badTotal = set.filter(s => s.bad).length;
+  let found = 0, timeLeft = 40, done = false;
+
+  openModal(`
+    <div class="modal-header">
+      <span class="modal-title">📝 평가서 초안 검토 · ${FACTORIES[idx].facility}</span>
+      <button class="close-btn" onclick="closeModal()">닫기</button>
+    </div>
+    <p style="line-height:1.65; color:#d9d1bd; margin-bottom:12px;">
+      사업자가 제출한 평가서 초안에서 <strong>잘못된 문장 ${badTotal}개</strong>를 찾아 클릭해 <strong>반려 도장</strong>을 찍으세요. 멀쩡한 문장을 누르면 시간이 3초 줄어요!
+    </p>
+    <div class="dossier-box">
+      <div style="display:flex; justify-content:space-between; font-weight:700;">
+        <span>남은 시간: <strong id="rv-time" style="color:#b3262e;">40.0초</strong></span>
+        <span>찾은 오류: <strong id="rv-found" style="color:#1b4332;">0/${badTotal}</strong></span>
+      </div>
+      <div class="timebar"><div id="rv-bar"></div></div>
+      ${set.map((s, i) => `<div class="rv-line" data-i="${i}">${s.t}</div>`).join('')}
+      <p id="rv-status" style="min-height:24px; margin-top:10px; font-weight:700; color:#5a3a1a; line-height:1.5;">문장을 읽고 이상한 부분을 찾아보세요.</p>
+    </div>
+  `);
+
+  const status = (s) => { const e = document.getElementById('rv-status'); if (e) e.innerText = s; };
+
+  function finish(success) {
+    if (done) return;
+    done = true;
+    clearInterval(iv);
+    activeTasks.phAlert = false;
+    typingGameCompleted[idx] = true;
+    if (success) {
+      assessmentQuality += 1.5;
+      pollutionRisk = Math.max(5, pollutionRisk - 2.5);
+      recordDailyTask('환경영향평가서 초안 검토 완료', `초안의 오류 ${badTotal}건을 모두 찾아 보완 요구 의견을 달았습니다.`);
+    } else {
+      if (found > 0) assessmentQuality += 0.5;
+      recordDailyTask('환경영향평가서 초안 검토', `시간 안에 오류 ${found}/${badTotal}건을 찾아 보완을 요구했습니다.`);
+    }
+    closeModal();
+    updateWeatherHUD();
+    updateAlertStrip();
+    showDialogue(success ? '나 · 초안 검토 완료' : '나 · 초안 검토 종료',
+      success ? '잘못된 문장을 전부 찾아냈어! 보완 요구 의견을 달아 평가서의 신뢰도가 올라갔어.' : `오류를 ${found}/${badTotal}건 찾았어. 놓친 부분은 보완 협의에서 다시 확인해야 해.`);
+  }
+
+  document.querySelectorAll('.rv-line').forEach(el => {
+    el.onclick = () => {
+      if (done || el.classList.contains('hit')) return;
+      const s = set[+el.dataset.i];
+      if (s.bad) {
+        el.classList.add('hit');
+        found++;
+        document.getElementById('rv-found').innerText = `${found}/${badTotal}`;
+        status('✅ ' + s.why);
+        if (found >= badTotal) finish(true);
+      } else {
+        timeLeft = Math.max(0, timeLeft - 3);
+        el.classList.add('miss');
+        setTimeout(() => el.classList.remove('miss'), 320);
+        status('⚠️ 이 문장은 문제가 없어요. (시간 -3초)');
+      }
+    };
+  });
+
+  const iv = setInterval(() => {
+    if (done) return;
+    timeLeft = Math.max(0, +(timeLeft - 0.1).toFixed(1));
+    const t = document.getElementById('rv-time'); if (t) t.innerText = `${timeLeft.toFixed(1)}초`;
+    const bar = document.getElementById('rv-bar'); if (bar) bar.style.width = `${timeLeft / 40 * 100}%`;
+    if (timeLeft <= 0) finish(false);
+  }, 100);
+
+  activeMinigameCleanup = () => { done = true; clearInterval(iv); };
+}
+
+// =====================================================================
+// [업무 4] 야간 보호종 현장 조사 — 손전등 불빛으로 보호종만 기록하기
+// =====================================================================
+function openHabitatShieldArcadeGame() {
+  const idx = Math.min(2, Math.floor((day - 1) / 5));
+  if (ecologyGameCompleted[idx]) {
+    showDialogue('나', '이 부지의 야간 보호종 조사는 이미 마쳤어.');
+    return;
+  }
+  const NEED = 4;
+  let found = 0, mistakes = 0, running = true, mx = 350, my = 160, msg = '', msgT = 0;
+
+  openModal(`
+    <div class="modal-header"><span class="modal-title" id="hb-title">🌙 야간 보호종 현장 조사 (0/${NEED})</span><button class="close-btn" onclick="closeModal()">닫기</button></div>
+    <p style="line-height:1.65; color:#d9d1bd; margin-bottom:10px;">
+      어두운 습지에서 <strong>손전등(마우스)</strong>을 비춰 <strong>법정보호종 ${NEED}마리</strong>를 찾아 클릭해 기록하세요. 오리·비둘기·쥐 같은 <strong>일반종</strong>은 기록하면 안 돼요. 동물은 잠깐 나타났다 사라져요!
+    </p>
+    <canvas id="habitatCanvas" class="mg" width="700" height="300" style="cursor:none;"></canvas>
+    <p id="hb-status" style="min-height:24px; color:#ffd166; font-weight:700; margin-top:12px;">불빛 속에 나타난 동물을 확인하세요.</p>
+  `);
+
+  const cv = document.getElementById('habitatCanvas'), cx = cv.getContext('2d'), W = cv.width, H = cv.height;
+  const LR = 78;
+
+  const bg = document.createElement('canvas'); bg.width = W; bg.height = H;
+  const b = bg.getContext('2d');
+  mgSky(b, W, 170, { x: 590, y: 42, r: 22 });
+  mgSkyline(b, W, 170, 21, '#141a44', '#f3c76a', 0.55);
+  const rm = makeRng(5);
+  for (let x = 0; x < W; x += 4) {
+    const h = Math.round(34 + 22 * Math.sin(x * 0.012 + 1) + 12 * Math.sin(x * 0.04));
+    mgR(b, x, 170 - h, 4, h, '#1d2560'); mgR(b, x, 170 - h, 4, 2, '#3a4a90');
+  }
+  mgSkyline(b, W, 176, 21, '#101640', '#f3c76a', 0.4);
+  mgR(b, 0, 176, W, 44, '#1d2f66');
+  for (let i = 0; i < 70; i++) mgR(b, Math.floor(rm() * W / 4) * 4, 178 + Math.floor(rm() * 40 / 4) * 4, 8, 2, '#4a66b0');
+  for (let y = 178; y < 214; y += 6) mgR(b, 560 + Math.sin(y) * 6, y, 30 - (y - 178) * 0.4, 2, '#f6f0cf');
+  mgR(b, 0, 220, W, 80, '#1a3a2c'); mgR(b, 0, 220, W, 3, '#2d6a4f');
+  for (let i = 0; i < 90; i++) {
+    const x = Math.floor(rm() * W), y = 226 + Math.floor(rm() * 68), hh = 10 + Math.floor(rm() * 14);
+    mgR(b, x, y - hh, 2, hh, rm() < 0.5 ? '#2d6a4f' : '#3f7a4a');
+    if (rm() < 0.15) mgR(b, x - 1, y - hh - 6, 4, 8, '#7a5230');
+  }
+
+  const ov = document.createElement('canvas'); ov.width = W; ov.height = H;
+  const o = ov.getContext('2d');
+
+  const KINDS = [
+    { k: 'frog', n: '맹꽁이', prot: true }, { k: 'otter', n: '수달', prot: true },
+    { k: 'owl', n: '수리부엉이', prot: true }, { k: 'frog', n: '맹꽁이', prot: true },
+    { k: 'duck', n: '청둥오리', prot: false }, { k: 'pigeon', n: '집비둘기', prot: false }, { k: 'rat', n: '집쥐', prot: false }
+  ];
+  const place = (cr) => { cr.x = 60 + Math.random() * 580; cr.y = 150 + Math.random() * 130; };
+  const cr = KINDS.map(k => {
+    const c0 = { ...k, x: 0, y: 0, vis: false, t: Math.random() * 2, done: false };
+    place(c0);
+    return c0;
+  });
+
+  cv.onpointermove = (e) => { const p = mgPt(e, cv); mx = p.x; my = p.y; };
+  cv.onpointerdown = (e) => {
+    if (!running) return;
+    const p = mgPt(e, cv); mx = p.x; my = p.y;
+    const hit = cr.find(c0 => c0.vis && !c0.done && Math.hypot(mx - c0.x, my - (c0.y - 14)) < 28 && Math.hypot(mx - c0.x, my - c0.y) < LR);
+    const st = document.getElementById('hb-status');
+    if (!hit) { return; }
+    if (hit.prot) {
+      hit.done = true; found++;
+      msg = `📸 ${hit.n} 기록! (${found}/${NEED})`; msgT = 2.5;
+      const t = document.getElementById('hb-title'); if (t) t.innerText = `🌙 야간 보호종 현장 조사 (${found}/${NEED})`;
+      if (st) st.innerText = `✅ 보호종 ${hit.n}을(를) 현황조사 자료로 기록했어요.`;
+      if (found >= NEED) finish();
+    } else {
+      mistakes++;
+      msg = `${hit.n}은(는) 일반종이에요. 기록 낭비!`; msgT = 2.5;
+      if (st) st.innerText = `⚠️ ${hit.n}은(는) 법정보호종이 아니에요. (잘못 기록 ${mistakes}회)`;
+    }
+  };
+
+  function finish() {
+    running = false;
+    ecologyGameCompleted[idx] = true;
+    assessmentQuality += 1;
+    pollutionRisk = Math.max(5, pollutionRisk - 2);
+    weather.ecoHealth = Math.min(100, weather.ecoHealth + 5);
+    recordDailyTask('야간 보호종 현장 조사 완료', `습지 일대에서 법정보호종 ${NEED}개체를 확인·기록했습니다. (일반종 오기록 ${mistakes}회)`);
+    closeModal();
+    updateWeatherHUD();
+    showDialogue('나 · 보호종 조사 완료', '보호종 4개체를 모두 기록했어! 서식지 보전 대책과 공사 시기 조정의 근거 자료가 확보됐어.');
+  }
+
+  let prevT = performance.now();
+  function frame(now) {
+    if (!running) return;
+    const dt = Math.min(0.05, (now - prevT) / 1000); prevT = now;
+    cr.forEach(c0 => {
+      if (c0.done) return;
+      c0.t -= dt;
+      if (c0.t <= 0) {
+        if (c0.vis) { c0.vis = false; c0.t = 1 + Math.random() * 2; place(c0); }
+        else { c0.vis = true; c0.t = 2.4 + Math.random() * 1.2; }
+      }
+    });
+    cx.drawImage(bg, 0, 0);
+
+    // 손전등 범위 안에서만 동물이 보임
+    cx.save();
+    cx.beginPath(); cx.arc(mx, my, LR, 0, Math.PI * 2); cx.clip();
+    cr.forEach(c0 => {
+      if (!c0.vis || c0.done) return;
+      const hop = Math.abs(Math.sin(now / 220 + c0.x)) * 4;
+      mgCreature(cx, c0.k, c0.x, c0.y - hop, 4);
+    });
+    cx.restore();
+
+    // 어둠 덮개 (손전등 구멍)
+    o.globalCompositeOperation = 'source-over';
+    o.clearRect(0, 0, W, H);
+    o.fillStyle = 'rgba(3,5,22,0.9)'; o.fillRect(0, 0, W, H);
+    o.globalCompositeOperation = 'destination-out';
+    const gr = o.createRadialGradient(mx, my, LR * 0.35, mx, my, LR);
+    gr.addColorStop(0, 'rgba(0,0,0,1)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+    o.fillStyle = gr; o.beginPath(); o.arc(mx, my, LR, 0, Math.PI * 2); o.fill();
+    cx.drawImage(ov, 0, 0);
+
+    // 조준점
+    mgR(cx, mx - 1, my - 8, 2, 6, '#ffd166'); mgR(cx, mx - 1, my + 3, 2, 6, '#ffd166');
+    mgR(cx, mx - 8, my - 1, 6, 2, '#ffd166'); mgR(cx, mx + 3, my - 1, 6, 2, '#ffd166');
+
+    // HUD
+    mgR(cx, 8, 8, 208, 26, 'rgba(5,8,28,0.8)');
+    cx.fillStyle = '#ffe9a8'; cx.font = '800 14px "Noto Sans KR", sans-serif'; cx.textAlign = 'left';
+    cx.fillText(`📸 보호종 기록 ${found}/${NEED}`, 16, 27);
+    if (msgT > 0) {
+      msgT -= dt;
+      mgR(cx, 150, 262, 400, 28, 'rgba(5,8,28,0.85)');
+      cx.fillStyle = '#f4f1e6'; cx.textAlign = 'center'; cx.fillText(msg, 350, 281);
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  activeMinigameCleanup = () => { running = false; };
+}
+
+// =====================================================================
+// [업무 5] 최대소음도(Lmax) 측정 — 기준을 넘는 소음 피크를 측정 창에서 포착
+// =====================================================================
+function openNoisePeakTimingGame() {
+  const idx = Math.min(2, Math.floor((day - 1) / 5));
+  if (noiseGameCompleted[idx]) {
+    showDialogue('나', '이 부지의 최대소음도 측정은 이미 완료했어.');
+    return;
+  }
+  const NEED = 3;
+  let caps = 0, misses = 0, running = true, msg = '', msgT = 0;
+
+  openModal(`
+    <div class="modal-header"><span class="modal-title" id="ns-title">🔊 최대소음도(Lmax) 측정 (0/${NEED})</span><button class="close-btn" onclick="closeModal()">닫기</button></div>
+    <p style="line-height:1.65; color:#d9d1bd; margin-bottom:10px;">
+      화물차가 지나갈 때마다 소음 파형에 피크가 생겨요. <strong>붉은 기준선(예시 65dB)을 넘는 피크</strong>가 <strong>노란 측정 창</strong>에 들어왔을 때 <strong>[측정!]</strong> (또는 Space)을 눌러 ${NEED}번 기록하세요. 기준 이하의 피크는 평가 대상이 아니에요.
+    </p>
+    <canvas id="noiseCanvas" class="mg" width="700" height="250"></canvas>
+    <div style="text-align:center; margin-top:16px;"><button class="action-btn btn-yes" id="ns-btn">🎯 최대소음도 측정!</button></div>
+    <p id="ns-status" style="min-height:24px; color:#ffd166; font-weight:700; margin-top:12px; text-align:center;">기준선을 넘는 피크가 측정 창에 들어오면 누르세요!</p>
+  `);
+
+  const cv = document.getElementById('noiseCanvas'), cx = cv.getContext('2d'), W = cv.width;
+  const BASE = 48, STD = 65, WINX = 150, SPEED = 150;
+  const Y = (db) => 200 - (db - 40) * 3.5;
+
+  const bg = document.createElement('canvas'); bg.width = W; bg.height = 250;
+  const b = bg.getContext('2d');
+  mgR(b, 0, 0, W, 250, '#0d163b');
+  for (let x = 0; x < W; x += 35) mgR(b, x, 0, 1, 205, '#18275c');
+  for (let db = 40; db <= 85; db += 5) {
+    mgR(b, 0, Y(db), W, 1, '#18275c');
+    b.fillStyle = '#6f80b8'; b.font = '700 11px "Noto Sans KR", sans-serif'; b.fillText(db + '', 4, Y(db) - 2);
+  }
+  for (let x = 0; x < W; x += 10) mgR(b, x, Y(STD), 6, 2, '#e0505a');
+  b.fillStyle = '#ff9a9a'; b.font = '800 12px "Noto Sans KR", sans-serif'; b.fillText('환경기준(예시) 65dB', W - 150, Y(STD) - 4);
+  mgR(b, 0, 214, W, 36, '#1a1f3c'); mgR(b, 0, 214, W, 3, '#3a456e');
+  for (let x = 6; x < W; x += 36) mgR(b, x, 236, 16, 3, '#d9cda4');
+
+  const spikes = [];
+  let spawnIn = 0.6, T = 0;
+  const level = (px) => {
+    let db = BASE + 1.6 * Math.sin(px * 0.09 + T * 3) + 1.0 * Math.sin(px * 0.23);
+    spikes.forEach(s => { const d = px - s.x; db += s.amp * Math.exp(-(d * d) / (2 * 20 * 20)); });
+    return db;
+  };
+
+  function finish() {
+    running = false;
+    noiseGameCompleted[idx] = true;
+    assessmentQuality += 1;
+    pollutionRisk = Math.max(5, pollutionRisk - 2);
+    recordDailyTask('최대소음도(Lmax) 측정 완료', `기준을 넘는 소음 피크 ${NEED}회를 측정해 방음 대책의 근거 자료를 확보했습니다.`);
+    closeModal();
+    updateWeatherHUD();
+    showDialogue('나 · 소음 측정 완료', '기준을 넘는 최대소음도를 3번 측정했어! 방음벽과 운행시간 조정의 근거가 생겼어.');
+  }
+
+  function capture() {
+    if (!running) return;
+    const s = spikes.find(q => !q.hit && Math.abs(q.x - WINX) <= 18);
+    const st = document.getElementById('ns-status');
+    if (s && s.exceed) {
+      s.hit = true; caps++;
+      msg = `✅ ${Math.round(BASE + s.amp)}dB 기록!`; msgT = 1.5;
+      if (st) st.innerText = `✅ 기준 초과 최대소음도 ${Math.round(BASE + s.amp)}dB를 포착했어요! (${caps}/${NEED})`;
+      const t = document.getElementById('ns-title'); if (t) t.innerText = `🔊 최대소음도(Lmax) 측정 (${caps}/${NEED})`;
+      if (caps >= NEED) finish();
+    } else if (s) {
+      s.hit = true; misses++;
+      msg = '기준 이하 소음'; msgT = 1.5;
+      if (st) st.innerText = '⚠️ 기준 이하의 소음이에요. 측정 대상이 아니에요!';
+    } else {
+      misses++;
+      msg = '피크 없음'; msgT = 1.5;
+      if (st) st.innerText = '❌ 측정 창에 피크가 없어요. 타이밍을 다시 보세요!';
+    }
+  }
+  document.getElementById('ns-btn').onclick = capture;
+  const onKey = (e) => { if (e.code === 'Space') { e.preventDefault(); capture(); } };
+  window.addEventListener('keydown', onKey);
+
+  let prevT = performance.now();
+  function frame(now) {
+    if (!running) return;
+    const dt = Math.min(0.05, (now - prevT) / 1000); prevT = now;
+    T += dt; spawnIn -= dt;
+    if (spawnIn <= 0) {
+      const ex = Math.random() < 0.6;
+      spikes.push({ x: W + 40, amp: (ex ? 72 + Math.random() * 10 : 55 + Math.random() * 7) - BASE, exceed: ex, hit: false });
+      spawnIn = 1.1 + Math.random() * 1.0;
+    }
+    spikes.forEach(s => { s.x -= SPEED * dt; });
+    while (spikes.length && spikes[0].x < -60) spikes.shift();
+
+    cx.drawImage(bg, 0, 0);
+    // 화물차
+    spikes.forEach(s => {
+      const tx = Math.round(s.x) - 18;
+      mgR(cx, tx, 218, 38, 16, MG_INK); mgR(cx, tx + 2, 220, 26, 11, s.hit ? '#6a708c' : '#c8ccd8');
+      mgR(cx, tx + 28, 224, 8, 8, '#e0505a'); mgR(cx, tx + 5, 232, 6, 4, MG_INK); mgR(cx, tx + 26, 232, 6, 4, MG_INK);
+    });
+    // 소음 파형
+    for (let px = 0; px < W; px += 3) {
+      const db = level(px), y = Y(db);
+      cx.globalAlpha = 0.14; mgR(cx, px, y + 3, 3, 203 - y, db > STD ? '#ff6b6b' : '#6ad0c8');
+      cx.globalAlpha = 1; mgR(cx, px, y, 3, 3, db > STD ? '#ff6b6b' : '#6ad0c8');
+    }
+    // 측정 창
+    cx.globalAlpha = 0.18; mgR(cx, WINX - 18, 0, 36, 205, '#ffd166'); cx.globalAlpha = 1;
+    mgR(cx, WINX - 18, 0, 2, 205, '#ffd166'); mgR(cx, WINX + 16, 0, 2, 205, '#ffd166');
+    // 현재 레벨 표시
+    mgR(cx, W - 140, 8, 130, 28, MG_INK);
+    cx.fillStyle = '#7bf0b0'; cx.font = '800 15px "Noto Sans KR", sans-serif'; cx.textAlign = 'center';
+    cx.fillText(`현재 ${level(WINX).toFixed(1)} dB`, W - 75, 28);
+    cx.textAlign = 'left'; cx.fillStyle = '#ffe9a8'; cx.font = '800 12px "Noto Sans KR", sans-serif';
+    cx.fillText('측정 창', WINX - 18, 16);
+    if (msgT > 0) {
+      msgT -= dt;
+      cx.fillStyle = '#ffd166'; cx.font = '800 22px "Noto Sans KR", sans-serif'; cx.textAlign = 'center';
+      cx.fillText(msg, 350, 60);
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  activeMinigameCleanup = () => { running = false; window.removeEventListener('keydown', onKey); };
+}
+
+// =====================================================================
+// [업무 6] 완충·저감시설 배치 — 문제 유형에 맞는 시설을 알맞은 구역에
+// =====================================================================
+function openMitigationPlacementGame() {
+  const idx = Math.min(2, Math.floor((day - 1) / 5));
+  if (mitigationGameCompleted[idx]) {
+    showDialogue('나', '이 부지의 완충·저감시설 배치는 이미 마쳤어.');
+    return;
+  }
+  const tools = [
+    { id: 'buffer', label: '🌳 완충녹지' },
+    { id: 'rain', label: '💧 투수·저류시설' },
+    { id: 'wall', label: '🧱 방음벽' }
+  ];
+  const slots = [
+    { name: '주거지 경계', issue: '단지로 먼지와 소음이 들어와요', kind: 'home', hz: ['dust', 'noise'], ok: ['buffer', 'wall'] },
+    { name: '하천 수변부', issue: '호우 때 오염된 물이 하천으로 흘러요', kind: 'river', hz: ['rain'], ok: ['rain', 'buffer'] },
+    { name: '학교 통학로 옆', issue: '새벽 화물차 소음이 등굣길에 전달돼요', kind: 'school', hz: ['noise'], ok: ['wall'] },
+    { name: '도로변 완충대', issue: '차량 먼지와 소음이 도로변으로 퍼져요', kind: 'road', hz: ['dust', 'noise'], ok: ['buffer', 'wall'] }
+  ];
+  const why = {
+    rain: '투수·저류시설은 빗물 유출을 줄이는 시설이에요. 먼지·소음 문제에는 맞지 않아요.',
+    wall: '방음벽은 소음을 막는 시설이에요. 빗물·오염수 문제에는 투수·저류시설이나 수변 완충녹지가 맞아요.',
+    buffer: '완충녹지는 먼지에는 좋지만 학교 앞 소음을 직접 막기엔 부족해요. 방음벽이 필요해요.'
+  };
+  let sel = 'buffer', placed = [null, null, null, null], badFlash = [0, 0, 0, 0], running = true;
+  const MAXP = 3;
+
+  openModal(`
+    <div class="modal-header"><span class="modal-title" id="mt-title">🧱 완충·저감시설 배치 (0/${MAXP} 설치)</span><button class="close-btn" onclick="closeModal()">닫기</button></div>
+    <p style="line-height:1.65; color:#d9d1bd; margin-bottom:12px;">
+      아래 <strong>저감 시설</strong>을 고른 뒤, 각 구역의 <strong>문제 유형</strong>에 맞는 곳 <strong>${MAXP}곳</strong>에 설치하세요. 설치한 곳을 다시 클릭하면 철거돼요.
+    </p>
+    <div id="mt-tools" style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;"></div>
+    <canvas id="mtCanvas" class="mg" width="700" height="250"></canvas>
+    <p id="place-fb" style="color:#ffd166; min-height:24px; margin-top:12px; font-weight:700; line-height:1.5;"></p>
+    <div style="text-align:center; margin-top:10px;"><button class="action-btn btn-yes" id="place-confirm-btn">배치안 적용</button></div>
+  `);
+
+  const renderTools = () => {
+    document.getElementById('mt-tools').innerHTML = tools.map(t => `<button class="action-btn ${sel === t.id ? 'btn-yes' : 'btn-no'}" onclick="pickPlaceTool('${t.id}')">${t.label}</button>`).join('');
+  };
+  window.pickPlaceTool = (tid) => { sel = tid; renderTools(); };
+  renderTools();
+
+  const cv = document.getElementById('mtCanvas'), cx = cv.getContext('2d');
+  const PW = 164, PX = (i) => 10 + i * 172;
+  const fb = (s) => { const e = document.getElementById('place-fb'); if (e) e.innerText = s; };
+  const count = () => placed.filter(Boolean).length;
+  const setTitle = () => { const t = document.getElementById('mt-title'); if (t) t.innerText = `🧱 완충·저감시설 배치 (${count()}/${MAXP} 설치)`; };
+
+  cv.onpointerdown = (e) => {
+    const p = mgPt(e, cv);
+    const i = Math.floor((p.x - 6) / 172);
+    if (i < 0 || i > 3) return;
+    if (placed[i]) placed[i] = null;
+    else if (count() < MAXP) placed[i] = sel;
+    badFlash[i] = 0;
+    setTitle(); fb('');
+  };
+
+  document.getElementById('place-confirm-btn').onclick = () => {
+    if (count() < MAXP) { fb(`저감시설 ${MAXP}곳을 모두 배치해야 합니다.`); return; }
+    let firstWrong = null;
+    placed.forEach((t, i) => { if (t && !slots[i].ok.includes(t)) { badFlash[i] = 1.2; if (firstWrong === null) firstWrong = i; } });
+    if (firstWrong !== null) {
+      fb(`❌ '${slots[firstWrong].name}'에는 맞지 않는 시설이에요. ${why[placed[firstWrong]]}`);
+      return;
+    }
+    running = false;
+    mitigationGameCompleted[idx] = true;
+    assessmentQuality += 1;
+    pollutionRisk = Math.max(5, pollutionRisk - 3);
+    weather.ecoHealth = Math.min(100, weather.ecoHealth + 4);
+    const done = placed.map((t, i) => t ? `${slots[i].name}: ${tools.find(x => x.id === t).label}` : null).filter(Boolean);
+    recordDailyTask('완충·저감시설 공간 배치 완료', `문제 유형에 맞춰 ${done.join(', ')} 에 저감시설을 배치했습니다.`);
+    closeModal();
+    updateWeatherHUD();
+    showDialogue('나 · 시설 배치 완료', '구역별 문제에 딱 맞는 저감시설을 배치했어! 영향 저감 효과가 높아졌어.');
+  };
+
+  function hazard(kind, x, y, T) {
+    if (kind === 'dust') {
+      for (let k = 0; k < 9; k++) mgR(cx, x + ((k * 17 + T * 22) % 70), y + ((k * 11) % 26) + Math.sin(T * 2 + k) * 3, 4, 4, '#9a9aa8');
+    } else if (kind === 'rain') {
+      for (let k = 0; k < 9; k++) mgR(cx, x + k * 8, y + ((k * 7 + T * 50) % 34), 2, 6, '#6ab0e8');
+    } else {
+      cx.globalAlpha = 0.5 + 0.5 * Math.sin(T * 6);
+      for (let k = 0; k < 3; k++) mgR(cx, x + 40 + k * 10, y + 6 - k * 3, 3, 10 + k * 6, '#ffd166');
+      cx.globalAlpha = 1;
+    }
+  }
+  function treeRow(x, y, n) {
+    for (let k = 0; k < n; k++) {
+      const tx = x + k * 34;
+      mgR(cx, tx + 8, y + 12, 6, 14, '#5b3a22');
+      mgR(cx, tx, y, 22, 14, MG_INK); mgR(cx, tx + 2, y + 2, 18, 10, '#2f6b3a'); mgR(cx, tx + 4, y + 2, 8, 4, '#4f9a52');
+    }
+  }
+
+  let prevT = performance.now();
+  function frame(now) {
+    if (!running) return;
+    const dt = Math.min(0.05, (now - prevT) / 1000); prevT = now;
+    const T = now / 1000;
+    cx.fillStyle = '#0d163b'; cx.fillRect(0, 0, 700, 250);
+    slots.forEach((s, i) => {
+      const x = PX(i), y = 8;
+      mgR(cx, x - 2, y - 2, PW + 4, 238, badFlash[i] > 0 ? '#e0505a' : (placed[i] ? '#52b788' : MG_INK));
+      mgR(cx, x, y, PW, 234, '#141a44');
+      for (let k = 0; k < 8; k++) mgR(cx, x + 10 + k * 19, y + 6 + (k * 13) % 30, 2, 2, '#c9d3f5');
+      mgR(cx, x, y + 138, PW, 30, '#1a3a2c');
+      // 장면
+      if (s.kind === 'home') {
+        [[12, 76, 52, 62, '#5a6a9a'], [78, 92, 40, 46, '#6a7aaa'], [124, 80, 34, 58, '#4a5a8a']].forEach(a => {
+          mgR(cx, x + a[0], y + a[1], a[2], a[3], MG_INK); mgR(cx, x + a[0] + 2, y + a[1] + 2, a[2] - 4, a[3] - 4, a[4]);
+          for (let wy = y + a[1] + 8; wy < y + a[1] + a[3] - 8; wy += 12) for (let wx = x + a[0] + 6; wx < x + a[0] + a[2] - 8; wx += 12) mgR(cx, wx, wy, 5, 6, '#ffd166');
+        });
+      } else if (s.kind === 'river') {
+        mgR(cx, x, y + 108, PW, 56, '#1d4f8a');
+        for (let k = 0; k < 6; k++) mgR(cx, x + ((k * 29 + T * 14) % 150), y + 116 + (k % 3) * 14, 14, 2, '#7fb0d8');
+        mgHouse(cx, x + 8, y + 78, 3, '#6a7aaa', '#a8603c');
+      } else if (s.kind === 'school') {
+        mgR(cx, x + 12, y + 78, 84, 60, MG_INK); mgR(cx, x + 14, y + 80, 80, 56, '#8a6a4a');
+        for (let wx = x + 22; wx < x + 90; wx += 16) mgR(cx, wx, y + 90, 8, 10, '#ffd166');
+        mgR(cx, x + 44, y + 112, 16, 24, '#5b3a22'); mgR(cx, x + 100, y + 54, 3, 36, '#c9ccd8'); mgR(cx, x + 103, y + 54, 14, 8, '#e0505a');
+        mgPerson(cx, x + 112, y + 104, 2, { hs: 'short', shirt: '#e0b13e', pants: '#2b3a5a', bag: '#2b6cb0' });
+      } else {
+        mgR(cx, x, y + 128, PW, 22, '#2a2e44'); for (let k = 0; k < 6; k++) mgR(cx, x + k * 30 + 4, y + 138, 16, 2, '#d9cda4');
+        const tx = x + ((T * 40) % (PW + 40)) - 30;
+        mgR(cx, tx, y + 118, 40, 18, MG_INK); mgR(cx, tx + 2, y + 120, 28, 12, '#c8ccd8'); mgR(cx, tx + 30, y + 124, 8, 8, '#e0505a');
+        mgR(cx, tx + 6, y + 134, 6, 4, MG_INK); mgR(cx, tx + 28, y + 134, 6, 4, MG_INK);
+      }
+      if (!placed[i]) s.hz.forEach((h, hi) => hazard(h, x + 10 + hi * 64, y + 22, T));
+      // 설치된 시설
+      const t = placed[i];
+      if (t === 'buffer') treeRow(x + 14, y + 112, 4);
+      else if (t === 'wall') {
+        mgR(cx, x + 8, y + 104, PW - 16, 30, MG_INK); mgR(cx, x + 10, y + 106, PW - 20, 26, '#8a8fa0');
+        for (let k = 0; k < 7; k++) mgR(cx, x + 14 + k * 20, y + 106, 2, 26, '#6a6f80'); mgR(cx, x + 10, y + 118, PW - 20, 2, '#6a6f80');
+      } else if (t === 'rain') {
+        mgR(cx, x + 14, y + 116, PW - 28, 24, MG_INK); mgR(cx, x + 16, y + 118, PW - 32, 20, '#3d7fb5');
+        for (let k = 0; k < 5; k++) mgR(cx, x + 24 + k * 26, y + 108, 2, 14, '#4f9a52');
+      }
+      cx.fillStyle = '#ffe9a8'; cx.font = '800 14px "Noto Sans KR", sans-serif'; cx.textAlign = 'center';
+      cx.fillText(s.name, x + PW / 2, y + 190);
+      cx.fillStyle = '#c9d3f5'; cx.font = '600 12px "Noto Sans KR", sans-serif';
+      mgWrap(cx, s.issue, PW - 16).forEach((ln, li) => cx.fillText(ln, x + PW / 2, y + 208 + li * 15));
+      if (badFlash[i] > 0) badFlash[i] -= dt;
+      if (placed[i]) { cx.fillStyle = '#95d5b2'; cx.font = '800 12px "Noto Sans KR", sans-serif'; cx.fillText('설치됨', x + PW / 2, y + 14); }
+    });
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  activeMinigameCleanup = () => { running = false; };
+}
+
+// =====================================================================
+// [업무 7] 풍향·대기확산 예측 — 바람이 '불어오는' 방향을 읽고 오염 기둥이 향할 구역 맞히기
+// =====================================================================
+function openWindPlumeDefenseGame() {
+  const idx = Math.min(2, Math.floor((day - 1) / 5));
+  if (windGameCompleted[idx]) {
+    showDialogue('나', '이 부지의 대기확산 예측은 이미 마쳤어.');
+    return;
+  }
+  const NEED = 3;
+  const DIRS = ['북', '북동', '동', '남동', '남', '남서', '서', '북서'];
+  let round = 0, lives = 3, running = true, lock = false, from = 0, windSpd = 2.4, hover = -1, flash = { k: -1, t: 0 }, plume = null, msg = '';
+
+  openModal(`
+    <div class="modal-header"><span class="modal-title" id="wd-title">💨 풍향·대기확산 예측 (0/${NEED})</span><button class="close-btn" onclick="closeModal()">닫기</button></div>
+    <p style="line-height:1.65; color:#d9d1bd; margin-bottom:10px;">
+      풍향은 바람이 <strong>불어오는 쪽</strong>의 이름이에요 (북풍 = 북쪽에서 남쪽으로). 오늘의 바람을 읽고 <strong>배출구의 오염 기둥이 흘러갈 주거 구역</strong>을 클릭하세요. ${NEED}번 맞히면 완료 (하트 3개)
+    </p>
+    <canvas id="windCanvas" class="mg" width="700" height="300"></canvas>
+    <p id="wd-status" style="min-height:24px; color:#ffd166; font-weight:700; margin-top:12px;">바람 방향을 읽고 영향받는 구역을 고르세요!</p>
+  `);
+
+  const cv = document.getElementById('windCanvas'), cx = cv.getContext('2d'), W = cv.width, H = cv.height;
+  const CX = 350, CY = 150;
+  const zones = DIRS.map((n, k) => { const a = k * Math.PI / 4; return { n, x: CX + Math.sin(a) * 250, y: CY - Math.cos(a) * 108 }; });
+
+  const bg = document.createElement('canvas'); bg.width = W; bg.height = H;
+  const b = bg.getContext('2d');
+  mgSky(b, W, 120, { x: 70, y: 36, r: 18 });
+  mgR(b, 0, 96, W, H - 96, '#162a3a');
+  for (let y = 96; y < H; y += 12) mgR(b, 0, y, W, 2, '#1d3a4a');
+  for (let x = 0; x < W; x += 40) mgR(b, x, 96, 2, H - 96, '#1d3a4a');
+  mgSkyline(b, W, 100, 44, '#141a44', '#f3c76a', 0.5);
+
+  const setStatus = (s) => { const e = document.getElementById('wd-status'); if (e) e.innerText = s; };
+  function newRound() {
+    let nf; do { nf = Math.floor(Math.random() * 8); } while (nf === from && round > 0);
+    from = nf; windSpd = +(1 + Math.random() * 5).toFixed(1); lock = false; plume = null;
+  }
+  newRound();
+
+  function finish() {
+    running = false;
+    windGameCompleted[idx] = true;
+    assessmentQuality += 1;
+    pollutionRisk = Math.max(5, pollutionRisk - 2);
+    recordDailyTask('풍향·대기확산 예측 완료', `풍향 자료를 읽고 오염 기둥의 이동 방향과 영향 구역을 ${NEED}회 정확히 예측했습니다.`);
+    closeModal();
+    updateWeatherHUD();
+    showDialogue('나 · 확산 예측 완료', '풍향을 정확히 읽고 영향 구역을 예측했어! 어디에 측정망과 저감시설을 둘지 근거가 생겼어.');
+  }
+
+  cv.onpointermove = (e) => {
+    const p = mgPt(e, cv);
+    hover = zones.findIndex(z => Math.hypot(p.x - z.x, p.y - z.y) < 46);
+  };
+  cv.onpointerdown = (e) => {
+    if (lock || !running) return;
+    const p = mgPt(e, cv);
+    const k = zones.findIndex(z => Math.hypot(p.x - z.x, p.y - z.y) < 46);
+    if (k < 0) return;
+    const target = (from + 4) % 8;
+    if (k === target) {
+      lock = true; round++;
+      plume = { k, t: 0 };
+      const t = document.getElementById('wd-title'); if (t) t.innerText = `💨 풍향·대기확산 예측 (${round}/${NEED})`;
+      setStatus(`✅ ${DIRS[from]}풍은 ${DIRS[from]}쪽에서 불어와 ${DIRS[target]}쪽 구역으로 오염물질을 실어 가요!`);
+      setTimeout(() => { if (!running) return; if (round >= NEED) finish(); else { msg = ''; newRound(); } }, 1300);
+    } else {
+      lives--;
+      flash = { k, t: 0.8 };
+      setStatus(`❌ ${DIRS[from]}풍은 ${DIRS[from]}쪽에서 불어와 반대편인 ${DIRS[target]}쪽으로 흘러가요. 다시 읽어 보세요!`);
+      if (lives <= 0) { lock = true; setTimeout(() => { if (!running) return; round = 0; lives = 3; const t = document.getElementById('wd-title'); if (t) t.innerText = `💨 풍향·대기확산 예측 (0/${NEED})`; setStatus('하트를 모두 잃어 처음부터 다시 도전해요!'); newRound(); }, 1200); }
+    }
+  };
+
+  let prevT = performance.now();
+  function frame(now) {
+    if (!running) return;
+    const dt = Math.min(0.05, (now - prevT) / 1000); prevT = now;
+    const T = now / 1000;
+    cx.drawImage(bg, 0, 0);
+
+    // 구역(주거지 3채 + 라벨)
+    zones.forEach((z, k) => {
+      const hot = hover === k && !lock;
+      if (hot) mgR(cx, z.x - 44, z.y - 30, 88, 64, 'rgba(255,209,102,0.25)');
+      if (flash.k === k && flash.t > 0) mgR(cx, z.x - 44, z.y - 30, 88, 64, 'rgba(224,80,90,0.45)');
+      mgHouse(cx, z.x - 38, z.y - 16, 3, '#8a6a4a', '#a8603c');
+      mgHouse(cx, z.x - 6, z.y - 8, 3, '#7a8ab4', '#5a6a9a');
+      cx.fillStyle = hot ? '#ffe9a8' : '#c9d3f5'; cx.font = '800 13px "Noto Sans KR", sans-serif'; cx.textAlign = 'center';
+      cx.fillText(z.n + ' 구역', z.x, z.y + 38);
+    });
+    if (flash.t > 0) flash.t -= dt;
+
+    // 배출원(굴뚝)
+    mgR(cx, CX - 34, CY - 6, 68, 44, MG_INK); mgR(cx, CX - 32, CY - 4, 64, 40, '#3a3f58');
+    mgR(cx, CX - 8, CY - 44, 16, 42, MG_INK); mgR(cx, CX - 6, CY - 42, 12, 38, '#4a4f6a'); mgR(cx, CX - 6, CY - 30, 12, 6, '#c0392b'); mgR(cx, CX - 6, CY - 18, 12, 6, '#c0392b');
+    for (let wx = CX - 26; wx < CX + 24; wx += 14) mgR(cx, wx, CY + 8, 8, 8, '#f3c76a');
+
+    // 오염 기둥
+    const tgt = plume ? zones[plume.k] : null;
+    for (let k = 0; k < 10; k++) {
+      let px, py, al;
+      if (plume) {
+        const prog = Math.min(1, plume.t + k * 0.03);
+        px = CX + (tgt.x - CX) * prog + Math.sin(k + T * 3) * 4;
+        py = CY - 40 + (tgt.y - (CY - 40)) * prog + Math.cos(k + T * 2) * 4;
+        al = 0.75;
+      } else {
+        const prog = (T * 0.35 + k / 10) % 1;
+        px = CX + Math.sin(k * 2 + T) * 6; py = CY - 46 - prog * 44; al = (1 - prog) * 0.8;
+      }
+      cx.globalAlpha = al; mgR(cx, px - 7, py - 7, 14, 14, '#6a625c');
+    }
+    cx.globalAlpha = 1;
+    if (plume) plume.t = Math.min(1, plume.t + dt * 0.9);
+
+    // 바람 정보 패널
+    mgR(cx, 8, 8, 232, 56, MG_INK); mgR(cx, 10, 10, 228, 52, '#101847');
+    cx.fillStyle = '#ffe9a8'; cx.font = '800 19px "Noto Sans KR", sans-serif'; cx.textAlign = 'left';
+    cx.fillText(`🌬️ ${DIRS[from]}풍  ${windSpd}m/s`, 20, 34);
+    cx.fillStyle = '#9ab0e8'; cx.font = '700 12px "Noto Sans KR", sans-serif';
+    cx.fillText(`(${DIRS[from]}쪽에서 불어오는 바람)`, 20, 54);
+    for (let i = 0; i < 3; i++) mgHeart(cx, W - 96 + i * 28, 12, 4, i < lives);
+
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  activeMinigameCleanup = () => { running = false; };
+}
+
+// =====================================================================
+// [업무 8] 주민 민원 전화 — 마을 주민 세 명의 말풍선 중 알맞은 근거 고르기
+// =====================================================================
+function openAuditPhoneModal() {
+  const audit = (activeTasks.phoneRinging && activeTasks.currentAudit)
+    ? activeTasks.currentAudit
+    : AUDIT_SCENARIOS[(day + Math.floor(gameMinutes / 60)) % AUDIT_SCENARIOS.length];
+  const cards = audit.speakers.slice().sort(() => Math.random() - 0.5);
+
+  openModal(`
+    <div class="modal-header">
+      <span class="modal-title">☎️ ${audit.title}</span>
+      <button class="close-btn" onclick="closeModal()">닫기</button>
+    </div>
+    <p style="line-height:1.65; color:#d9d1bd; margin-bottom:10px;">${audit.situation}<br><strong>주민이나 말풍선을 클릭</strong>해서 평가에 반영할 근거를 고르세요.</p>
+    <canvas id="callCanvas" class="mg" width="720" height="380"></canvas>
+    <p id="call-status" style="min-height:24px; color:#ffd166; font-weight:700; margin-top:12px; text-align:center;">누구의 말이 평가에 반영할 만한 근거일까요?</p>
+  `);
+
+  const cv = document.getElementById('callCanvas'), cx = cv.getContext('2d'), W = cv.width, H = cv.height;
+  const COLW = W / 3, GROUND = 318, SP_Y = 186, S = 6;
+  cx.font = '700 14px "Noto Sans KR", sans-serif';
+  const lay = cards.map(sp => ({ sp, lines: mgWrap(cx, sp.bubble, COLW - 52) }));
+  const maxLines = Math.max(...lay.map(l => l.lines.length));
+  const BH = maxLines * 19 + 24;
+
+  // 정적 배경: 서울 저녁 골목 + 남산타워
+  const bg = document.createElement('canvas'); bg.width = W; bg.height = H;
+  const b = bg.getContext('2d');
+  mgSky(b, W, 250, { x: 664, y: 40, r: 16 });
+  for (let x = 0; x < W; x += 4) {
+    const h = Math.round(50 + 26 * Math.sin(x * 0.011 + 2) + 14 * Math.sin(x * 0.037));
+    mgR(b, x, 250 - h, 4, h, '#1d2560'); mgR(b, x, 250 - h, 4, 2, '#3a4a90');
+  }
+  mgTower(b, 640, 250, '#9aa6cc');
+  mgSkyline(b, W, 262, 14, '#141a44', '#f3c76a', 0.9);
+  mgR(b, 0, 262, W, H - 262, '#1a1f3c'); mgR(b, 0, GROUND - 6, W, 5, '#3a456e'); mgR(b, 0, 262, W, 6, '#2a3270');
+  for (let x = 8; x < W; x += 40) mgR(b, x, 350, 20, 3, '#d9cda4');
+  [240, 480].forEach(lx => {
+    mgR(b, lx - 2, 196, 4, 124, '#2a2e44'); mgR(b, lx - 12, 190, 24, 8, '#2a2e44');
+    b.globalAlpha = 0.18; mgR(b, lx - 30, 198, 60, 80, '#ffd166'); b.globalAlpha = 1; mgR(b, lx - 8, 196, 16, 4, '#ffe9a8');
+  });
+
+  let hover = -1, chosen = -1, locked = false, running = true;
+
+  const colAt = (p) => (p.y < 340 && p.x >= 0 && p.x < W) ? Math.floor(p.x / COLW) : -1;
+  cv.onpointermove = (e) => { hover = locked ? hover : colAt(mgPt(e, cv)); cv.style.cursor = (hover >= 0 && !locked) ? 'pointer' : 'default'; };
+  cv.onpointerdown = (e) => {
+    if (locked) return;
+    const i = colAt(mgPt(e, cv));
+    if (i < 0) return;
+    locked = true; chosen = i; hover = i;
+    const sp = lay[i].sp;
+    const st = document.getElementById('call-status');
+    if (st) st.innerText = sp.correct ? `✔ ${sp.name}의 말을 평가 근거로 채택합니다!` : `✘ ${sp.name}의 말은 평가 근거로 부족해 보여요…`;
+    setTimeout(() => { if (running) pickSpeakerBubble(sp, audit); }, 1000);
+  };
+
+  let prevT = performance.now();
+  function frame(now) {
+    if (!running) return;
+    prevT = now;
+    const T = now / 1000;
+    cx.drawImage(bg, 0, 0);
+    lay.forEach((l, i) => {
+      const x0 = i * COLW, mid = x0 + COLW / 2;
+      const isHover = hover === i && chosen < 0;
+      const isChosen = chosen === i;
+      const dim = chosen >= 0 && !isChosen;
+      // 주민
+      const jump = Math.sin(T * 3 + i * 1.7) > 0.7 ? -3 : 0;
+      cx.globalAlpha = dim ? 0.45 : 1;
+      mgR(cx, mid - 36, GROUND - 4, 72, 6, 'rgba(0,0,0,0.4)');
+      mgPerson(cx, mid - 6 * S, SP_Y + jump + (isHover ? -4 : 0), S, Object.assign({}, l.sp.look, { talk: chosen < 0 && Math.floor(T * 4 + i * 3) % 3 === 0 }));
+      // 이름표
+      cx.font = '800 13px "Noto Sans KR", sans-serif'; cx.textAlign = 'center';
+      const nw = cx.measureText(l.sp.name).width + 22;
+      mgR(cx, mid - nw / 2 - 3, GROUND + 8, nw + 6, 26, MG_INK); mgR(cx, mid - nw / 2, GROUND + 11, nw, 20, isHover || isChosen ? '#f2c14e' : '#26357f');
+      cx.fillStyle = isHover || isChosen ? '#1a1030' : '#dbe6ff'; cx.fillText(l.sp.name, mid, GROUND + 26);
+      // 말풍선
+      let fill = '#f6efd8', line = MG_INK;
+      if (isHover) { fill = '#fff8e3'; line = '#f2c14e'; }
+      if (isChosen) { fill = l.sp.correct ? '#cfeedd' : '#f6d4d4'; line = l.sp.correct ? '#2d6a4f' : '#b3262e'; }
+      mgBubble(cx, x0 + 14, 12 + (isHover ? -2 : 0), COLW - 28, BH, fill, line, mid);
+      cx.fillStyle = '#221d17'; cx.font = '700 14px "Noto Sans KR", sans-serif'; cx.textAlign = 'left';
+      l.lines.forEach((ln, li) => cx.fillText(ln, x0 + 26, 12 + (isHover ? -2 : 0) + 24 + li * 19));
+      if (isChosen) {
+        mgR(cx, x0 + 18, 4, 64, 20, l.sp.correct ? '#2d6a4f' : '#b3262e');
+        cx.fillStyle = '#fff'; cx.font = '800 12px "Noto Sans KR", sans-serif'; cx.textAlign = 'center';
+        cx.fillText(l.sp.correct ? '✔ 채택' : '✘ 부족', x0 + 50, 19);
+      }
+      cx.globalAlpha = 1;
+    });
+    // 전화기 아이콘 (울리는 중)
+    const ring = Math.floor(T * 6) % 2 === 0;
+    mgR(cx, 14, 352, 30, 20, MG_INK); mgR(cx, 16, 354, 26, 16, '#b3262e'); mgR(cx, 20, 358, 18, 4, '#14131f'); mgR(cx, 22, 364, 4, 4, '#c9c2b0'); mgR(cx, 30, 364, 4, 4, '#c9c2b0');
+    if (chosen < 0 && ring) { mgR(cx, 50, 352, 3, 8, '#ffd166'); mgR(cx, 58, 348, 3, 14, '#ffd166'); }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  activeMinigameCleanup = () => { running = false; };
+}
+
+function pickSpeakerBubble(sp, audit) {
+  const msg = sp.effect();
+  if (sp.correct) {
+    assessmentQuality += 1;
+    recordDailyTask('주민 민원 근거 선택 성공', `${audit.title} — ${sp.name}: ${sp.bubble}`);
+  } else {
+    recordDailyTask('주민 민원 검토 및 재확인', `${audit.title} — ${sp.name}의 발언을 검토했습니다.`);
+  }
+  activeTasks.phoneRinging = false;
+  activeTasks.currentAudit = null;
+  closeModal();
+  updateWeatherHUD();
+  updateAlertStrip();
+  showDialogue(sp.correct ? `나 · ${sp.name} 근거 채택` : `나 · ${sp.name} 발언 검토`, msg);
 }
 
 const INK = '#16111f';
@@ -2352,7 +2467,7 @@ function drawCelestial(variant, dp, T) {
   const sy = Math.round(lh * (0.43 - 0.29 * Math.sin(Math.PI * u)));
   if (variant === 'night') {
     drawStars(lh * 0.5, 1, null);
-    drawMoon(Math.round(lw * 0.78), Math.round(lh * 0.2), Math.max(5, Math.round(lh * 0.07)));
+    drawMoon(Math.round(lw * 0.78), Math.round(lh * 0.2), Math.max(6, Math.round(lh * 0.095)));
     drawClouds('#26356e', '#1b2756', 2, T);
   } else if (variant === 'dusk') {
     drawStars(lh * 0.35, 0.4, null);
@@ -2389,11 +2504,20 @@ function chimney(cx, cy, cw, ch) {
   pr(cx + 1, cy + 7, cw - 2, 2, '#c0392b');
 }
 
+// 서울 도시 레이어: 북한산 능선 · 아파트 스카이라인 · 남산서울타워 · 한강
 function drawCityLayer(variant, green) {
   const r = makeRng(11);
   const groundY = Math.round(lh * 0.54);
   const groundH = Math.round(lh * 0.14);
   const towerLights = [];
+  const desert = endingType === 'desert';
+
+  // 북한산 능선 (원경)
+  for (let xx = 0; xx < lw; xx++) {
+    const ridge = Math.round(groundY - lh * 0.22 - Math.abs(Math.sin(xx * 0.045 + 0.6)) * lh * 0.09 - Math.sin(xx * 0.013) * lh * 0.04);
+    pr(xx, ridge, 1, groundY - ridge, '#6d7aa3');
+    pr(xx, ridge, 1, 1, '#9aa6cc');
+  }
 
   let x = 0;
   while (x < lw) {
@@ -2414,13 +2538,28 @@ function drawCityLayer(variant, green) {
 
   for (let xx = 0; xx < lw; xx++) {
     const dy = Math.round(groundY - 2 - 3 * Math.sin(xx * 0.035 + 1) - 2 * Math.sin(xx * 0.09));
-    pr(xx, dy, 1, groundY - dy + 2, endingType === 'desert' ? '#9b805e' : '#526b62');
+    pr(xx, dy, 1, groundY - dy + 2, desert ? '#9b805e' : '#526b62');
     pr(xx, dy, 1, 1, '#82958a');
   }
 
-  const base = endingType === 'desert' ? '#a88b62' : (green ? '#4a6b48' : '#59615f');
-  const lite = endingType === 'desert' ? '#c4a174' : (green ? '#6f9a5a' : '#78817c');
-  const dk = endingType === 'desert' ? '#806746' : (green ? '#365236' : '#414947');
+  // 남산과 남산서울타워
+  const nx = Math.round(lw * 0.9), nw = Math.round(lw * 0.09), nh = Math.round(lh * 0.1);
+  for (let xx = nx - nw; xx <= nx + nw; xx++) {
+    const t = (xx - nx) / nw;
+    const hh = Math.round(nh * (1 - t * t));
+    pr(xx, groundY - hh, 1, hh + 2, desert ? '#8a7352' : '#3f6b4a');
+    pr(xx, groundY - hh, 1, 1, '#6f9a6a');
+  }
+  const topY = groundY - nh;
+  pr(nx - 1, topY - 18, 2, 18, '#c9ccd8');
+  pr(nx - 3, topY - 12, 6, 3, '#e8e2d0');
+  pr(nx - 2, topY - 15, 4, 2, '#c9ccd8');
+  pr(nx, topY - 24, 1, 6, '#c9ccd8');
+  pr(nx, topY - 25, 1, 1, '#e0505a');
+
+  const base = desert ? '#a88b62' : (green ? '#4a6b48' : '#59615f');
+  const lite = desert ? '#c4a174' : (green ? '#6f9a5a' : '#78817c');
+  const dk = desert ? '#806746' : (green ? '#365236' : '#414947');
   pr(0, groundY, lw, groundH, base);
   pr(0, groundY, lw, 1, lite);
   for (let i = 0; i < 170; i++) {
@@ -2428,17 +2567,24 @@ function drawCityLayer(variant, green) {
     const sy = groundY + 2 + Math.floor(r() * Math.max(1, groundH - 2));
     pr(sx, sy, r() < 0.4 ? 2 : 1, 1, r() < 0.5 ? lite : dk);
   }
+
+  // 한강
+  const rvH = Math.max(3, Math.round(lh * 0.04));
+  pr(0, groundY, lw, rvH, desert ? '#8a7a5a' : '#35629a');
+  for (let i = 0; i < 60; i++) pr(Math.floor(r() * lw), groundY + Math.floor(r() * rvH), 2 + Math.floor(r() * 3), 1, r() < 0.5 ? '#7fb0d8' : '#2a4f82');
+  pr(0, groundY + rvH, lw, 1, '#9a9b91');
+
   const roadY = groundY + Math.round(groundH * 0.62);
-  pr(0, roadY, lw, Math.max(3, Math.round(groundH * 0.22)), endingType === 'desert' ? '#78664e' : '#343b42');
+  pr(0, roadY, lw, Math.max(3, Math.round(groundH * 0.22)), desert ? '#78664e' : '#343b42');
   pr(0, roadY, lw, 1, '#9a9b91');
   for (let rx = 5; rx < lw; rx += 18) pr(rx, roadY + 2, 5, 1, '#d9cda4');
-  const treeColor = endingType === 'desert' ? '#74654b' : (green ? '#2f6b3a' : '#596f56');
+  const treeColor = desert ? '#74654b' : (green ? '#2f6b3a' : '#596f56');
   [0.05, 0.17, 0.39, 0.6, 0.86, 0.95].forEach((tx, idx) => {
     const px = Math.round(lw * tx);
     const py = groundY + 5 + (idx % 2) * 3;
     pr(px, py, 2, 4, '#5b3a22');
     pixDisc(px + 1, py - 1, 4, treeColor);
-    pixDisc(px, py - 2, 2, endingType === 'desert' ? '#8b7856' : '#4f9a52');
+    pixDisc(px, py - 2, 2, desert ? '#8b7856' : '#4f9a52');
   });
 
   FACTORIES.forEach((f, idx) => {
@@ -2478,10 +2624,17 @@ function drawCityLayer(variant, green) {
     g.globalCompositeOperation = 'source-over';
   }
 
+  // 달빛 길 (한강 위 달 그림자)
+  if (variant === 'night') {
+    const mxr = Math.round(lw * 0.78);
+    for (let k = 0; k < rvH; k++) pr(mxr - 3 + (k % 2) * 2, groundY + k, 5 - (k % 2) * 2, 1, '#f6f0cf');
+  }
+
   const dim = (variant === 'night' || variant === 'dusk' || variant === 'rain' || variant === 'dust');
   if (dim) {
     g.globalAlpha = variant === 'night' ? 0.95 : 0.6;
     towerLights.forEach(p => pr(p[0], p[1], 1, 1, '#ffd36b'));
+    pr(nx - 3, topY - 12, 6, 1, '#ffd36b');
     g.globalAlpha = 1;
   }
   const rf = makeRng(31);
@@ -2540,7 +2693,7 @@ function drawRain(heavy, acidic) {
     const x = Math.round(d.x * lw);
     const y = Math.round(d.y * fh);
     g.fillRect(x, y, 1, 2);
-    g.fillRect(x - 1, y + 2, 1, 2);
+    g.fillRect(x - 1, y + 2, 1, 1);
     if (heavy) g.fillRect(x - 2, y + 4, 1, 2);
   }
   g.globalAlpha = 1;
@@ -2563,11 +2716,28 @@ function drawParticles(color, speedMult) {
   g.globalAlpha = 1;
 }
 
+// 점프킹 풍 이끼 낀 돌벽돌 창틀
+function brickBar(x, y, w, h, seed) {
+  const rb = makeRng(seed);
+  pr(x, y, w, h, '#14132a');
+  const bh = 4, bw = 9;
+  for (let by = 0; by < h; by += bh) {
+    const off = ((by / bh) | 0) % 2 ? 4 : 0;
+    for (let bx = -off; bx < w; bx += bw) {
+      const x0 = Math.max(0, bx), x1 = Math.min(w, bx + bw - 1);
+      if (x1 > x0) {
+        const lt = rb();
+        pr(x + x0, y + by, x1 - x0, Math.min(bh - 1, h - by), lt < 0.2 ? '#59577a' : (lt < 0.55 ? '#46455f' : '#3b3a52'));
+        pr(x + x0, y + by, x1 - x0, 1, '#6a688c');
+      }
+    }
+  }
+  const mossN = Math.max(2, ((w * h) / 50) | 0);
+  for (let i = 0; i < mossN; i++) pr(x + Math.floor(rb() * w), y + Math.floor(rb() * h), 1 + Math.floor(rb() * 2), 1, rb() < 0.5 ? '#3f7a4a' : '#2f5f3b');
+}
+
 function drawFrameAndDesk() {
   const fh = Math.round(lh * 0.65);
-  const frame = '#2a2340';
-  const frameHi = '#4a4066';
-  const ink = '#100c18';
 
   g.globalAlpha = 0.07;
   for (let i = 0; i < 4; i++) {
@@ -2576,14 +2746,11 @@ function drawFrameAndDesk() {
   }
   g.globalAlpha = 1;
 
-  pr(0, 0, lw, 4, ink); pr(0, 1, lw, 2, frame); pr(0, 1, lw, 1, frameHi);
-  pr(0, 0, 4, fh, ink); pr(1, 0, 2, fh, frame);
-  pr(lw - 4, 0, 4, fh, ink); pr(lw - 3, 0, 2, fh, frame);
-  pr(0, fh - 3, lw, 3, ink);
-  for (let i = 1; i <= 3; i++) {
-    const mx = Math.round(lw / 4 * i) - 2;
-    pr(mx, 0, 4, fh, ink); pr(mx + 1, 0, 2, fh, frame); pr(mx + 1, 0, 1, fh, frameHi);
-  }
+  brickBar(0, 0, lw, 6, 1);
+  brickBar(0, 0, 6, fh, 2);
+  brickBar(lw - 6, 0, 6, fh, 3);
+  brickBar(0, fh - 5, lw, 5, 4);
+  for (let i = 1; i <= 3; i++) brickBar(Math.round(lw / 4 * i) - 2, 0, 5, fh, 10 + i);
 
   const y0 = Math.round(lh * 0.63);
   const stops = [[0, '#6a4c34'], [0.18, '#4f3827'], [1, '#241911']];
@@ -2831,11 +2998,32 @@ function drawTitleCity() {
     { x: 0.59, w: 0.055, h: 0.32 }, { x: 0.67, w: 0.045, h: 0.25 }, { x: 0.75, w: 0.055, h: 0.38 },
     { x: 0.84, w: 0.04, h: 0.22 }
   ];
+  // 북한산 능선
+  for (let x = 0; x < lw; x++) {
+    const y = Math.round(lh * 0.56 - Math.abs(Math.sin(x * 0.03 + 0.4)) * lh * 0.1 - Math.sin(x * 0.011) * lh * 0.04);
+    pr(x, y, 1, lh * 0.8 - y, '#161d4e');
+    pr(x, y, 1, 1, '#2f3a82');
+  }
   for (let x = 0; x < lw; x++) {
     const y = Math.round(lh * (0.69 + 0.035 * Math.sin(x / lw * 8 + 0.4) + 0.025 * Math.sin(x / lw * 17)));
     pr(x, y, 1, lh - y, '#171c3c');
     pr(x, y, 1, 1, '#3a456e');
   }
+  // 남산과 서울타워
+  const hx = Math.round(lw * 0.9), hw = Math.round(lw * 0.1), hhh = Math.round(lh * 0.12);
+  for (let x = hx - hw; x <= hx + hw; x++) {
+    const t = (x - hx) / hw;
+    const top = Math.round(lh * 0.69) - Math.round(hhh * (1 - t * t));
+    pr(x, top, 1, lh - top, '#171c3c');
+    pr(x, top, 1, 1, '#3a456e');
+  }
+  const ttop = Math.round(lh * 0.69) - hhh;
+  pr(hx - 1, ttop - 24, 2, 24, '#2a3170');
+  pr(hx - 4, ttop - 16, 8, 4, '#3a456e');
+  pr(hx - 3, ttop - 20, 6, 3, '#2a3170');
+  pr(hx, ttop - 34, 1, 10, '#2a3170');
+  pr(hx, ttop - 35, 1, 1, '#e0505a');
+  pr(hx - 3, ttop - 15, 6, 1, '#f3c76a');
   list.forEach(b => {
     const bx = Math.round(lw * b.x), bw = Math.max(6, Math.round(lw * b.w));
     const bh = Math.round(lh * b.h), by = baseY - bh;
@@ -2844,7 +3032,7 @@ function drawTitleCity() {
     for (let wy = by + 4; wy < baseY - 2; wy += 4) for (let wx = bx + 2; wx < bx + bw - 2; wx += 3) if (r() < 0.32) pr(wx, wy, 1, 2, r() < 0.8 ? '#f3c76a' : '#6ad0c8');
     if (b.h > 0.3) { pr(bx + 2, by - 2, bw - 4, 2, '#0e1230'); pr(bx + Math.floor(bw / 2), by - 5, 1, 3, '#0e1230'); }
   });
-  [0.07, 0.91].forEach(tx => {
+  [0.06].forEach(tx => {
     const cx = Math.round(lw * tx), cy = baseY - 2;
     pr(cx, cy - 10, 2, 10, '#0d0814');
     pixDisc(cx, cy - 12, 5, '#183b35');
