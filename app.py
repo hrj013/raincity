@@ -338,9 +338,9 @@ const POLICIES = [
 ];
 
 const FACTORIES = [
-  { id: 'factory1', name: '제1 에너지 공급시설 부지 (갑천변)', facility: 'LNG 열병합발전소', benefit: '대전 도심과 산업시설에 안정적인 전력과 열을 공급합니다.', role: '전력 공급은 필요하지만 연료 연소 과정에서 온실가스와 질소산화물 등이 발생할 수 있습니다. 주거지와의 이격거리, 배출구 높이, 저NOx 연소기술, 방지시설, 대체 에너지 입지를 비교해야 합니다.', pollutants: '온실가스(CO₂), 질소산화물(NOx), 황산화물(SOx), 소음 및 냉각수 영향', relX: 0.22, relY: 0.42, relW: 0.13, relH: 0.16 },
-  { id: 'factory2', name: '제2 자원순환시설 부지 (대전천변)', facility: '폐기물 소각·자원회수시설', benefit: '대전에서 발생하는 폐기물을 처리하고 열과 자원을 회수합니다.', role: '폐기물 처리시설은 도시 운영에 필요하지만 대기배출, 악취, 폐수, 폐기물 운반차량과 주민 수용성 문제가 발생할 수 있습니다. 재활용·감량 대안, 배출가스 처리, 밀폐형 반입시설, 교통 동선을 함께 비교해야 합니다.', pollutants: '질소산화물(NOx), 먼지, 악취, 폐수, 운반차량 배출가스 및 소음', relX: 0.44, relY: 0.43, relW: 0.14, relH: 0.15 },
-  { id: 'factory3', name: '제3 물류지원시설 부지 (유등천변)', facility: '대형 물류센터', benefit: '생활물자와 산업 원료를 공급하고 지역 일자리와 물류 기능을 지원합니다.', role: '물류시설은 지역경제와 생활에 필요하지만 대형 화물차 통행, 야간 소음, 대기오염, 넓은 불투수면과 녹지 훼손을 유발할 수 있습니다. 기존 도로 활용, 대중교통·친환경 차량, 완충녹지, 빗물관리 대안을 검토해야 합니다.', pollutants: '화물차 배출가스(PM2.5·NOx), 교통소음, 불투수면 증가, 녹지 훼손', relX: 0.68, relY: 0.41, relW: 0.13, relH: 0.17 }
+  { id: 'factory1', name: '제1 에너지 공급시설 부지 (갑천변)', facility: 'LNG 열병합발전소', benefit: '대전 도심과 산업시설에 안정적인 전력과 열을 공급합니다.', role: '전력 공급은 필요하지만 연료 연소 과정에서 온실가스와 질소산화물 등이 발생할 수 있습니다. 주거지와의 이격거리, 배출구 높이, 저NOx 연소기술, 방지시설, 대체 에너지 입지를 비교해야 합니다.', pollutants: '온실가스(CO₂), 질소산화물(NOx), 황산화물(SOx), 소음 및 냉각수 영향', relX: 0.30, relY: 0.33, relW: 0.12, relH: 0.16 },
+  { id: 'factory2', name: '제2 자원순환시설 부지 (대전천변)', facility: '폐기물 소각·자원회수시설', benefit: '대전에서 발생하는 폐기물을 처리하고 열과 자원을 회수합니다.', role: '폐기물 처리시설은 도시 운영에 필요하지만 대기배출, 악취, 폐수, 폐기물 운반차량과 주민 수용성 문제가 발생할 수 있습니다. 재활용·감량 대안, 배출가스 처리, 밀폐형 반입시설, 교통 동선을 함께 비교해야 합니다.', pollutants: '질소산화물(NOx), 먼지, 악취, 폐수, 운반차량 배출가스 및 소음', relX: 0.47, relY: 0.34, relW: 0.13, relH: 0.15 },
+  { id: 'factory3', name: '제3 물류지원시설 부지 (유등천변)', facility: '대형 물류센터', benefit: '생활물자와 산업 원료를 공급하고 지역 일자리와 물류 기능을 지원합니다.', role: '물류시설은 지역경제와 생활에 필요하지만 대형 화물차 통행, 야간 소음, 대기오염, 넓은 불투수면과 녹지 훼손을 유발할 수 있습니다. 기존 도로 활용, 대중교통·친환경 차량, 완충녹지, 빗물관리 대안을 검토해야 합니다.', pollutants: '화물차 배출가스(PM2.5·NOx), 교통소음, 불투수면 증가, 녹지 훼손', relX: 0.64, relY: 0.32, relW: 0.12, relH: 0.17 }
 ];
 
 let facilityDecisions = [null, null, null];
@@ -355,6 +355,47 @@ let assessmentQuality = 0;
 let pendingMilestoneIndex = null;
 let pendingFinalSettlement = false;
 let endingType = null;
+
+// ---- 평가계획서(조사 이행 체크리스트) ----
+const RISK_CUT = 0.5;
+let airGameCompleted = [false, false, false];
+let reviewPassed = [false, false, false];
+let civilCorrect = [0, 0, 0];
+let siteVerdicts = [null, null, null];
+const siteIndexNow = () => Math.min(2, Math.floor((day - 1) / 5));
+const PLAN_ITEMS = [
+  { name: '대기질 배출기준 판정', where: '📟 계측기·수첩', done: i => airGameCompleted[i] },
+  { name: '사면·완충대 현장 조사', where: '⛰️ 조사 지도', done: i => dragClimbCompleted[i] },
+  { name: '야간 보호종 현장 조사', where: '🌙 책상 왼쪽 아래', done: i => ecologyGameCompleted[i] },
+  { name: '최대소음도(Lmax) 측정', where: '🔊 책상 가운데 아래', done: i => noiseGameCompleted[i] },
+  { name: '풍향·대기확산 예측', where: '💨 책상 오른쪽 끝 아래', done: i => windGameCompleted[i] },
+  { name: '저감시설 배치 검토', where: '🧱 책상 오른쪽 아래', done: i => mitigationGameCompleted[i] },
+  { name: '평가서 초안 검토 (오류 모두 찾기)', where: '📝 서류', done: i => reviewPassed[i] },
+  { name: '주민 민원에서 올바른 근거 채택', where: '☎️ 전화기', done: i => civilCorrect[i] >= 1 }
+];
+function planRate(i) { return PLAN_ITEMS.filter(it => it.done(i)).length / PLAN_ITEMS.length; }
+function planListHtml(i) {
+  return PLAN_ITEMS.map(it => `<div class="check-item" style="padding:8px 12px; margin:5px 0;"><span>${it.done(i) ? '✅' : '⬜'} ${it.name}</span><span style="font-size:0.8rem; font-weight:400; color:#5a4a30;">${it.where}</span></div>`).join('');
+}
+function evaluateDecision(idx, decision) {
+  const rate = planRate(idx);
+  const pol = POLICIES.filter(p => p.status === 'ACTIVE' && p.id !== 'sensor').length;
+  let score, text;
+  if (rate < 0.5) {
+    if (decision === 'standard') { score = 0; text = '조사가 절반도 끝나지 않았는데 기본 계획에 동의했어요. 근거 없는 동의예요.'; }
+    else if (decision === 'conditional') { score = 1; text = '조사가 부족한 상태의 조건부 동의예요. 보완 조건을 더 엄격히 달았어야 했어요.'; }
+    else { score = 2; text = '근거가 부족해 부동의하고 보완을 요구한 것은 적절한 판단이에요.'; }
+  } else if (rate < 0.75) {
+    if (decision === 'standard') { score = 0; text = '조사 결과가 일부 비어 있는데 저감 조건 없이 동의했어요.'; }
+    else if (decision === 'conditional') { score = 2; text = '조사 결과를 바탕으로 저감 조건을 붙인 적절한 의견이에요.'; }
+    else { score = 1; text = '신중한 판단이지만, 조건부 동의로 필요한 시설과 보전을 함께 챙길 여지가 있었어요.'; }
+  } else {
+    if (decision === 'standard') { score = (rate >= 0.99 && pol >= 3) ? 1 : 0; text = score ? '조사와 저감대책이 충분해 동의할 수 있지만, 조건을 붙이면 더 안전했어요.' : '조사는 잘했지만 저감대책이 충분히 확보되지 않은 채 동의했어요.'; }
+    else if (decision === 'conditional') { score = 2; text = '충분한 조사 근거 위에 저감 조건을 붙인 가장 적절한 의견이에요.'; }
+    else { score = pollutionRisk > 60 ? 1 : 0; text = score ? '누적 오염 위험이 커서 부동의는 이해할 수 있어요.' : '근거가 충분한데도 부동의해 필요한 시설을 포기했어요.'; }
+  }
+  return { score, rate, text, decision };
+}
 
 const DESK_ITEMS = [
   { id: 'radio', name: '📟 배출허용기준 판정 계측기 (대기오염 측정값)', relX: 0.04, relY: 0.65, relW: 0.07, relH: 0.13 },
@@ -390,7 +431,7 @@ const AUDIT_SCENARIOS = [
         effect: wrongFx('연평균이 기준 이내여도 단기(일·시간) 기준을 넘는 날이 생길 수 있어. 짧게 높아지는 때도 따로 봐야 해.', 1.5) },
       { name: '학부모', look: { hair: '#4a2c20', hs: 'long', shirt: '#d98aa0', shirt2: '#bd6f86', pants: '#3d3a52', bag: '#a8603c' },
         bubble: '여름과 겨울은 바람 방향이 달라요. 계절별 풍향 자료로 단지 높이까지 연기가 오는 날을 예측해 주세요.', correct: true,
-        effect: () => { budget = Math.max(0, budget - 5); weather.co2 = Math.max(180, weather.co2 - 10); pollutionRisk = Math.max(5, pollutionRisk - 2); return '정확해! 계절별 풍향·풍속과 배출량을 함께 넣어야 오염물질이 어디로 얼마나 오는지 예측할 수 있어.'; } }
+        effect: () => { budget = Math.max(0, budget - 5); weather.co2 = Math.max(180, weather.co2 - 10); pollutionRisk = Math.max(5, pollutionRisk - 2 * RISK_CUT); return '정확해! 계절별 풍향·풍속과 배출량을 함께 넣어야 오염물질이 어디로 얼마나 오는지 예측할 수 있어.'; } }
     ]
   },
   {
@@ -402,7 +443,7 @@ const AUDIT_SCENARIOS = [
         effect: wrongFx('소음은 거리와 지형에 따라 달라져. 학교처럼 민감한 지점에서 따로 측정해야 해.', 1.5) },
       { name: '학부모', look: { hair: '#4a2c20', hs: 'long', shirt: '#d98aa0', shirt2: '#bd6f86', pants: '#3d3a52', bag: '#a8603c' },
         bubble: '등교 시간과 새벽 화물차 시간대에 학교 담장에서 소음을 재서, 환경기준과 비교해 주세요.', correct: true,
-        effect: () => { budget = Math.max(0, budget - 6); pollutionRisk = Math.max(5, pollutionRisk - 2); return '맞아! 민감한 지점·시간대의 소음을 현장에서 측정해 환경기준과 비교해야 방음 대책의 근거가 생겨.'; } },
+        effect: () => { budget = Math.max(0, budget - 6); pollutionRisk = Math.max(5, pollutionRisk - 2 * RISK_CUT); return '맞아! 민감한 지점·시간대의 소음을 현장에서 측정해 환경기준과 비교해야 방음 대책의 근거가 생겨.'; } },
       { name: '택시 기사', look: { hair: '#2b2230', hs: 'short', shirt: '#e0b13e', shirt2: '#c4982a', pants: '#2b2d42' },
         bubble: '화물차 소음은 어차피 도로 소음이니, 물류센터가 아니라 도로 관리 쪽 문제 아닌가요?', correct: false,
         effect: wrongFx('사업이 새로 유발하는 통행량도 평가에 포함돼. 도로 관리 문제로만 넘길 수는 없어.', 1.5) }
@@ -420,7 +461,7 @@ const AUDIT_SCENARIOS = [
         effect: wrongFx('이미 탁하다고 추가 오염을 허용할 순 없어. 현재 수질을 기준으로 증가분을 평가해야 해.', 1.5) },
       { name: '조깅하던 주민', look: { hair: '#3a2a1a', hs: 'short', shirt: '#6ad0c8', shirt2: '#52b0a8', pants: '#2b3a5a', glasses: true },
         bubble: '비가 쏟아질 때 부지에서 하천으로 나가는 물의 양과 오염 정도를 예측해서 저류시설 용량을 정해 주세요.', correct: true,
-        effect: () => { budget = Math.max(0, budget - 7); weather.ecoHealth = Math.min(100, weather.ecoHealth + 7); pollutionRisk = Math.max(5, pollutionRisk - 2); return '정확해! 유출량·오염 부하를 예측해야 저류시설과 완충녹지를 알맞은 크기와 위치로 둘 수 있어.'; } }
+        effect: () => { budget = Math.max(0, budget - 7); weather.ecoHealth = Math.min(100, weather.ecoHealth + 7); pollutionRisk = Math.max(5, pollutionRisk - 2 * RISK_CUT); return '정확해! 유출량·오염 부하를 예측해야 저류시설과 완충녹지를 알맞은 크기와 위치로 둘 수 있어.'; } }
     ]
   },
   {
@@ -432,7 +473,7 @@ const AUDIT_SCENARIOS = [
         effect: wrongFx('야행성·번식기 종은 낮에 한 번 본 것으로는 알 수 없어. 시기와 시간대를 바꿔 반복 조사해야 해.', 1.5) },
       { name: '생태 모임 회원', look: { hair: '#4a2c20', hs: 'long', shirt: '#4b9a6b', shirt2: '#3a7e56', pants: '#3b3a52', glasses: true },
         bubble: '맹꽁이는 비 온 뒤 밤에 울어요. 그 시기에 야간 조사를 하고, 번식기를 피해 공사 시기를 정해 주세요.', correct: true,
-        effect: () => { budget = Math.max(0, budget - 6); weather.ecoHealth = Math.min(100, weather.ecoHealth + 8); pollutionRisk = Math.max(5, pollutionRisk - 2); return '맞아! 종의 활동 시기에 맞춰 조사하고, 번식기를 피해 공사 시기를 조정해야 해.'; } },
+        effect: () => { budget = Math.max(0, budget - 6); weather.ecoHealth = Math.min(100, weather.ecoHealth + 8); pollutionRisk = Math.max(5, pollutionRisk - 2 * RISK_CUT); return '맞아! 종의 활동 시기에 맞춰 조사하고, 번식기를 피해 공사 시기를 조정해야 해.'; } },
       { name: '편의점 직원', look: { hair: '#2b2230', hs: 'short', shirt: '#6ad0c8', shirt2: '#52b0a8', pants: '#3a3a4a' },
         bubble: '보호종이 나온 자리만 울타리로 막고, 나머지 구역은 계획대로 공사하면 충분하지 않을까요?', correct: false,
         effect: wrongFx('그 자리만 막아도 주변 소음·조명과 이동 경로 단절로 서식이 어려워질 수 있어. 생태축 연결도 봐야 해.', 1.5) }
@@ -447,7 +488,7 @@ const AUDIT_SCENARIOS = [
         effect: wrongFx('공사장 안쪽 수치는 주민이 실제로 마시는 농도와 달라. 주거지 쪽 민감 지점에서 재야 해.', 1.5) },
       { name: '저층 주민', look: { hair: '#d8d8e0', hs: 'bun', shirt: '#c0613a', shirt2: '#a24f2e', pants: '#3b3550', cane: true },
         bubble: '공사 구간과 가까운 창문 높이에서 먼지 농도를 재고, 바람 부는 날 살수·세륜을 하는지 확인해 주세요.', correct: true,
-        effect: () => { budget = Math.max(0, budget - 5); pollutionRisk = Math.max(5, pollutionRisk - 2.5); return '정확해! 민감한 지점에서 농도를 재고, 바람 센 날의 살수·세륜 같은 저감 이행을 확인해야 해.'; } },
+        effect: () => { budget = Math.max(0, budget - 5); pollutionRisk = Math.max(5, pollutionRisk - 2.5 * RISK_CUT); return '정확해! 민감한 지점에서 농도를 재고, 바람 센 날의 살수·세륜 같은 저감 이행을 확인해야 해.'; } },
       { name: '중학생', look: { hair: '#3a2a1a', hs: 'short', shirt: '#e0505a', shirt2: '#c0404a', pants: '#2b3a5a', bag: '#2b6cb0' },
         bubble: '먼지는 주로 도로에서 날리는 거니까, 공사장 관리와는 따로 생각해야 하지 않을까요?', correct: false,
         effect: wrongFx('도로 먼지도 있지만 공사 자체가 만드는 먼지가 있어. 공사장의 발생원 관리도 평가 대상이야.', 1.5) }
@@ -465,7 +506,7 @@ const AUDIT_SCENARIOS = [
         effect: wrongFx('탈취제는 냄새를 가릴 뿐 발생원을 줄이지 못해. 밀폐·포집·처리 같은 근본 대책이 필요해.', 1.5) },
       { name: '저녁 산책 주민', look: { hair: '#d8d8e0', hs: 'bald', shirt: '#6a7a5a', shirt2: '#566448', pants: '#4a4036', cane: true },
         bubble: '바람 방향이 바뀌는 여름 저녁에 시설 주변 아파트에서 악취를 재고, 밀폐·탈취 계획을 보여 주세요.', correct: true,
-        effect: () => { budget = Math.max(0, budget - 6); pollutionRisk = Math.max(5, pollutionRisk - 2); return '맞아! 악취가 심한 시간대·풍향 조건에서 민감 지점의 농도를 재고, 발생원 저감 계획을 확인해야 해.'; } }
+        effect: () => { budget = Math.max(0, budget - 6); pollutionRisk = Math.max(5, pollutionRisk - 2 * RISK_CUT); return '맞아! 악취가 심한 시간대·풍향 조건에서 민감 지점의 농도를 재고, 발생원 저감 계획을 확인해야 해.'; } }
     ]
   }
 ];
@@ -541,12 +582,16 @@ function recordDailyTask(title, detail) { dailyWork.tasks.push({ title, detail }
 
 function calculateFinalScores() {
   const builtCount = facilityDecisions.filter(d => d && d !== 'reject').length;
-  const utilityScore = builtCount === 3 ? 3 : (builtCount >= 2 ? 2 : 1);
+  const utilityScore = builtCount === 3 ? 3 : (builtCount === 2 ? 2 : 1);
   const activePolicyCount = POLICIES.filter(p => p.status === 'ACTIVE' && p.id !== 'sensor').length;
-  const netImpact = Math.max(0, projectImpactScore - activePolicyCount * 0.65 - assessmentQuality * 0.25);
+  const netImpact = Math.max(0, projectImpactScore - activePolicyCount * 0.65 - Math.min(2.5, assessmentQuality * 0.1));
   const risk = pollutionRisk;
-  const environmentScore = (netImpact <= 1.5 && risk <= 48) ? 3 : ((netImpact <= 5 && risk <= 72) ? 2 : 1);
-  return { utilityScore, environmentScore, builtCount, netImpact: +netImpact.toFixed(1), risk: +risk.toFixed(1) };
+  const environmentScore = (netImpact <= 1.0 && risk <= 45) ? 3 : ((netImpact <= 3.5 && risk <= 65) ? 2 : 1);
+  const rates = [0, 1, 2].map(i => siteVerdicts[i] ? siteVerdicts[i].rate : planRate(i));
+  const planAvg = rates.reduce((a, b) => a + b, 0) / 3;
+  const decAvg = siteVerdicts.reduce((a, v) => a + (v ? v.score : 0), 0) / 3;
+  const processScore = (planAvg >= 0.85 && decAvg >= 1.6) ? 3 : ((planAvg >= 0.6 && decAvg >= 1) ? 2 : 1);
+  return { utilityScore, environmentScore, processScore, builtCount, planAvg, decAvg, netImpact: +netImpact.toFixed(1), risk: +risk.toFixed(1) };
 }
 
 function scoreMark(score) { return score === 3 ? 'O' : (score === 2 ? '△' : 'x'); }
@@ -561,16 +606,15 @@ function handleObjectClick(id) {
       <p style="line-height:1.8; font-size:1.02rem;">기후 위기로 폭염과 집중호우, 대기오염 위험이 커진 대전. 갑천과 대전천, 유등천변에 에너지 공급시설, 자원순환시설, 물류지원시설의 입지가 제안되었다. 세 시설은 도시 운영에 필요하지만 온실가스와 대기오염, 소음, 교통량 증가, 녹지 훼손 등의 영향을 일으킬 수 있다.</p></div>
     `);
   } else if (id === 'documents') {
-    recordDailyTask('환경영향평가서 및 조사 체크리스트 검토', '환경현황, 영향예측, 대안 비교, 저감방안, 주민 의견 반영 여부를 점검했습니다.');
-    const built = facilityDecisions.filter(d => d && d !== 'reject').length;
-    openModal(`<div class="modal-header"><span class="modal-title">📁 환경영향평가서 검토 현황</span><button class="close-btn" onclick="closeModal()">닫기</button></div>
-      <div class="dossier-box"><h3>평가서 핵심 검토 항목</h3>
-      <div class="check-item"><span>① 사업 목적·규모·입지와 주변 토지이용</span><strong>검토</strong></div>
-      <div class="check-item"><span>② 대기질·소음·물환경·생태·교통 현황</span><strong>조사 중</strong></div>
-      <div class="check-item"><span>③ 사업 시행 전·후 환경영향 예측</span><strong>분석 중</strong></div>
-      <div class="check-item"><span>④ 입지·규모·공법 대안 및 저감방안</span><strong>비교 중</strong></div>
-      <div class="check-item"><span>승인 결정된 시설</span><strong>${built}/3곳</strong></div>
+    const si = siteIndexNow();
+    const done = PLAN_ITEMS.filter(it => it.done(si)).length;
+    openModal(`<div class="modal-header"><span class="modal-title">📁 평가계획서 — ${si + 1}번 부지 조사 이행 현황</span><button class="close-btn" onclick="closeModal()">닫기</button></div>
+      <div class="dossier-box"><h3>${FACTORIES[si].facility} · 조사 이행 ${done}/${PLAN_ITEMS.length} (${Math.round(done / PLAN_ITEMS.length * 100)}%)</h3>
+      <p style="line-height:1.6; margin:8px 0 12px; font-size:0.92rem;">5일이 끝나면 이 계획서의 이행 정도를 근거로 <strong>협의 의견(동의/조건부 동의/부동의)</strong>이 적절했는지 평가받아요. 조사를 빠뜨린 채 동의하면 근거 없는 의견이 되고, 충분히 조사했는데 부동의하면 필요한 시설을 포기한 셈이에요.</p>
+      ${planListHtml(si)}
+      <div class="check-item"><span>승인 결정된 시설</span><strong>${facilityDecisions.filter(d => d && d !== 'reject').length}/3곳</strong></div>
       <div class="check-item"><span>평가 예산 잔액</span><strong>${budget}억 원</strong></div></div>`);
+    recordDailyTask('평가계획서 이행 현황 점검', `${si + 1}번 부지 조사 이행 ${done}/${PLAN_ITEMS.length}건을 확인했습니다.`);
   } else if (id === 'laptop') {
     renderLaptopModal();
   } else if (id === 'radio' || id === 'penholder') {
@@ -868,11 +912,15 @@ function advanceGameDay() {
 function showSiteDecisionModal(index) {
   const f = FACTORIES[index];
   const dayRange = index === 0 ? '1~5일차' : (index === 1 ? '6~10일차' : '11~15일차');
+  const done = PLAN_ITEMS.filter(it => it.done(index)).length;
+  const missing = PLAN_ITEMS.filter(it => !it.done(index)).map(it => it.name);
   openModal(`<div class="modal-header"><span class="modal-title">⚖️ ${index + 1}번 부지 환경영향평가 협의 의견</span><span style="font-size:0.8rem; color:#c9b182;">결정 필요</span></div>
     <div class="dossier-box"><div style="font-weight:700; margin-bottom:8px;">${dayRange} 평가 대상: ${f.name}</div>
     <h3>${f.facility}</h3><p style="line-height:1.7; margin:10px 0;">${f.benefit}</p>
     <p style="line-height:1.7; margin:10px 0;"><strong>주요 예상 환경영향</strong><br>${f.pollutants}</p>
-    <p style="line-height:1.7; margin:10px 0;">${f.role}</p></div>
+    <p style="line-height:1.7; margin:10px 0;">${f.role}</p>
+    <div class="check-item" style="display:block;"><div style="display:flex; justify-content:space-between;"><span>📁 평가계획서 이행</span><strong>${done}/${PLAN_ITEMS.length} (${Math.round(done / PLAN_ITEMS.length * 100)}%)</strong></div>
+    <div style="font-size:0.85rem; font-weight:400; margin-top:6px; line-height:1.5;">${missing.length ? '아직 하지 못한 조사: ' + missing.join(', ') : '모든 조사 항목을 이행했습니다.'}<br>※ 조사 근거에 맞지 않는 의견은 최종 평가에서 감점돼요.</div></div></div>
     <div style="display:grid; gap:10px; margin-top:14px;">
       <button class="choice-btn" onclick="decideFacility(${index}, 'standard')">① 협의 동의 · 기본 계획으로 사업 추진 (환경 부담 큼)</button>
       <button class="choice-btn" onclick="decideFacility(${index}, 'conditional')">② 조건부 동의 · 저감대책 이행을 전제로 사업 추진 (예산 18억)</button>
@@ -887,6 +935,7 @@ function decideFacility(index, decision) {
     return;
   }
   const f = FACTORIES[index];
+  siteVerdicts[index] = evaluateDecision(index, decision);
   facilityDecisions[index] = decision;
   if (decision === 'standard') {
     projectImpactScore += 2.1;
@@ -920,22 +969,29 @@ function decideFacility(index, decision) {
 
 function showFinalAssessmentSummary() {
   const scores = calculateFinalScores();
+  const names = { standard: '협의 동의', conditional: '조건부 동의', reject: '부동의' };
   const rows = [
-    { label: '도시에 꼭 필요한 시설이 모두 들어왔는가?', score: scores.utilityScore, detail: `${scores.builtCount}/3개 시설 건설` },
-    { label: '도시의 환경오염 정도가 악화되지 않고 환경을 보존하였는가?', score: scores.environmentScore, detail: `누적 환경오염 위험도 ${scores.risk}% · 잔여 영향 지수 ${scores.netImpact}` }
+    { label: '도시에 꼭 필요한 시설이 들어왔는가?', score: scores.utilityScore, detail: `${scores.builtCount}/3개 시설 건설` },
+    { label: '환경오염이 악화되지 않고 환경이 보전되었는가?', score: scores.environmentScore, detail: `누적 환경오염 위험도 ${scores.risk}% · 잔여 영향 지수 ${scores.netImpact}` },
+    { label: '평가계획서대로 조사하고, 그 근거에 맞는 의견을 냈는가?', score: scores.processScore, detail: `평균 조사 이행률 ${Math.round(scores.planAvg * 100)}% · 의견 적정성 ${scores.decAvg.toFixed(1)}/2` }
   ];
+  const siteRows = FACTORIES.map((f, i) => {
+    const v = siteVerdicts[i] || { rate: planRate(i), text: '' };
+    const mark = v.score === 2 ? '적정' : (v.score === 1 ? '보통' : '부적정');
+    return `<div class="check-item" style="display:block;"><div style="display:flex; justify-content:space-between;"><span>${i + 1}. ${f.facility} — ${names[facilityDecisions[i]] || '-'}</span><strong>${mark} · 조사 ${Math.round(v.rate * 100)}%</strong></div><div style="font-size:0.86rem; font-weight:400; margin-top:5px; line-height:1.5;">${v.text}</div></div>`;
+  }).join('');
   openModal(`<div class="modal-header"><span class="modal-title">📋 15일 최종 환경영향평가 결산</span></div>
-    <div class="dossier-box"><h3>최종 협의 의견</h3>
-      ${FACTORIES.map((f,i)=>`<div class="check-item"><span>${i+1}. ${f.facility}</span><strong>${facilityDecisions[i] === 'standard' ? '협의 동의' : facilityDecisions[i] === 'conditional' ? '조건부 동의' : '부동의'}</strong></div>`).join('')}
+    <div class="dossier-box"><h3>부지별 협의 의견과 평가계획서 이행</h3>${siteRows}
       <h3 style="margin-top:18px;">도시의 최종 평가 체크리스트</h3>
-      ${rows.map(r=>`<div class="check-item" style="align-items:flex-start;"><span style="max-width:76%; line-height:1.6;">${r.label}<br><small>${r.detail}</small></span><strong style="font-size:1.45rem; min-width:34px; text-align:center;">${scoreMark(r.score)}</strong></div>`).join('')}
+      ${rows.map(r => `<div class="check-item" style="align-items:flex-start;"><span style="max-width:76%; line-height:1.6;">${r.label}<br><small>${r.detail}</small></span><strong style="font-size:1.45rem; min-width:34px; text-align:center;">${scoreMark(r.score)}</strong></div>`).join('')}
     </div><div style="text-align:center; margin-top:18px;"><button class="start-btn" onclick="checkCampaignEnd()">엔딩 보기</button></div>`);
 }
 
 function checkCampaignEnd() {
   const status = calculateFinalScores();
-  const hasO = status.utilityScore === 3 || status.environmentScore === 3;
-  const hasTriangle = status.utilityScore === 2 || status.environmentScore === 2;
+  const axes = [status.utilityScore, status.environmentScore, status.processScore];
+  const hasO = status.utilityScore >= 2 && status.environmentScore === 3 && status.processScore === 3;
+  const hasTriangle = axes.filter(v => v >= 2).length >= 2;
   endingType = hasO ? 'green' : (hasTriangle ? 'partial' : 'desert');
   scene = 'ENDING';
   isPaused = true;
@@ -958,7 +1014,12 @@ function checkCampaignEnd() {
   const names = { standard: '협의 동의', conditional: '조건부 동의', reject: '부동의' };
   const summary = '<div style="font-size:0.88rem; color:#a8c8ff; margin-bottom:16px; line-height:1.8;">' +
     FACTORIES.map((f, i) => `${f.facility}: <strong>${names[facilityDecisions[i]] || '-'}</strong>`).join(' · ') + '</div>';
-  openEndingScene(endingType, title, message, summary);
+  const why = [];
+  if (status.utilityScore < 2) why.push('필요한 시설이 충분히 들어서지 못했어요');
+  if (status.environmentScore < 3) why.push('환경 부담이 아직 충분히 낮지 않아요');
+  if (status.processScore < 3) why.push('평가계획서의 조사 이행 또는 의견의 근거가 부족했어요');
+  const reasonHtml = why.length ? '<div style="font-size:0.9rem; color:#ffcf9a; margin-bottom:14px; line-height:1.7;">아쉬운 점: ' + why.join(' · ') + '</div>' : '';
+  openEndingScene(endingType, title, message, summary + reasonHtml);
 }
 
 // =====================================================================
@@ -1026,19 +1087,22 @@ function mgSkyline(c, W, baseY, seed, col, win, scale) {
   }
 }
 
-// 대전 엑스포과학공원 한빛탑
+// 대전 엑스포과학공원 한빛탑 (원뿔형 몸체 + 전망 원반 + 첨탑)
 function mgHanbit(c, x, baseY, col, k) {
   k = k || 1;
   const R = (gx, gy, w, h, cc) => mgR(c, x + gx * k, baseY + gy * k, w * k, h * k, cc || col);
-  R(-14, -4, 28, 4);
-  R(-3, -70, 6, 66);
-  R(-9, -80, 18, 10);
-  R(-12, -84, 24, 3);
-  R(-6, -96, 12, 12);
-  R(-1, -122, 2, 26);
-  R(-1, -124, 2, 2, '#e0505a');
-  R(-7, -78, 2, 3, '#ffd36b'); R(-1, -78, 2, 3, '#ffd36b'); R(5, -78, 2, 3, '#ffd36b');
-  R(-3, -92, 2, 3, '#ffd36b'); R(1, -92, 2, 3, '#ffd36b');
+  R(-14, -3, 28, 3);
+  for (let i = 0; i < 58; i++) {
+    const hw = 2 + Math.round(5 * Math.pow(1 - i / 58, 1.6));
+    R(-hw, -4 - i, hw * 2, 1);
+    R(hw - 1, -4 - i, 1, 1, 'rgba(0,0,0,0.2)');
+  }
+  R(-12, -66, 24, 2);
+  R(-10, -64, 20, 2, 'rgba(0,0,0,0.28)');
+  for (let q = -9; q <= 8; q += 4) R(q, -65, 2, 1, '#ffd36b');
+  R(-2, -80, 4, 14);
+  R(-1, -112, 2, 32);
+  R(-1, -114, 2, 2, '#e0505a');
 }
 
 function mgHeart(c, x, y, s, on) {
@@ -1179,8 +1243,9 @@ function openEmissionInspectionGame() {
   function finish() {
     running = false;
     activeTasks.seedingReady = false;
+    airGameCompleted[siteIndexNow()] = true;
     assessmentQuality += 1.5;
-    pollutionRisk = Math.max(5, pollutionRisk - 2.5);
+    pollutionRisk = Math.max(5, pollutionRisk - 2.5 * RISK_CUT);
     recordDailyTask('배출허용기준 판정 점검 완료', `측정값과 기준을 비교해 ${NEED}건을 정확히 판정하고, 기준 초과 사업장에 개선 조치를 기록했습니다.`);
     closeModal();
     updateWeatherHUD();
@@ -1421,7 +1486,7 @@ function openDragClimbMinigame() {
             cleared = true;
             dragClimbCompleted[idx] = true;
             assessmentQuality += 2 + (sampleCount >= 3 ? 0.5 : 0);
-            pollutionRisk = Math.max(5, pollutionRisk - 3);
+            pollutionRisk = Math.max(5, pollutionRisk - 3 * RISK_CUT);
             weather.ecoHealth = Math.min(100, weather.ecoHealth + 5);
             recordDailyTask('현장 사면·완충대 조사 완료', `${f.facility} 주변 상부 완충녹지 관측 지점에 도달해 표본 ${sampleCount}/3곳을 채취했습니다.`);
             updateWeatherHUD();
@@ -1560,8 +1625,9 @@ function openTypingChallengeGame() {
     activeTasks.phAlert = false;
     typingGameCompleted[idx] = true;
     if (success) {
+      reviewPassed[idx] = true;
       assessmentQuality += 1.5;
-      pollutionRisk = Math.max(5, pollutionRisk - 2.5);
+      pollutionRisk = Math.max(5, pollutionRisk - 2.5 * RISK_CUT);
       recordDailyTask('환경영향평가서 초안 검토 완료', `초안의 오류 ${badTotal}건을 모두 찾아 보완 요구 의견을 달았습니다.`);
     } else {
       if (found > 0) assessmentQuality += 0.5;
@@ -1687,7 +1753,7 @@ function openHabitatShieldArcadeGame() {
     running = false;
     ecologyGameCompleted[idx] = true;
     assessmentQuality += 1;
-    pollutionRisk = Math.max(5, pollutionRisk - 2);
+    pollutionRisk = Math.max(5, pollutionRisk - 2 * RISK_CUT);
     weather.ecoHealth = Math.min(100, weather.ecoHealth + 5);
     recordDailyTask('야간 보호종 현장 조사 완료', `습지 일대에서 법정보호종 ${NEED}개체를 확인·기록했습니다. (일반종 오기록 ${mistakes}회)`);
     closeModal();
@@ -1800,7 +1866,7 @@ function openNoisePeakTimingGame() {
     running = false;
     noiseGameCompleted[idx] = true;
     assessmentQuality += 1;
-    pollutionRisk = Math.max(5, pollutionRisk - 2);
+    pollutionRisk = Math.max(5, pollutionRisk - 2 * RISK_CUT);
     recordDailyTask('최대소음도(Lmax) 측정 완료', `기준을 넘는 소음 피크 ${NEED}회를 측정해 방음 대책의 근거 자료를 확보했습니다.`);
     closeModal();
     updateWeatherHUD();
@@ -1950,7 +2016,7 @@ function openMitigationPlacementGame() {
     running = false;
     mitigationGameCompleted[idx] = true;
     assessmentQuality += 1;
-    pollutionRisk = Math.max(5, pollutionRisk - 3);
+    pollutionRisk = Math.max(5, pollutionRisk - 3 * RISK_CUT);
     weather.ecoHealth = Math.min(100, weather.ecoHealth + 4);
     const done = placed.map((t, i) => t ? `${slots[i].name}: ${tools.find(x => x.id === t).label}` : null).filter(Boolean);
     recordDailyTask('완충·저감시설 공간 배치 완료', `문제 유형에 맞춰 ${done.join(', ')} 에 저감시설을 배치했습니다.`);
@@ -2081,7 +2147,7 @@ function openWindPlumeDefenseGame() {
     running = false;
     windGameCompleted[idx] = true;
     assessmentQuality += 1;
-    pollutionRisk = Math.max(5, pollutionRisk - 2);
+    pollutionRisk = Math.max(5, pollutionRisk - 2 * RISK_CUT);
     recordDailyTask('풍향·대기확산 예측 완료', `풍향 자료를 읽고 오염 기둥의 이동 방향과 영향 구역을 ${NEED}회 정확히 예측했습니다.`);
     closeModal();
     updateWeatherHUD();
@@ -2288,6 +2354,7 @@ function openAuditPhoneModal() {
 function pickSpeakerBubble(sp, audit) {
   const msg = sp.effect();
   if (sp.correct) {
+    civilCorrect[siteIndexNow()]++;
     assessmentQuality += 1;
     recordDailyTask('주민 민원 근거 선택 성공', `${audit.title} — ${sp.name}: ${sp.bubble}`);
   } else if (sp.name === '시간 초과') {
@@ -2359,6 +2426,18 @@ function openEndingScene(kind, title, message, summaryHtml) {
   if (kind === 'desert') for (let i = 0; i < 46; i++) { let x = Math.floor(rs() * W), y = 320 + Math.floor(rs() * 34); for (let k = 0; k < 7; k++) { mgR(b, x, y, 3, 2, PAL.rip); x += Math.floor(rs() * 7) - 2; y += Math.floor(rs() * 5) - 2; if (y < 319) y = 319; if (y > 352) y = 352; } }
   mgR(b, 0, 354, W, 46, PAL.bank); mgR(b, 0, 354, W, 4, PAL.landHi);
   mgR(b, 0, 316, W, 3, '#9a9b91');
+  // 엑스포다리
+  {
+    const bc = kind === 'desert' ? ['#8a7a6a', '#a89a88', '#8a4a3a'] : ['#2b6fd4', '#6ab4f4', '#c0392b'];
+    mgR(b, 300, 326, 320, 6, '#bdb6aa'); mgR(b, 300, 326, 320, 2, '#e8e2d4');
+    [340, 450, 560].forEach(px => mgR(b, px, 332, 8, 26, '#8a8a90'));
+    for (let x = 340; x <= 560; x += 2) {
+      const t = (x - 340) / 220, y = 326 - 88 * (1 - Math.pow(2 * t - 1, 2));
+      if ((x - 340) % 14 === 0) mgR(b, x + 1, y + 4, 1, 326 - y - 4, 'rgba(170,180,196,0.6)');
+      mgR(b, x, y, 4, 4, bc[0]); mgR(b, x, y, 2, 2, bc[1]);
+    }
+    mgR(b, 372, 262, 6, 64, bc[2]);
+  }
   function tree(x, y, i) {
     mgR(b, x + 8, y + 18, 6, 22, '#5b3a22');
     if (kind === 'desert') {
@@ -2721,90 +2800,128 @@ function chimney(cx, cy, cw, ch) {
   pr(cx + 1, cy + 7, cw - 2, 2, '#c0392b');
 }
 
-// 대전 도시 레이어: 보문산 능선 · 아파트 스카이라인 · 엑스포과학공원 한빛탑 · 갑천
+// 대전 한빛탑 (원뿔형 몸체 + 전망 원반 + 가는 첨탑)
+function pxHanbit(hx, by, H, main, shadeC, lit) {
+  const dy = Math.round(H * 0.5);
+  for (let i = 0; i < dy; i++) {
+    const hw = 1 + Math.round(4 * Math.pow(1 - i / dy, 1.6));
+    pr(hx - hw, by - i, hw * 2 + 1, 1, main);
+    pr(hx + hw, by - i, 1, 1, shadeC);
+  }
+  pr(hx, by - dy + 1, 1, dy, '#c9606a');
+  pr(hx - 6, by - dy - 2, 13, 2, main);
+  pr(hx - 5, by - dy, 11, 1, shadeC);
+  pr(hx - 7, by - dy - 1, 1, 1, main);
+  pr(hx + 7, by - dy - 1, 1, 1, main);
+  pr(hx - 1, by - dy - 10, 3, 8, main);
+  pr(hx, by - H, 1, H - dy - 10, main);
+  pr(hx, by - H - 1, 1, 1, '#e0505a');
+  if (lit) {
+    for (let k = -4; k <= 4; k += 2) pr(hx + k, by - dy - 1, 1, 1, '#ffd36b');
+  }
+}
+
+// 대전 도시 레이어: 갑천 · 엑스포다리 · 한빛탑 · 둔산 고층 · 보문산
 function drawCityLayer(variant, green) {
   const r = makeRng(11);
-  const groundY = Math.round(lh * 0.54);
-  const groundH = Math.round(lh * 0.14);
-  const towerLights = [];
+  const yB = Math.round(lh * 0.49);
+  const yW = Math.round(lh * 0.66);
   const desert = endingType === 'desert';
+  const dim = (variant === 'night' || variant === 'dusk' || variant === 'rain' || variant === 'dust');
+  const C = desert
+    ? { far: '#c9b08a', hill: '#9a8056', hillHi: '#b89a68', grass: '#c9a468', grassHi: '#dcc088', water: '#8a6a48', waterHi: '#a8845a', glass: '#b09a78', glassHi: '#c9b490', glassDk: '#8a7656', expo: '#cdbb96', tree: '#7a6a48', fl: 'rgba(60,40,20,0.3)' }
+    : (green
+      ? { far: '#7f8fb8', hill: '#2f5a3a', hillHi: '#4a7a4a', grass: '#5a8a4a', grassHi: '#7bb060', water: '#4a6a64', waterHi: '#86aaa6', glass: '#5a86a8', glassHi: '#9cc4dc', glassDk: '#3a5a7c', expo: '#dfe6ea', tree: '#2a5a34', fl: 'rgba(20,40,70,0.35)' }
+      : { far: '#7f8a9e', hill: '#3f5a48', hillHi: '#5a7258', grass: '#6a8a58', grassHi: '#82a068', water: '#4a5a58', waterHi: '#7a9a9a', glass: '#5f7e98', glassHi: '#98b4c4', glassDk: '#3f5870', expo: '#d4dade', tree: '#35523c', fl: 'rgba(20,40,70,0.35)' });
+  const lights = [];
 
-  // 보문산 능선 (원경)
+  // 원경 능선
   for (let xx = 0; xx < lw; xx++) {
-    const ridge = Math.round(groundY - lh * 0.22 - Math.abs(Math.sin(xx * 0.045 + 0.6)) * lh * 0.06 - Math.sin(xx * 0.013) * lh * 0.04);
-    pr(xx, ridge, 1, groundY - ridge, '#6d7aa3');
-    pr(xx, ridge, 1, 1, '#9aa6cc');
+    const mt = Math.round(yB - lh * 0.2 - Math.abs(Math.sin(xx * 0.03 + 0.5)) * lh * 0.05);
+    pr(xx, mt, 1, yB - mt, C.far);
+  }
+  // 좌측 숲 언덕 (보문산 자락)
+  const hcx = lw * 0.15, hhw = lw * 0.3, hH = lh * 0.15;
+  for (let xx = 0; xx < lw * 0.46; xx++) {
+    const t = (xx - hcx) / hhw;
+    if (Math.abs(t) >= 1) continue;
+    const hh = Math.round(hH * Math.pow(1 - t * t, 0.9) + Math.sin(xx * 0.3) * 1.2);
+    pr(xx, yB - hh, 1, hh, C.hill);
+    pr(xx, yB - hh, 1, 1, C.hillHi);
+  }
+  for (let i = 0; i < 300; i++) {
+    const x = Math.floor(r() * lw * 0.44), y = yB - 1 - Math.floor(r() * lh * 0.12);
+    const t = (x - hcx) / hhw;
+    const lim = yB - Math.round(hH * Math.pow(Math.max(0, 1 - t * t), 0.9));
+    if (y > lim + 1) pr(x, y, 2, 1, r() < 0.5 ? C.hillHi : (desert ? '#7a6444' : '#244a2f'));
+  }
+  // 우측 낮은 언덕
+  for (let xx = Math.round(lw * 0.84); xx < lw; xx++) {
+    const t = (xx - lw * 0.98) / (lw * 0.16);
+    const hh = Math.round(lh * 0.08 * Math.max(0, 1 - t * t));
+    if (hh > 0) { pr(xx, yB - hh, 1, hh, C.hill); pr(xx, yB - hh, 1, 1, C.hillHi); }
   }
 
-  let x = 0;
-  while (x < lw) {
-    const bw = 5 + Math.floor(r() * 8);
-    const bh = Math.round(lh * (0.07 + r() * 0.15));
-    const by = groundY + 2 - bh;
-    pr(x, by, bw, bh + 4, '#8d9ab4');
-    pr(x + bw - 2, by, 2, bh + 4, '#7684a2');
-    if (r() < 0.35) pr(x + Math.floor(bw / 2), by - 4, 1, 4, '#8d9ab4');
-    if (r() < 0.25) pr(x + 1, by - 2, bw - 2, 2, '#8d9ab4');
-    for (let wy = by + 3; wy < groundY - 1; wy += 3) {
-      for (let wx = x + 1; wx < x + bw - 2; wx += 2) {
-        if (r() < 0.4) towerLights.push([wx, wy]);
-      }
+  // 엑스포 컨벤션 건물 (낮은 곡선 지붕)
+  const ex0 = Math.round(lw * 0.14), ex1 = Math.round(lw * 0.5), exw = ex1 - ex0;
+  pr(ex0, yB - 9, exw, 8, C.expo);
+  pr(ex0 + 3, yB - 6, exw - 6, 4, desert ? '#a89a74' : '#3a9a8a');
+  for (let xx = ex0; xx < ex1; xx++) {
+    const rh = Math.round(4 * Math.sin(Math.PI * (xx - ex0) / exw));
+    pr(xx, yB - 9 - rh, 1, rh + 1, C.expo);
+  }
+  const sx = Math.round(lw * 0.355);
+  for (let k = 0; k < 11; k++) {
+    const h = Math.round(10 * Math.sin(k / 10 * Math.PI * 0.55));
+    pr(sx + k, yB - 10 - h, 1, h + 1, C.expo);
+  }
+  for (let wx = ex0 + 5; wx < ex1 - 4; wx += 4) lights.push([wx, yB - 5, 1]);
+
+  // 둔산 유리 고층 건물군
+  const towers = [[0.46, 0.17], [0.515, 0.19], [0.575, 0.16], [0.63, 0.15], [0.685, 0.2], [0.745, 0.145], [0.795, 0.125]];
+  const bw = Math.max(9, Math.round(lw * 0.04));
+  towers.forEach(([fx, fh]) => {
+    const x = Math.round(lw * fx), h = Math.round(lh * fh), top = yB - 2 - h;
+    pr(x, top, bw, h, C.glass);
+    pr(x, top, 2, h, C.glassHi);
+    pr(x + bw - 2, top, 2, h, C.glassDk);
+    pr(x, top, bw, 2, C.glassDk);
+    for (let wy = top + 4; wy < yB - 3; wy += 3) {
+      pr(x + 2, wy, bw - 4, 1, C.fl);
+      for (let wx = x + 2; wx < x + bw - 2; wx += 2) if (r() < 0.4) lights.push([wx, wy + 1, 0]);
     }
-    x += bw + (r() < 0.3 ? 1 + Math.floor(r() * 3) : 0);
+  });
+  {
+    const ax = Math.round(lw * 0.885), ah = Math.round(lh * 0.2), at = yB - 2 - ah;
+    pr(ax, at, bw, ah, C.glass); pr(ax, at, 2, ah, C.glassHi); pr(ax + bw - 2, at, 2, ah, C.glassDk); pr(ax, at, bw, 2, C.glassDk);
+    pr(ax + (bw >> 1), at - 10, 1, 10, '#c9ccd8'); pr(ax + (bw >> 1) - 1, at - 5, 3, 1, '#c9ccd8'); pr(ax + (bw >> 1), at - 11, 1, 1, '#e0505a');
+    for (let wy = at + 4; wy < yB - 3; wy += 3) pr(ax + 2, wy, bw - 4, 1, C.fl);
   }
 
-  for (let xx = 0; xx < lw; xx++) {
-    const dy = Math.round(groundY - 2 - 3 * Math.sin(xx * 0.035 + 1) - 2 * Math.sin(xx * 0.09));
-    pr(xx, dy, 1, groundY - dy + 2, desert ? '#9b805e' : '#526b62');
-    pr(xx, dy, 1, 1, '#82958a');
-  }
+  // 한빛탑 (왼쪽)
+  const hx = Math.round(lw * 0.095), hb = yB - 1, HH = Math.round(lh * 0.3);
+  pxHanbit(hx, hb, HH, desert ? '#c9b490' : '#e6eaf0', desert ? '#a08a6a' : '#9aa6b8', false);
 
-  // 엑스포과학공원 언덕과 한빛탑
-  const nx = Math.round(lw * 0.9), nw = Math.round(lw * 0.09), nh = Math.round(lh * 0.04);
-  for (let xx = nx - nw; xx <= nx + nw; xx++) {
-    const t = (xx - nx) / nw;
-    const hh = Math.round(nh * (1 - t * t));
-    pr(xx, groundY - hh, 1, hh + 2, desert ? '#8a7352' : '#3f6b4a');
-    pr(xx, groundY - hh, 1, 1, '#6f9a6a');
-  }
-  const topY = groundY - nh;
-  pr(nx - 1, topY - 30, 2, 30, '#c9ccd8');
-  pr(nx - 4, topY - 37, 8, 5, '#e8e2d0');
-  pr(nx - 5, topY - 38, 10, 1, '#c9ccd8');
-  pr(nx - 3, topY - 46, 6, 7, '#e8e2d0');
-  pr(nx, topY - 62, 1, 16, '#c9ccd8');
-  pr(nx, topY - 63, 1, 1, '#e0505a');
-
-  const base = desert ? '#a88b62' : (green ? '#4a6b48' : '#59615f');
-  const lite = desert ? '#c4a174' : (green ? '#6f9a5a' : '#78817c');
-  const dk = desert ? '#806746' : (green ? '#365236' : '#414947');
-  pr(0, groundY, lw, groundH, base);
-  pr(0, groundY, lw, 1, lite);
-  for (let i = 0; i < 170; i++) {
-    const sx = Math.floor(r() * lw);
-    const sy = groundY + 2 + Math.floor(r() * Math.max(1, groundH - 2));
-    pr(sx, sy, r() < 0.4 ? 2 : 1, 1, r() < 0.5 ? lite : dk);
-  }
+  // 강변 잔디와 나무
+  pr(0, yB - 2, lw, 3, C.grass);
+  pr(0, yB - 2, lw, 1, C.grassHi);
+  for (let xx = 0; xx < lw; xx += 5 + Math.floor(r() * 7)) pixDisc(xx, yB - 3, 2 + Math.floor(r() * 2), C.tree);
 
   // 갑천
-  const rvH = Math.max(3, Math.round(lh * 0.04));
-  pr(0, groundY, lw, rvH, desert ? '#8a7a5a' : '#35629a');
-  for (let i = 0; i < 60; i++) pr(Math.floor(r() * lw), groundY + Math.floor(r() * rvH), 2 + Math.floor(r() * 3), 1, r() < 0.5 ? '#7fb0d8' : '#2a4f82');
-  pr(0, groundY + rvH, lw, 1, '#9a9b91');
+  for (let y = yB + 1; y < yW; y++) {
+    const t = (y - yB) / Math.max(1, yW - yB);
+    pr(0, y, lw, 1, mixHex(C.water, desert ? '#6a4e34' : '#2f3d3e', t * 0.7));
+  }
+  pr(0, yB + 1, lw, 1, '#8a8a78');
+  g.globalAlpha = 0.28;
+  towers.forEach(([fx, fh]) => { const x = Math.round(lw * fx); pr(x + 1, yB + 2, bw - 2, Math.round(lh * fh * 0.35), C.glassHi); });
+  pr(hx - 2, yB + 2, 5, Math.round(HH * 0.3), '#e6eaf0');
+  g.globalAlpha = 0.3;
+  for (let i = 0; i < 90; i++) pr(Math.floor(r() * lw), yB + 2 + Math.floor(r() * (yW - yB - 3)), 3 + Math.floor(r() * 5), 1, C.waterHi);
+  g.globalAlpha = 1;
+  if (desert) for (let i = 0; i < 50; i++) pr(Math.floor(r() * lw), yB + 3 + Math.floor(r() * (yW - yB - 4)), 2, 1, '#5e4630');
 
-  const roadY = groundY + Math.round(groundH * 0.62);
-  pr(0, roadY, lw, Math.max(3, Math.round(groundH * 0.22)), desert ? '#78664e' : '#343b42');
-  pr(0, roadY, lw, 1, '#9a9b91');
-  for (let rx = 5; rx < lw; rx += 18) pr(rx, roadY + 2, 5, 1, '#d9cda4');
-  const treeColor = desert ? '#74654b' : (green ? '#2f6b3a' : '#596f56');
-  [0.05, 0.17, 0.39, 0.6, 0.86, 0.95].forEach((tx, idx) => {
-    const px = Math.round(lw * tx);
-    const py = groundY + 5 + (idx % 2) * 3;
-    pr(px, py, 2, 4, '#5b3a22');
-    pixDisc(px + 1, py - 1, 4, treeColor);
-    pixDisc(px, py - 2, 2, desert ? '#8b7856' : '#4f9a52');
-  });
-
+  // 시설 (공사 중 울타리 또는 건물)
   FACTORIES.forEach((f, idx) => {
     const q = factoryGeom(f);
     const decision = facilityDecisions[idx];
@@ -2816,7 +2933,6 @@ function drawCityLayer(variant, green) {
       for (let fx = q.x - 2; fx < q.x + q.w + 2; fx += 5) pr(fx, q.y + 2, 2, 2, '#d4b86d');
     }
   });
-
   FACTORIES.forEach((f, idx) => {
     const decision = facilityDecisions[idx];
     if (!decision || decision === 'reject') return;
@@ -2834,6 +2950,43 @@ function drawCityLayer(variant, green) {
     chimney(q.x + Math.round(q.w * 0.65), q.y + Math.round(q.h * 0.08), cw, Math.round(q.h * 0.27) + 2);
   });
 
+  // 엑스포다리 (파란 아치 + 붉은 주탑, 대각선 상판)
+  const Ax = Math.round(lw * 0.26), Ay = yB + 3, Bx = Math.round(lw * 0.9), By = Math.round(lh * 0.655);
+  const deckY = (x) => Ay + (x - Ax) * (By - Ay) / (Bx - Ax);
+  for (let xx = Ax; xx <= Bx; xx++) {
+    const y = deckY(xx), th = 2 + Math.round((xx - Ax) / (Bx - Ax) * 3);
+    pr(xx, y, 1, th, '#bdb6aa');
+    pr(xx, y, 1, 1, '#e8e2d4');
+    pr(xx, y + th, 1, 1, '#5a5a62');
+    pr(xx, y - 1, 1, 1, '#8a8a92');
+  }
+  [0.22, 0.5, 0.78].forEach(u => { const px = Math.round(Ax + (Bx - Ax) * u); pr(px, deckY(px) + 4, 3, 7, '#8a8a90'); });
+  const x0 = Math.round(lw * 0.34), x2 = Math.round(lw * 0.8);
+  const y0 = deckY(x0), y2 = deckY(x2);
+  const apx = lw * 0.58, apy = lh * 0.31;
+  const cxA = (4 * apx - x0 - x2) / 2, cyA = (4 * apy - y0 - y2) / 2;
+  const archPts = [];
+  for (let k = 0; k <= 80; k++) {
+    const t = k / 80, u = 1 - t;
+    archPts.push([u * u * x0 + 2 * u * t * cxA + t * t * x2, u * u * y0 + 2 * u * t * cyA + t * t * y2]);
+  }
+  // 붉은 주탑과 케이블
+  const px0 = Math.round(lw * 0.365), pyTop = Math.round(lh * 0.37);
+  g.globalAlpha = 0.55;
+  for (let dx = px0 + 6; dx < px0 + 70; dx += 6) pline(px0 + 1, pyTop + 2, dx, deckY(dx), '#aab4c4');
+  for (let k = 8; k < 72; k += 6) { const p = archPts[k]; if (p[0] > px0 + 4) pline(p[0], p[1], p[0], deckY(p[0]), '#9aa6b8'); }
+  g.globalAlpha = 1;
+  pr(px0, pyTop, 3, deckY(px0) - pyTop, '#c0392b');
+  pr(px0, pyTop, 1, deckY(px0) - pyTop, '#e0705a');
+  archPts.forEach(p => { pr(p[0], p[1], 2, 2, desert ? '#8a7a6a' : '#2b6fd4'); pr(p[0], p[1], 1, 1, desert ? '#a89a88' : '#6ab4f4'); });
+  if (dim) {
+    // 밤에는 주황 아치가 함께 켜진다
+    const ox0 = Math.round(lw * 0.45), ox2 = Math.round(lw * 0.86);
+    const oy0 = deckY(ox0), oy2 = deckY(ox2), oax = lw * 0.68, oay = lh * 0.4;
+    const ocx = (4 * oax - ox0 - ox2) / 2, ocy = (4 * oay - oy0 - oy2) / 2;
+    for (let k = 0; k <= 70; k++) { const t = k / 70, u = 1 - t; pr(u * u * ox0 + 2 * u * t * ocx + t * t * ox2, u * u * oy0 + 2 * u * t * ocy + t * t * oy2, 2, 2, '#e0703a'); }
+  }
+
   const tone = CITY_TONE[variant];
   if (tone) {
     g.globalCompositeOperation = 'source-atop';
@@ -2842,19 +2995,21 @@ function drawCityLayer(variant, green) {
     g.globalCompositeOperation = 'source-over';
   }
 
-  // 달빛 길 (한강 위 달 그림자)
-  if (variant === 'night') {
-    const mxr = Math.round(lw * 0.78);
-    for (let k = 0; k < rvH; k++) pr(mxr - 3 + (k % 2) * 2, groundY + k, 5 - (k % 2) * 2, 1, '#f6f0cf');
-  }
-
-  const dim = (variant === 'night' || variant === 'dusk' || variant === 'rain' || variant === 'dust');
   if (dim) {
     g.globalAlpha = variant === 'night' ? 0.95 : 0.6;
-    towerLights.forEach(p => pr(p[0], p[1], 1, 1, '#ffd36b'));
-    pr(nx - 3, topY - 36, 6, 1, '#ffd36b');
-    pr(nx - 2, topY - 44, 4, 1, '#ffd36b');
+    lights.forEach(p => pr(p[0], p[1], 1, 1, p[2] ? '#ffe9a8' : '#ffd36b'));
+    for (let k = 0; k < archPts.length; k += 4) pr(archPts[k][0], archPts[k][1], 1, 1, k % 8 ? '#8fd4ff' : '#ffffff');
+    pxHanbit(hx, hb, HH, '#fff4d8', '#d8c9a0', true);
+    for (let xx = Ax; xx < Bx; xx += 6) pr(xx, deckY(xx) - 2, 1, 1, '#ffd36b');
     g.globalAlpha = 1;
+    // 강물에 비치는 달빛과 다리 불빛
+    if (variant === 'night') {
+      const mxr = Math.round(lw * 0.78);
+      for (let k = yB + 2; k < yW; k++) pr(mxr - 3 + (k % 2) * 2, k, 5 - (k % 2) * 2, 1, '#f6f0cf');
+      g.globalAlpha = 0.4;
+      for (let k = 0; k < archPts.length; k += 5) pr(archPts[k][0], yB + 4 + (archPts[k][1] % 9), 2, 1, k % 2 ? '#2b9be4' : '#e0703a');
+      g.globalAlpha = 1;
+    }
   }
   const rf = makeRng(31);
   FACTORIES.forEach((f, idx) => {
@@ -2952,26 +3107,7 @@ function drawPetals() {
   g.globalAlpha = 1;
 }
 
-// 점프킹 풍 이끼 낀 돌벽돌 창틀
-function brickBar(x, y, w, h, seed) {
-  const rb = makeRng(seed);
-  pr(x, y, w, h, '#14132a');
-  const bh = 4, bw = 9;
-  for (let by = 0; by < h; by += bh) {
-    const off = ((by / bh) | 0) % 2 ? 4 : 0;
-    for (let bx = -off; bx < w; bx += bw) {
-      const x0 = Math.max(0, bx), x1 = Math.min(w, bx + bw - 1);
-      if (x1 > x0) {
-        const lt = rb();
-        pr(x + x0, y + by, x1 - x0, Math.min(bh - 1, h - by), lt < 0.2 ? '#59577a' : (lt < 0.55 ? '#46455f' : '#3b3a52'));
-        pr(x + x0, y + by, x1 - x0, 1, '#6a688c');
-      }
-    }
-  }
-  const mossN = Math.max(2, ((w * h) / 50) | 0);
-  for (let i = 0; i < mossN; i++) pr(x + Math.floor(rb() * w), y + Math.floor(rb() * h), 1 + Math.floor(rb() * 2), 1, rb() < 0.5 ? '#3f7a4a' : '#2f5f3b');
-}
-
+// 통창 창틀: 얇은 알루미늄 프레임과 유리 반사
 function drawFrameAndDesk() {
   const fh = Math.round(lh * 0.65);
 
@@ -2980,13 +3116,14 @@ function drawFrameAndDesk() {
     const px = Math.round(lw / 4 * i) + 10;
     for (let yy = 4; yy < fh - 6; yy++) pr(px + Math.round(yy * 0.35), yy, 3, 1, '#ffffff');
   }
+  g.globalAlpha = 0.05;
+  for (let yy = 4; yy < fh - 6; yy++) pr(Math.round(lw * 0.62) + Math.round(yy * 0.35), yy, 9, 1, '#ffffff');
   g.globalAlpha = 1;
 
-  brickBar(0, 0, lw, 6, 1);
-  brickBar(0, 0, 6, fh, 2);
-  brickBar(lw - 6, 0, 6, fh, 3);
-  brickBar(0, fh - 5, lw, 5, 4);
-  for (let i = 1; i <= 3; i++) brickBar(Math.round(lw / 4 * i) - 2, 0, 5, fh, 10 + i);
+  const fr = '#23262f', fhi = '#5a6272';
+  pr(0, 0, lw, 3, fr); pr(0, 0, 3, fh, fr); pr(lw - 3, 0, 3, fh, fr);
+  pr(3, 3, lw - 6, 1, fhi); pr(3, 3, 1, fh - 6, fhi); pr(lw - 4, 3, 1, fh - 6, '#171a22');
+  pr(0, fh - 4, lw, 4, '#2c303b'); pr(0, fh - 4, lw, 1, '#6a7284');
 
   const y0 = Math.round(lh * 0.63);
   const stops = [[0, '#6a4c34'], [0.18, '#4f3827'], [1, '#241911']];
@@ -3245,23 +3382,15 @@ function drawTitleCity() {
     pr(x, y, 1, lh - y, '#171c3c');
     pr(x, y, 1, 1, '#3a456e');
   }
-  // 엑스포과학공원 언덕과 한빛탑
-  const hx = Math.round(lw * 0.88), hw = Math.round(lw * 0.1), hhh = Math.round(lh * 0.05);
-  for (let x = hx - hw; x <= hx + hw; x++) {
+  // 엑스포과학공원 언덕과 한빛탑 (밤에 하얗게 점등)
+  const hx = Math.round(lw * 0.92), hw = Math.round(lw * 0.1), hhh = Math.round(lh * 0.04);
+  for (let x = hx - hw; x <= Math.min(lw - 1, hx + hw); x++) {
     const t = (x - hx) / hw;
     const top = Math.round(lh * 0.69) - Math.round(hhh * (1 - t * t));
     pr(x, top, 1, lh - top, '#171c3c');
     pr(x, top, 1, 1, '#3a456e');
   }
-  const ttop = Math.round(lh * 0.69) - hhh;
-  pr(hx - 1, ttop - 30, 2, 30, '#2a3170');
-  pr(hx - 4, ttop - 37, 8, 5, '#3a456e');
-  pr(hx - 5, ttop - 38, 10, 1, '#2a3170');
-  pr(hx - 3, ttop - 46, 6, 7, '#3a456e');
-  pr(hx, ttop - 62, 1, 16, '#2a3170');
-  pr(hx, ttop - 63, 1, 1, '#e0505a');
-  pr(hx - 3, ttop - 36, 6, 1, '#f3c76a');
-  pr(hx - 2, ttop - 44, 4, 1, '#f3c76a');
+  pxHanbit(hx, Math.round(lh * 0.69) - hhh + 1, Math.round(lh * 0.3), '#f4f1e6', '#b8b2c8', true);
   list.forEach(b => {
     const bx = Math.round(lw * b.x), bw = Math.max(6, Math.round(lw * b.w));
     const bh = Math.round(lh * b.h), by = baseY - bh;
@@ -3270,6 +3399,20 @@ function drawTitleCity() {
     for (let wy = by + 4; wy < baseY - 2; wy += 4) for (let wx = bx + 2; wx < bx + bw - 2; wx += 3) if (r() < 0.32) pr(wx, wy, 1, 2, r() < 0.8 ? '#f3c76a' : '#6ad0c8');
     if (b.h > 0.3) { pr(bx + 2, by - 2, bw - 4, 2, '#0e1230'); pr(bx + Math.floor(bw / 2), by - 5, 1, 3, '#0e1230'); }
   });
+  // 엑스포다리 (파란 아치 + 주황 아치, 야간 점등)
+  {
+    const dy0 = Math.round(lh * 0.745), dx0 = Math.round(lw * 0.34), dx1 = Math.round(lw * 0.8);
+    for (let x = dx0; x <= dx1; x++) { pr(x, dy0 + Math.round((x - dx0) * 0.03), 1, 3, '#5a5a78'); pr(x, dy0 + Math.round((x - dx0) * 0.03), 1, 1, '#c9c2b8'); }
+    const arch = (xa, xb, ay, col, col2) => {
+      const ya = dy0 + (xa - dx0) * 0.03, yb2 = dy0 + (xb - dx0) * 0.03, mx = (xa + xb) / 2;
+      const cyy = (4 * ay - ya - yb2) / 2;
+      for (let k = 0; k <= 70; k++) { const t = k / 70, u = 1 - t; const px = u * u * xa + 2 * u * t * mx + t * t * xb, py = u * u * ya + 2 * u * t * cyy + t * t * yb2; pr(px, py, 2, 2, col); if (k % 5 === 0) pr(px, py, 1, 1, col2); }
+    };
+    arch(Math.round(lw * 0.5), Math.round(lw * 0.82), Math.round(lh * 0.56), '#e0703a', '#ffd9a8');
+    arch(Math.round(lw * 0.42), Math.round(lw * 0.74), Math.round(lh * 0.52), '#2b9be4', '#bfe8ff');
+    for (let x = dx0 + 3; x < dx1; x += 5) pr(x, dy0 - 1 + Math.round((x - dx0) * 0.03), 1, 1, '#ffd36b');
+    for (let x = dx0 + 10; x < dx1; x += 12) { const yy = dy0 + 3 + Math.round((x - dx0) * 0.03); pr(x, yy, 1, 9, '#2b9be4'); pr(x + 1, yy + 1, 1, 8, '#e0703a'); }
+  }
   [0.06].forEach(tx => {
     const cx = Math.round(lw * tx), cy = baseY - 2;
     pr(cx, cy - 10, 2, 10, '#0d0814');
