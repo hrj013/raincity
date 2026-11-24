@@ -33,7 +33,9 @@ game_html = r"""
 <meta charset="UTF-8">
 <title>내일의 도시</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Jua&family=Press+Start+2P&family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;700&display=swap');
+  @import url('https://cdn.jsdelivr.net/npm/galmuri@latest/dist/galmuri.css');
+  @import url('https://cdn.jsdelivr.net/gh/neodgm/neodgm-webfont@latest/neodgm/style.css');
+  @import url('https://fonts.googleapis.com/css2?family=Jua&family=Press+Start+2P&display=swap');
 
   :root {
     --ink: #0a0d24;
@@ -52,7 +54,7 @@ game_html = r"""
   body, html {
     width: 100%; height: 100%; overflow: hidden;
     background-color: #070a1c;
-    font-family: 'Jua', 'Noto Sans KR', sans-serif;
+    font-family: 'Galmuri11', 'NeoDunggeunmo', 'Jua', sans-serif;
     color: #f0ece1;
   }
 
@@ -97,28 +99,24 @@ game_html = r"""
   #title-overlay.zooming { transform: scale(4.5) translate(5%, -5%); opacity: 0; pointer-events: none; }
 
   .title-eng {
-    font-family: 'Press Start 2P', monospace; font-size: clamp(0.6rem, 1.5vw, 1rem); letter-spacing: 0.4em;
-    color: #9ab0e8; margin-bottom: 10px; text-shadow: 2px 2px 0 #0a0d24;
+    font-family: 'Press Start 2P', monospace; font-size: clamp(0.65rem, 1.6vw, 1.05rem); letter-spacing: 0.4em;
+    color: #cfe0ff; margin-bottom: 14px; text-shadow: 2px 2px 0 #0a0d24, -2px -2px 0 #0a0d24, 2px -2px 0 #0a0d24, -2px 2px 0 #0a0d24;
   }
   .title-logo {
-    position: relative; isolation: isolate; font-family: 'Black Han Sans', 'Do Hyeon', sans-serif;
-    font-size: clamp(3.8rem, min(14vw, 24vh), 10rem); line-height: 1.05; letter-spacing: 0.05em; margin-bottom: 18px;
-    color: transparent; background: linear-gradient(180deg, #fffbe0 0%, #ffe27a 38%, #ffb03a 70%, #f0702a 100%);
-    -webkit-background-clip: text; background-clip: text; animation: logo-bob 3s ease-in-out infinite;
-  }
-  .title-logo::before {
-    content: attr(data-t); position: absolute; left: 0; top: 0; z-index: -1; color: #14123a; -webkit-text-stroke: 0.2em #14123a;
-    text-shadow: 0 0.06em 0 #14123a, 0 0.12em 0 #a4412a, 0 0.18em 0 #0a0d24, 0 0.26em 0.2em rgba(0, 0, 0, 0.5);
+    font-family: 'Galmuri11', 'NeoDunggeunmo', 'Jua', sans-serif; font-weight: 700;
+    font-size: clamp(3.6rem, min(13vw, 22vh), 9.5rem); line-height: 1.1; letter-spacing: 0.06em; margin-bottom: 46px;
+    color: #ffe27a;
+    text-shadow:
+      -0.05em -0.05em 0 #14123a, 0 -0.05em 0 #14123a, 0.05em -0.05em 0 #14123a,
+      -0.05em 0 0 #14123a, 0.05em 0 0 #14123a,
+      -0.05em 0.05em 0 #14123a, 0 0.05em 0 #14123a, 0.05em 0.05em 0 #14123a,
+      0 0.1em 0 #14123a, 0 0.15em 0 #a4412a, 0 0.2em 0 #0a0d24, 0.05em 0.2em 0 #0a0d24, -0.05em 0.2em 0 #0a0d24;
+    animation: logo-bob 3s steps(6) infinite;
   }
   @keyframes logo-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-  .title-sub {
-    font-family: 'Do Hyeon', 'Jua', sans-serif; font-size: clamp(1.1rem, 2.4vw, 1.9rem); letter-spacing: 0.28em; color: #e6eeff;
-    margin-bottom: 44px; text-shadow: 3px 3px 0 #0a0d24; padding: 6px 28px;
-    background: linear-gradient(90deg, rgba(10,13,36,0), rgba(10,13,36,0.7) 20%, rgba(10,13,36,0.7) 80%, rgba(10,13,36,0));
-  }
 
   .start-btn {
-    font-family: 'Press Start 2P', 'Do Hyeon', sans-serif; font-size: clamp(1.1rem, 2vw, 1.6rem); letter-spacing: 0.15em;
+    font-family: 'Press Start 2P', 'Galmuri11', 'NeoDunggeunmo', sans-serif; font-size: clamp(1.1rem, 2vw, 1.6rem); letter-spacing: 0.15em;
     padding: 20px 64px; background: var(--gold); color: #1a1030; border: none; border-radius: 0; cursor: pointer;
     transition: transform 0.08s steps(2), box-shadow 0.08s steps(2);
     box-shadow: -4px 0 0 0 var(--ink), 4px 0 0 0 var(--ink), 0 -4px 0 0 var(--ink), 0 4px 0 0 var(--ink), 0 10px 0 0 var(--gold-dk), 0 10px 0 4px var(--ink);
@@ -181,9 +179,9 @@ game_html = r"""
   }
   .close-btn:hover { background: var(--gold); color: #1a1030; }
 
-  .newspaper-sheet { background: #e8dec8; color: #241f18; padding: 26px; font-family: 'Gowun Batang', serif; box-shadow: 0 0 0 3px var(--ink), 0 6px 0 3px var(--ink); }
+  .newspaper-sheet { background: #e8dec8; color: #241f18; padding: 26px; font-family: 'Galmuri11', 'NeoDunggeunmo', 'Jua', sans-serif; box-shadow: 0 0 0 3px var(--ink), 0 6px 0 3px var(--ink); }
   .news-head { text-align: center; border-top: 3px double #241f18; border-bottom: 3px double #241f18; padding: 10px 0; margin-bottom: 16px; }
-  .dossier-box { background: #f4efe4; color: #222; padding: 20px; font-family: 'Gowun Batang', serif; box-shadow: 0 0 0 3px var(--ink), 0 6px 0 3px var(--ink); }
+  .dossier-box { background: #f4efe4; color: #222; padding: 20px; font-family: 'Galmuri11', 'NeoDunggeunmo', 'Jua', sans-serif; box-shadow: 0 0 0 3px var(--ink), 0 6px 0 3px var(--ink); }
   .check-item {
     display: flex; align-items: center; justify-content: space-between; padding: 12px; margin: 9px 0;
     background: #e6decb; border-left: 6px solid #7d6844; font-size: 1.02rem; font-weight: 700;
@@ -252,7 +250,7 @@ game_html = r"""
     box-shadow: 0 0 0 3px var(--edge), 0 0 0 6px var(--ink);
   }
   .modal-title, .speaker-tag, .clock-day, .clock-time, .action-btn, .close-btn, .alert-pill, .speed-btn, .badge-status, .check-item strong, .choice-btn, .rv-line.hit::after {
-    font-family: 'Do Hyeon', 'Jua', sans-serif; letter-spacing: 0.02em;
+    font-family: 'Galmuri11', 'NeoDunggeunmo', 'Jua', sans-serif; letter-spacing: 0.02em;
   }
   html { font-size: 17px; }
   .modal-title { font-size: 1.45rem; }
@@ -267,7 +265,6 @@ game_html = r"""
   <div id="title-overlay">
     <div class="title-eng">TOMORROW'S CITY</div>
     <div class="title-logo" data-t="내일의 도시">내일의 도시</div>
-    <div class="title-sub">대전의 밤, 지속 가능한 내일을 평가하다</div>
     <button class="start-btn" onclick="startGame()">START</button>
   </div>
 
@@ -298,7 +295,7 @@ game_html = r"""
 </div>
 
 <script>
-if (document.fonts && document.fonts.load) ['18px "Jua"', '18px "Do Hyeon"', '18px "Black Han Sans"'].forEach(f => document.fonts.load(f));
+if (document.fonts && document.fonts.load) ['16px "Galmuri11"', '16px "NeoDunggeunmo"'].forEach(f => document.fonts.load(f));
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
@@ -773,7 +770,7 @@ function confirmPolicy(policyId) {
   const p = POLICIES.find(item => item.id === policyId);
   openModal(`
     <div style="text-align:center; padding:20px 10px;">
-      <h3 style="font-family:'Gowun Batang', serif; font-size:1.45rem; color:#f5e6c8; margin-bottom:12px;">"${p.name}"을(를) 선택하시겠습니까?</h3>
+      <h3 style="font-family:'Galmuri11', 'NeoDunggeunmo', 'Jua', sans-serif; font-size:1.45rem; color:#f5e6c8; margin-bottom:12px;">"${p.name}"을(를) 선택하시겠습니까?</h3>
       <p style="color:#cfc9bc; font-size:0.98rem;">소요 예산: <strong>${p.cost}억</strong> | 적용 시점: <strong>${day + 2}일차 아침</strong></p>
       <div style="max-width:520px; margin:12px auto 0; text-align:left;">${policyInfoHtml(p)}</div>
       <div style="display:flex; justify-content:center; gap:16px; margin-top:24px;">
@@ -1323,7 +1320,7 @@ function openEmissionInspectionGame() {
       }
       // 기준선
       for (let rr = 40; rr <= GR + 12; rr += 5) mgR(cx, GCX + Math.cos(limA) * rr - 3, GCY - Math.sin(limA) * rr - 3, 6, 6, '#ffffff');
-      cx.fillStyle = '#ffe9a8'; cx.font = '700 13px "Jua", "Noto Sans KR", sans-serif'; cx.textAlign = 'center';
+      cx.fillStyle = '#ffe9a8'; cx.font = '700 13px "Galmuri11", "NeoDunggeunmo", "Jua", sans-serif'; cx.textAlign = 'center';
       cx.fillText(`기준 ${reading.limit}`, GCX + Math.cos(limA) * (GR + 34), GCY - Math.sin(limA) * (GR + 24));
       cx.fillStyle = '#9ab0e8'; cx.fillText('0', GCX - GR + 8, GCY + 18);
       // 바늘
@@ -1333,22 +1330,22 @@ function openEmissionInspectionGame() {
       for (let i = 0; i < GR - 22; i += 4) mgR(cx, GCX + Math.cos(na) * i - 3, GCY - Math.sin(na) * i - 3, 6, 6, '#ffd166');
       mgDisc(cx, GCX, GCY, 12, '#f2c14e', 4);
       // 정보창
-      cx.fillStyle = '#f4f1e6'; cx.font = '800 19px "Jua", "Noto Sans KR", sans-serif'; cx.textAlign = 'center';
+      cx.fillStyle = '#f4f1e6'; cx.font = '800 19px "Galmuri11", "NeoDunggeunmo", "Jua", sans-serif'; cx.textAlign = 'center';
       cx.fillText(`${reading.gas}  측정값 ${reading.value}  /  기준 ${reading.limit}`, 465, 96);
       mgR(cx, 262, 108, 406, 10, MG_INK);
       mgR(cx, 264, 110, 402 * Math.max(0, left / 7), 6, left < 2 ? '#e0505a' : '#f2c14e');
     }
     for (let i = 0; i < 3; i++) mgHeart(cx, 252 + i * 28, 132, 4, i < lives);
-    cx.fillStyle = '#9ab0e8'; cx.font = '700 13px "Jua", "Noto Sans KR", sans-serif'; cx.textAlign = 'right';
+    cx.fillStyle = '#9ab0e8'; cx.font = '700 13px "Galmuri11", "NeoDunggeunmo", "Jua", sans-serif'; cx.textAlign = 'right';
     cx.fillText(`조치 ${ok}/${NEED}`, 676, 30);
     if (flashT > 0) {
       flashT -= dt;
-      cx.fillStyle = flashGood ? '#7bf0b0' : '#ff7b7b'; cx.font = '800 34px "Jua", "Noto Sans KR", sans-serif'; cx.textAlign = 'center';
+      cx.fillStyle = flashGood ? '#7bf0b0' : '#ff7b7b'; cx.font = '800 34px "Galmuri11", "NeoDunggeunmo", "Jua", sans-serif'; cx.textAlign = 'center';
       cx.fillText(flashTxt, 465, 190);
     }
     if (over) {
       cx.fillStyle = 'rgba(5,8,28,0.78)'; cx.fillRect(0, 0, W, H);
-      cx.fillStyle = '#ffd166'; cx.font = '800 26px "Jua", "Noto Sans KR", sans-serif'; cx.textAlign = 'center';
+      cx.fillStyle = '#ffd166'; cx.font = '800 26px "Galmuri11", "NeoDunggeunmo", "Jua", sans-serif'; cx.textAlign = 'center';
       cx.fillText('점검 실패! 클릭해서 다시 도전', W / 2, H / 2);
     }
     requestAnimationFrame(frame);
@@ -1549,7 +1546,7 @@ function openDragClimbMinigame() {
           mgR(dctx, cx0 + vel.vx * tS - 2, cy0 + vel.vy * tS + 0.5 * GRAVITY * tS * tS - 2, 4, 4, '#6ad0c8');
         }
         for (let i = 1; i <= 6; i++) mgR(dctx, cx0 + (dragCurr.x - cx0) * i / 6 - 2, cy0 + (dragCurr.y - cy0) * i / 6 - 2, 4, 4, '#ffd166');
-        dctx.fillStyle = '#ffe9a8'; dctx.font = '700 12px "Jua", "Noto Sans KR", sans-serif'; dctx.textAlign = 'left';
+        dctx.fillStyle = '#ffe9a8'; dctx.font = '700 12px "Galmuri11", "NeoDunggeunmo", "Jua", sans-serif'; dctx.textAlign = 'left';
         dctx.fillText(`출력 ${vel.powerPct}%`, cx0 + 12, cy0 - 14);
       }
     }
@@ -1812,7 +1809,7 @@ function openHabitatShieldArcadeGame() {
 
     // HUD
     mgR(cx, 8, 8, 208, 26, 'rgba(5,8,28,0.8)');
-    cx.fillStyle = '#ffe9a8'; cx.font = '800 14px "Jua", "Noto Sans KR", sans-serif'; cx.textAlign = 'left';
+    cx.fillStyle = '#ffe9a8'; cx.font = '800 14px "Galmuri11", "NeoDunggeunmo", "Jua", sans-serif'; cx.textAlign = 'left';
     cx.fillText(`📸 보호종 기록 ${found}/${NEED}`, 16, 27);
     if (msgT > 0) {
       msgT -= dt;
@@ -1858,10 +1855,10 @@ function openNoisePeakTimingGame() {
   for (let x = 0; x < W; x += 35) mgR(b, x, 0, 1, 205, '#18275c');
   for (let db = 40; db <= 85; db += 5) {
     mgR(b, 0, Y(db), W, 1, '#18275c');
-    b.fillStyle = '#6f80b8'; b.font = '700 11px "Jua", "Noto Sans KR", sans-serif'; b.fillText(db + '', 4, Y(db) - 2);
+    b.fillStyle = '#6f80b8'; b.font = '700 11px "Galmuri11", "NeoDunggeunmo", "Jua", sans-serif'; b.fillText(db + '', 4, Y(db) - 2);
   }
   for (let x = 0; x < W; x += 10) mgR(b, x, Y(STD), 6, 2, '#e0505a');
-  b.fillStyle = '#ff9a9a'; b.font = '800 12px "Jua", "Noto Sans KR", sans-serif'; b.fillText('환경기준(예시) 65dB', W - 150, Y(STD) - 4);
+  b.fillStyle = '#ff9a9a'; b.font = '800 12px "Galmuri11", "NeoDunggeunmo", "Jua", sans-serif'; b.fillText('환경기준(예시) 65dB', W - 150, Y(STD) - 4);
   mgR(b, 0, 214, W, 36, '#1a1f3c'); mgR(b, 0, 214, W, 3, '#3a456e');
   for (let x = 6; x < W; x += 36) mgR(b, x, 236, 16, 3, '#d9cda4');
 
@@ -1939,13 +1936,13 @@ function openNoisePeakTimingGame() {
     mgR(cx, WINX - 18, 0, 2, 205, '#ffd166'); mgR(cx, WINX + 16, 0, 2, 205, '#ffd166');
     // 현재 레벨 표시
     mgR(cx, W - 140, 8, 130, 28, MG_INK);
-    cx.fillStyle = '#7bf0b0'; cx.font = '800 15px "Jua", "Noto Sans KR", sans-serif'; cx.textAlign = 'center';
+    cx.fillStyle = '#7bf0b0'; cx.font = '800 15px "Galmuri11", "NeoDunggeunmo", "Jua", sans-serif'; cx.textAlign = 'center';
     cx.fillText(`현재 ${level(WINX).toFixed(1)} dB`, W - 75, 28);
-    cx.textAlign = 'left'; cx.fillStyle = '#ffe9a8'; cx.font = '800 12px "Jua", "Noto Sans KR", sans-serif';
+    cx.textAlign = 'left'; cx.fillStyle = '#ffe9a8'; cx.font = '800 12px "Galmuri11", "NeoDunggeunmo", "Jua", sans-serif';
     cx.fillText('측정 창', WINX - 18, 16);
     if (msgT > 0) {
       msgT -= dt;
-      cx.fillStyle = '#ffd166'; cx.font = '800 22px "Jua", "Noto Sans KR", sans-serif'; cx.textAlign = 'center';
+      cx.fillStyle = '#ffd166'; cx.font = '800 22px "Galmuri11", "NeoDunggeunmo", "Jua", sans-serif'; cx.textAlign = 'center';
       cx.fillText(msg, 350, 60);
     }
     requestAnimationFrame(frame);
@@ -2099,12 +2096,12 @@ function openMitigationPlacementGame() {
         mgR(cx, x + 14, y + 116, PW - 28, 24, MG_INK); mgR(cx, x + 16, y + 118, PW - 32, 20, '#3d7fb5');
         for (let k = 0; k < 5; k++) mgR(cx, x + 24 + k * 26, y + 108, 2, 14, '#4f9a52');
       }
-      cx.fillStyle = '#ffe9a8'; cx.font = '800 14px "Jua", "Noto Sans KR", sans-serif'; cx.textAlign = 'center';
+      cx.fillStyle = '#ffe9a8'; cx.font = '800 14px "Galmuri11", "NeoDunggeunmo", "Jua", sans-serif'; cx.textAlign = 'center';
       cx.fillText(s.name, x + PW / 2, y + 190);
-      cx.fillStyle = '#c9d3f5'; cx.font = '600 12px "Jua", "Noto Sans KR", sans-serif';
+      cx.fillStyle = '#c9d3f5'; cx.font = '600 12px "Galmuri11", "NeoDunggeunmo", "Jua", sans-serif';
       mgWrap(cx, s.issue, PW - 16).forEach((ln, li) => cx.fillText(ln, x + PW / 2, y + 208 + li * 15));
       if (badFlash[i] > 0) badFlash[i] -= dt;
-      if (placed[i]) { cx.fillStyle = '#95d5b2'; cx.font = '800 12px "Jua", "Noto Sans KR", sans-serif'; cx.fillText('설치됨', x + PW / 2, y + 14); }
+      if (placed[i]) { cx.fillStyle = '#95d5b2'; cx.font = '800 12px "Galmuri11", "NeoDunggeunmo", "Jua", sans-serif'; cx.fillText('설치됨', x + PW / 2, y + 14); }
     });
     requestAnimationFrame(frame);
   }
@@ -2203,7 +2200,7 @@ function openWindPlumeDefenseGame() {
       if (flash.k === k && flash.t > 0) mgR(cx, z.x - 44, z.y - 30, 88, 64, 'rgba(224,80,90,0.45)');
       mgHouse(cx, z.x - 38, z.y - 16, 3, '#8a6a4a', '#a8603c');
       mgHouse(cx, z.x - 6, z.y - 8, 3, '#7a8ab4', '#5a6a9a');
-      cx.fillStyle = hot ? '#ffe9a8' : '#c9d3f5'; cx.font = '800 13px "Jua", "Noto Sans KR", sans-serif'; cx.textAlign = 'center';
+      cx.fillStyle = hot ? '#ffe9a8' : '#c9d3f5'; cx.font = '800 13px "Galmuri11", "NeoDunggeunmo", "Jua", sans-serif'; cx.textAlign = 'center';
       cx.fillText(z.n + ' 구역', z.x, z.y + 38);
     });
     if (flash.t > 0) flash.t -= dt;
@@ -2233,9 +2230,9 @@ function openWindPlumeDefenseGame() {
 
     // 바람 정보 패널
     mgR(cx, 8, 8, 232, 56, MG_INK); mgR(cx, 10, 10, 228, 52, '#101847');
-    cx.fillStyle = '#ffe9a8'; cx.font = '800 19px "Jua", "Noto Sans KR", sans-serif'; cx.textAlign = 'left';
+    cx.fillStyle = '#ffe9a8'; cx.font = '800 19px "Galmuri11", "NeoDunggeunmo", "Jua", sans-serif'; cx.textAlign = 'left';
     cx.fillText(`🌬️ ${DIRS[from]}풍  ${windSpd}m/s`, 20, 34);
-    cx.fillStyle = '#9ab0e8'; cx.font = '700 12px "Jua", "Noto Sans KR", sans-serif';
+    cx.fillStyle = '#9ab0e8'; cx.font = '700 12px "Galmuri11", "NeoDunggeunmo", "Jua", sans-serif';
     cx.fillText(`(${DIRS[from]}쪽에서 불어오는 바람)`, 20, 54);
     for (let i = 0; i < 3; i++) mgHeart(cx, W - 96 + i * 28, 12, 4, i < lives);
 
@@ -2268,7 +2265,7 @@ function openAuditPhoneModal() {
 
   const cv = document.getElementById('callCanvas'), cx = cv.getContext('2d'), W = cv.width, H = cv.height;
   const COLW = W / 3, GROUND = 318, SP_Y = 186, S = 6;
-  cx.font = '700 14px "Jua", "Noto Sans KR", sans-serif';
+  cx.font = '700 14px "Galmuri11", "NeoDunggeunmo", "Jua", sans-serif';
   const lay = cards.map(sp => ({ sp, lines: mgWrap(cx, sp.bubble, COLW - 52) }));
   const maxLines = Math.max(...lay.map(l => l.lines.length));
   const BH = maxLines * 19 + 24;
@@ -2326,7 +2323,7 @@ function openAuditPhoneModal() {
       cx.globalAlpha = dim ? 0.45 : 1;
       mgR(cx, mid - 36, GROUND - 4, 72, 6, 'rgba(0,0,0,0.4)');
       mgPerson(cx, mid - 6 * S, SP_Y + jump + (isHover ? -4 : 0), S, Object.assign({}, l.sp.look, { talk: chosen < 0 && Math.floor(T * 4 + i * 3) % 3 === 0 }));
-      cx.font = '800 13px "Jua", "Noto Sans KR", sans-serif'; cx.textAlign = 'center';
+      cx.font = '800 13px "Galmuri11", "NeoDunggeunmo", "Jua", sans-serif'; cx.textAlign = 'center';
       const nw = cx.measureText(l.sp.name).width + 22;
       mgR(cx, mid - nw / 2 - 3, GROUND + 8, nw + 6, 26, MG_INK); mgR(cx, mid - nw / 2, GROUND + 11, nw, 20, isHover || isChosen ? '#f2c14e' : '#26357f');
       cx.fillStyle = isHover || isChosen ? '#1a1030' : '#dbe6ff'; cx.fillText(l.sp.name, mid, GROUND + 26);
@@ -2334,11 +2331,11 @@ function openAuditPhoneModal() {
       if (isHover) { fill = '#fff8e3'; line = '#f2c14e'; }
       if (isChosen) { fill = l.sp.correct ? '#cfeedd' : '#f6d4d4'; line = l.sp.correct ? '#2d6a4f' : '#b3262e'; }
       mgBubble(cx, x0 + 14, 12 + (isHover ? -2 : 0), COLW - 28, BH, fill, line, mid);
-      cx.fillStyle = '#221d17'; cx.font = '700 14px "Jua", "Noto Sans KR", sans-serif'; cx.textAlign = 'left';
+      cx.fillStyle = '#221d17'; cx.font = '700 14px "Galmuri11", "NeoDunggeunmo", "Jua", sans-serif'; cx.textAlign = 'left';
       l.lines.forEach((ln, li) => cx.fillText(ln, x0 + 26, 12 + (isHover ? -2 : 0) + 24 + li * 19));
       if (isChosen) {
         mgR(cx, x0 + 18, 4, 64, 20, l.sp.correct ? '#2d6a4f' : '#b3262e');
-        cx.fillStyle = '#fff'; cx.font = '800 12px "Jua", "Noto Sans KR", sans-serif'; cx.textAlign = 'center';
+        cx.fillStyle = '#fff'; cx.font = '800 12px "Galmuri11", "NeoDunggeunmo", "Jua", sans-serif'; cx.textAlign = 'center';
         cx.fillText(l.sp.correct ? '✔ 채택' : '✘ 부족', x0 + 50, 19);
       }
       cx.globalAlpha = 1;
@@ -2349,7 +2346,7 @@ function openAuditPhoneModal() {
     if (chosen < 0 && ring) { mgR(cx, 50, 352, 3, 8, '#ffd166'); mgR(cx, 58, 348, 3, 14, '#ffd166'); }
     mgR(cx, 90, 356, 614, 14, MG_INK);
     mgR(cx, 92, 358, 610 * (left / LIMIT), 10, left < 8 ? '#e0505a' : '#f2c14e');
-    cx.fillStyle = '#ffe9a8'; cx.font = '800 12px "Jua", "Noto Sans KR", sans-serif'; cx.textAlign = 'left';
+    cx.fillStyle = '#ffe9a8'; cx.font = '800 12px "Galmuri11", "NeoDunggeunmo", "Jua", sans-serif'; cx.textAlign = 'left';
     cx.fillText(`통화 가능 ${Math.ceil(left)}초`, 96, 349);
     requestAnimationFrame(frame);
   }
@@ -2470,7 +2467,7 @@ function openEndingScene(kind, title, message, summaryHtml) {
         mgR(cx, x + 4, baseY - 30, 6, 24, '#5b3a22'); mgR(cx, x, baseY - 46, 22, 20, MG_INK); mgR(cx, x + 2, baseY - 44, 18, 16, '#2f6b3a'); mgR(cx, x + 4, baseY - 44, 8, 6, '#4f9a52');
         for (let k = 0; k < 6; k++) mgR(cx, x + 28 + k * 6, baseY - 6 - (k % 2) * 2, 3, 3, k % 2 ? '#ffd166' : '#ff9ab8');
         mgR(cx, x + 30, baseY - 30, 30, 12, MG_INK); mgR(cx, x + 32, baseY - 28, 26, 8, '#8a6a4a');
-        cx.fillStyle = '#fff4c0'; cx.font = '800 9px "Jua", "Noto Sans KR", sans-serif'; cx.textAlign = 'center'; cx.fillText('보전', x + 45, baseY - 21);
+        cx.fillStyle = '#fff4c0'; cx.font = '800 9px "Galmuri11", "NeoDunggeunmo", "Jua", sans-serif'; cx.textAlign = 'center'; cx.fillText('보전', x + 45, baseY - 21);
       } else {
         mgR(cx, x + 8, baseY - 22, 4, 20, '#5b3a22'); mgR(cx, x + 4, baseY - 16, 6, 2, '#5b3a22');
         mgR(cx, x + 24, baseY - 4, 36, 4, '#3a2f26');
@@ -3327,7 +3324,7 @@ function presentBuffer(withText) {
   if (withText) {
     const cal = DESK_ITEMS[9];
     ctx.fillStyle = '#1c1815';
-    ctx.font = 'bold 14px Gowun Batang';
+    ctx.font = 'bold 14px Galmuri11, NeoDunggeunmo, Jua, sans-serif';
     ctx.fillText(`${day}일`, width * (cal.relX + 0.015), height * (cal.relY + 0.075));
   }
 }
