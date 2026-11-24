@@ -244,6 +244,26 @@ game_html = r"""
   @keyframes stamp { 0% { transform: translateY(-50%) rotate(-8deg) scale(3); opacity: 0; } 100% { transform: translateY(-50%) rotate(-8deg) scale(1); opacity: 1; } }
   @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
 
+  #end-black {
+    position: absolute; inset: 0; background: #000; z-index: 40; display: none; flex-direction: column; align-items: center; justify-content: center;
+    gap: 36px; cursor: pointer; transition: opacity 1.8s ease; text-align: center; padding: 20px;
+  }
+  .end-line {
+    font-family: 'Galmuri11', 'NeoDunggeunmo', 'Jua', sans-serif; font-weight: 700; font-size: clamp(1.8rem, 5vw, 3.6rem);
+    color: #f4f1e6; letter-spacing: 0.1em; min-height: 1.4em; text-shadow: 0 0 18px rgba(255, 233, 168, 0.5);
+  }
+  .end-tap { font-family: 'Galmuri11', 'NeoDunggeunmo', 'Jua', sans-serif; font-size: 1.1rem; color: #9ab0e8; animation: blink 1s steps(2) infinite; visibility: hidden; }
+  #explore-ui { position: absolute; inset: 0; z-index: 12; pointer-events: none; display: none; }
+  #explore-caption {
+    position: absolute; top: 26px; left: 50%; transform: translateX(-50%); opacity: 0; transition: opacity 0.3s;
+    background: #101846; color: #ffe9a8; padding: 8px 22px; font-size: 1.2rem; white-space: nowrap;
+    box-shadow: 0 0 0 3px var(--edge), 0 0 0 6px var(--ink);
+  }
+  #explore-hint {
+    position: absolute; bottom: 38px; left: 50%; transform: translateX(-50%); color: #fff4d2; font-size: 1.3rem; padding: 8px 24px;
+    background: rgba(10, 13, 36, 0.75); animation: blink 1.2s steps(2) infinite; display: none;
+  }
+  #explore-btn { position: absolute; top: 24px; right: 28px; pointer-events: auto; }
   #hover-tooltip {
     position: absolute; pointer-events: none; background: #101846; color: #fff4d2; padding: 5px 12px;
     font-size: 0.86rem; font-weight: 600; z-index: 18; display: none; transform: translate(-50%, -140%); white-space: nowrap;
@@ -282,6 +302,16 @@ game_html = r"""
   </div>
 
   <div id="hover-tooltip"></div>
+
+  <div id="end-black" onclick="beginExplore()">
+    <div class="end-line" id="end-line"></div>
+    <div class="end-tap" id="end-tap">▶ 화면을 눌러 계속</div>
+  </div>
+  <div id="explore-ui">
+    <div id="explore-caption"></div>
+    <div id="explore-hint">◀ 드래그해서 둘러보기 ▶</div>
+    <button class="action-btn btn-yes" id="explore-btn" onclick="openExploreResult()">📋 결과 보기</button>
+  </div>
 
   <div id="dialogue-box" onclick="closeDialogue()">
     <div class="speaker-tag" id="dialogue-speaker">나</div>
@@ -376,35 +406,80 @@ let civilCorrect = [0, 0, 0];
 let siteVerdicts = [null, null, null];
 const siteIndexNow = () => Math.min(2, Math.floor((day - 1) / 5));
 const PLAN_ITEMS = [
-  { name: '대기질 배출기준 판정', where: '📟 계측기·수첩', done: i => airGameCompleted[i] },
-  { name: '사면·완충대 현장 조사', where: '⛰️ 조사 지도', done: i => dragClimbCompleted[i] },
-  { name: '야간 보호종 현장 조사', where: '🌙 책상 왼쪽 아래', done: i => ecologyGameCompleted[i] },
-  { name: '최대소음도(Lmax) 측정', where: '🔊 책상 가운데 아래', done: i => noiseGameCompleted[i] },
-  { name: '풍향·대기확산 예측', where: '💨 책상 오른쪽 끝 아래', done: i => windGameCompleted[i] },
-  { name: '저감시설 배치 검토', where: '🧱 책상 오른쪽 아래', done: i => mitigationGameCompleted[i] },
-  { name: '평가서 초안 검토 (오류 모두 찾기)', where: '📝 서류', done: i => reviewPassed[i] },
-  { name: '주민 민원에서 올바른 근거 채택', where: '☎️ 전화기', done: i => civilCorrect[i] >= 1 }
+  { key: 'air', name: '대기질 배출기준 판정', where: '📟 계측기·수첩', done: i => airGameCompleted[i] },
+  { key: 'slope', name: '사면·완충대 현장 조사', where: '⛰️ 조사 지도', done: i => dragClimbCompleted[i] },
+  { key: 'habitat', name: '야간 보호종 현장 조사', where: '🌙 책상 왼쪽 아래', done: i => ecologyGameCompleted[i] },
+  { key: 'noise', name: '최대소음도(Lmax) 측정', where: '🔊 책상 가운데 아래', done: i => noiseGameCompleted[i] },
+  { key: 'wind', name: '풍향·대기확산 예측', where: '💨 책상 오른쪽 끝 아래', done: i => windGameCompleted[i] },
+  { key: 'mitig', name: '저감시설 배치 검토', where: '🧱 책상 오른쪽 아래', done: i => mitigationGameCompleted[i] },
+  { key: 'review', name: '평가서 초안 검토 (오류 모두 찾기)', where: '📝 서류', done: i => reviewPassed[i] },
+  { key: 'civil', name: '주민 민원에서 올바른 근거 채택', where: '☎️ 전화기', done: i => civilCorrect[i] >= 1 }
 ];
+// 미니게임을 마치면 알게 되는 부지별 조사 결과 (sev: 0 양호 · 1 주의 · 2 심각)
+const SITE_FACTS = [
+  { // 1번 부지: 갑천변 LNG 열병합발전소 — 영향이 중간 정도
+    air:     { sev: 1, text: '비슷한 열병합시설의 질소산화물(NOx)이 기준의 80~110% 사이를 오가요. 방지시설 없이는 기준을 넘길 수 있어요.' },
+    slope:   { sev: 1, text: '부지 북쪽 사면의 완충녹지는 폭이 좁고 일부가 훼손돼 있어요.' },
+    habitat: { sev: 2, text: '갑천 수변에서 수달 흔적이 확인됐어요. 야간 공사는 서식에 큰 영향을 줄 수 있어요.' },
+    noise:   { sev: 1, text: '냉각탑 가동 시 최대소음도가 주거지 기준에 가까워요 (예상 약 62dB).' },
+    wind:    { sev: 2, text: '겨울철 북서풍이 잦아 연기가 남동쪽 아파트 단지 방향으로 흐를 가능성이 커요.' },
+    mitig:   { sev: 0, text: '배출구 높이를 높이고 수변 완충녹지를 함께 두면 영향을 크게 줄일 수 있어요.' },
+    review:  { sev: 1, text: '사업자 초안에 확산 예측과 대안 비교가 빠져 있어 보완이 필요해요.' },
+    civil:   { sev: 1, text: '주민들은 계절별 풍향을 반영한 확산 예측을 요구하고 있어요.' }
+  },
+  { // 2번 부지: 대전천변 소각·자원회수시설 — 영향이 심각
+    air:     { sev: 2, text: '소각로 배출가스의 먼지·NOx가 기준의 90~130%로 높게 측정되는 유형이에요.' },
+    slope:   { sev: 2, text: '부지 서쪽 사면 아래로 주거지가 가까워 완충대를 충분히 확보하기 어려워요.' },
+    habitat: { sev: 2, text: '습지에 맹꽁이 번식지가 있어요. 장마철 야간 공사는 번식에 치명적이에요.' },
+    noise:   { sev: 2, text: '반입 차량이 새벽에 몰려 학교 앞 통학로 소음이 기준을 넘을 수 있어요.' },
+    wind:    { sev: 2, text: '여름 저녁 남서풍이 불면 악취와 배출가스가 북동쪽 아파트 단지로 향해요.' },
+    mitig:   { sev: 1, text: '밀폐형 반입장과 탈취·집진 설비로 상당 부분 줄일 수 있지만 비용이 매우 커요.' },
+    review:  { sev: 2, text: '악취 평가가 빠져 있고 소각 외 대안(재활용 확대) 비교도 없어요.' },
+    civil:   { sev: 2, text: '주민 반대가 크고 악취 민원이 반복되고 있어요.' }
+  },
+  { // 3번 부지: 유등천변 물류센터 — 영향이 작음
+    air:     { sev: 0, text: '화물차 배출가스는 늘지만 PM2.5 기여도는 기준 이내로 예상돼요.' },
+    slope:   { sev: 0, text: '부지 사면이 안정적이고 기존 녹지 폭이 넓어 완충대 확보가 쉬워요.' },
+    habitat: { sev: 0, text: '하천변에서 법정보호종은 확인되지 않았고 일반 조류만 관찰됐어요.' },
+    noise:   { sev: 1, text: '새벽 화물차가 통학로를 지나며 소음이 기준 근처까지 올라가요.' },
+    wind:    { sev: 0, text: '오염물질이 주로 하천 쪽으로 흘러 주거지 영향이 작아요.' },
+    mitig:   { sev: 0, text: '방음벽과 투수시설을 두면 소음·빗물 문제를 충분히 해결할 수 있어요.' },
+    review:  { sev: 1, text: '불투수면 증가에 따른 빗물 유출 예측이 미흡해 보완이 필요해요.' },
+    civil:   { sev: 1, text: '주민들은 소음과 안전을 걱정하지만 저감 대책을 전제로 수용적이에요.' }
+  }
+];
+function factNote(idx, key) { const f = SITE_FACTS[idx] && SITE_FACTS[idx][key]; return f ? `\n📌 조사 결과: ${f.text}` : ''; }
 function planRate(i) { return PLAN_ITEMS.filter(it => it.done(i)).length / PLAN_ITEMS.length; }
 function planListHtml(i) {
-  return PLAN_ITEMS.map(it => `<div class="check-item" style="padding:8px 12px; margin:5px 0;"><span>${it.done(i) ? '✅' : '⬜'} ${it.name}</span><span style="font-size:0.8rem; font-weight:400; color:#5a4a30;">${it.where}</span></div>`).join('');
+  const dot = (sev) => sev >= 2 ? '🔴' : (sev === 1 ? '🟠' : '🟢');
+  return PLAN_ITEMS.map(it => {
+    const ok = it.done(i);
+    const f = SITE_FACTS[i][it.key];
+    return `<div class="check-item" style="display:block; padding:8px 12px; margin:5px 0;"><div style="display:flex; justify-content:space-between;"><span>${ok ? '✅' : '⬜'} ${it.name}</span><span style="font-size:0.8rem; font-weight:400; color:#5a4a30;">${it.where}</span></div>${ok ? `<div style="font-size:0.86rem; font-weight:400; margin-top:5px; line-height:1.5;">${dot(f.sev)} ${f.text}</div>` : `<div style="font-size:0.82rem; font-weight:400; margin-top:4px; color:#7a6a4a;">아직 조사하지 않아 이 항목의 정보를 알 수 없어요.</div>`}</div>`;
+  }).join('');
 }
 function evaluateDecision(idx, decision) {
   const rate = planRate(idx);
   const pol = POLICIES.filter(p => p.status === 'ACTIVE' && p.id !== 'sensor').length;
+  const done = PLAN_ITEMS.filter(it => it.done(idx));
+  const sev = done.length ? done.reduce((a, it) => a + SITE_FACTS[idx][it.key].sev, 0) / (2 * done.length) : 0;
   let score, text;
   if (rate < 0.5) {
     if (decision === 'standard') { score = 0; text = '조사가 절반도 끝나지 않았는데 기본 계획에 동의했어요. 근거 없는 동의예요.'; }
     else if (decision === 'conditional') { score = 1; text = '조사가 부족한 상태의 조건부 동의예요. 보완 조건을 더 엄격히 달았어야 했어요.'; }
     else { score = 2; text = '근거가 부족해 부동의하고 보완을 요구한 것은 적절한 판단이에요.'; }
-  } else if (rate < 0.75) {
-    if (decision === 'standard') { score = 0; text = '조사 결과가 일부 비어 있는데 저감 조건 없이 동의했어요.'; }
-    else if (decision === 'conditional') { score = 2; text = '조사 결과를 바탕으로 저감 조건을 붙인 적절한 의견이에요.'; }
-    else { score = 1; text = '신중한 판단이지만, 조건부 동의로 필요한 시설과 보전을 함께 챙길 여지가 있었어요.'; }
+  } else if (sev >= 0.75) {
+    if (decision === 'standard') { score = 0; text = '조사 결과 영향이 심각한데 기본 계획에 동의했어요.'; }
+    else if (decision === 'conditional') { score = pol >= 3 ? 2 : 1; text = pol >= 3 ? '영향이 심각하지만 충분한 저감대책(정책 3개 이상)을 전제로 한 조건부 동의예요.' : '영향이 심각한 부지인데 저감대책(적용 중 정책 3개 이상)이 부족한 채 조건부 동의했어요.'; }
+    else { score = 2; text = '조사 결과 영향이 심각해 부동의한 것은 적절한 판단이에요.'; }
+  } else if (sev >= 0.4) {
+    if (decision === 'standard') { score = 0; text = '조사 결과 주의할 영향이 있는데 저감 조건 없이 동의했어요.'; }
+    else if (decision === 'conditional') { score = 2; text = '조사 결과에 맞춰 저감 조건을 붙인 적절한 의견이에요.'; }
+    else { score = 1; text = '신중한 판단이지만, 조건부 동의로 필요한 시설과 보전을 함께 챙길 수 있었어요.'; }
   } else {
-    if (decision === 'standard') { score = (rate >= 0.99 && pol >= 3) ? 1 : 0; text = score ? '조사와 저감대책이 충분해 동의할 수 있지만, 조건을 붙이면 더 안전했어요.' : '조사는 잘했지만 저감대책이 충분히 확보되지 않은 채 동의했어요.'; }
-    else if (decision === 'conditional') { score = 2; text = '충분한 조사 근거 위에 저감 조건을 붙인 가장 적절한 의견이에요.'; }
-    else { score = pollutionRisk > 60 ? 1 : 0; text = score ? '누적 오염 위험이 커서 부동의는 이해할 수 있어요.' : '근거가 충분한데도 부동의해 필요한 시설을 포기했어요.'; }
+    if (decision === 'standard') { score = (rate >= 0.75 && pol >= 2) ? 2 : 1; text = score === 2 ? '조사 결과 영향이 작고 저감대책도 갖춰져 동의한 것은 적절해요.' : '영향이 작아 보이지만 조사나 저감대책이 충분하지 않은 채 동의했어요.'; }
+    else if (decision === 'conditional') { score = 2; text = '영향이 작은 부지에 최소한의 조건을 붙인 신중한 의견이에요.'; }
+    else { score = 0; text = '조사 결과 영향이 작은데 부동의해 필요한 시설을 포기했어요.'; }
   }
   return { score, rate, text, decision };
 }
@@ -622,7 +697,7 @@ function handleObjectClick(id) {
     const done = PLAN_ITEMS.filter(it => it.done(si)).length;
     openModal(`<div class="modal-header"><span class="modal-title">📁 평가계획서 — ${si + 1}번 부지 조사 이행 현황</span><button class="close-btn" onclick="closeModal()">닫기</button></div>
       <div class="dossier-box"><h3>${FACTORIES[si].facility} · 조사 이행 ${done}/${PLAN_ITEMS.length} (${Math.round(done / PLAN_ITEMS.length * 100)}%)</h3>
-      <p style="line-height:1.6; margin:8px 0 12px; font-size:0.92rem;">5일이 끝나면 이 계획서의 이행 정도를 근거로 <strong>협의 의견(동의/조건부 동의/부동의)</strong>이 적절했는지 평가받아요. 조사를 빠뜨린 채 동의하면 근거 없는 의견이 되고, 충분히 조사했는데 부동의하면 필요한 시설을 포기한 셈이에요.</p>
+      <p style="line-height:1.6; margin:8px 0 12px; font-size:0.92rem;">미니게임으로 조사하면 이 부지에 대한 <strong>조사 결과</strong>가 여기에 기록돼요 (🔴 심각 · 🟠 주의 · 🟢 양호). 5일이 끝나면 이 결과를 근거로 <strong>협의 의견(동의/조건부 동의/부동의)</strong>을 정해요. 조사 결과에 맞지 않는 의견은 감점돼요.</p>
       ${planListHtml(si)}
       <div class="check-item"><span>승인 결정된 시설</span><strong>${facilityDecisions.filter(d => d && d !== 'reject').length}/3곳</strong></div>
       <div class="check-item"><span>평가 예산 잔액</span><strong>${budget}억 원</strong></div></div>`);
@@ -671,7 +746,7 @@ function openSiteInfoModal(id) {
 
 // ===== 센서 점검 =====
 let cleanedCount = 0;
-function openSensorRepairMinigame() {
+function _openSensorRepairMinigame() {
   if (!activeTasks.sensorDirty) {
     showDialogue('나', '사업지 경계와 인근 주거지역의 대기질·소음 자료를 수집하고 있어.');
     return;
@@ -925,15 +1000,15 @@ function showSiteDecisionModal(index) {
   const f = FACTORIES[index];
   const dayRange = index === 0 ? '1~5일차' : (index === 1 ? '6~10일차' : '11~15일차');
   const done = PLAN_ITEMS.filter(it => it.done(index)).length;
-  const missing = PLAN_ITEMS.filter(it => !it.done(index)).map(it => it.name);
   openModal(`<div class="modal-header"><span class="modal-title">⚖️ ${index + 1}번 부지 환경영향평가 협의 의견</span><span style="font-size:0.8rem; color:#c9b182;">결정 필요</span></div>
     <div class="dossier-box"><div style="font-weight:700; margin-bottom:8px;">${dayRange} 평가 대상: ${f.name}</div>
     <h3>${f.facility}</h3><p style="line-height:1.7; margin:10px 0;">${f.benefit}</p>
-    <p style="line-height:1.7; margin:10px 0;"><strong>주요 예상 환경영향</strong><br>${f.pollutants}</p>
-    <p style="line-height:1.7; margin:10px 0;">${f.role}</p>
-    <div class="check-item" style="display:block;"><div style="display:flex; justify-content:space-between;"><span>📁 평가계획서 이행</span><strong>${done}/${PLAN_ITEMS.length} (${Math.round(done / PLAN_ITEMS.length * 100)}%)</strong></div>
-    <div style="font-size:0.85rem; font-weight:400; margin-top:6px; line-height:1.5;">${missing.length ? '아직 하지 못한 조사: ' + missing.join(', ') : '모든 조사 항목을 이행했습니다.'}<br>※ 조사 근거에 맞지 않는 의견은 최종 평가에서 감점돼요.</div></div></div>
-    <div style="display:grid; gap:10px; margin-top:14px;">
+    <p style="line-height:1.7; margin:10px 0;"><strong>일반적인 예상 영향</strong> — ${f.pollutants}</p>
+    <h3 style="margin-top:16px;">📁 이 부지에서 직접 조사해 알아낸 정보 (${done}/${PLAN_ITEMS.length})</h3>
+    <p style="font-size:0.84rem; margin:6px 0 8px; color:#5a4a30;">🔴 심각 · 🟠 주의 · 🟢 양호 — 조사하지 않은 항목은 정보가 없어 판단 근거가 약해져요.</p>
+    ${planListHtml(index)}</div>
+    <p style="font-size:0.86rem; color:#c9b182; margin:12px 0 6px; line-height:1.5;">※ 조사 결과에 맞지 않는 의견은 최종 평가에서 감점돼요.</p>
+    <div style="display:grid; gap:10px; margin-top:8px;">
       <button class="choice-btn" onclick="decideFacility(${index}, 'standard')">① 협의 동의 · 기본 계획으로 사업 추진 (환경 부담 큼)</button>
       <button class="choice-btn" onclick="decideFacility(${index}, 'conditional')">② 조건부 동의 · 저감대책 이행을 전제로 사업 추진 (예산 18억)</button>
       <button class="choice-btn" onclick="decideFacility(${index}, 'reject')">③ 부동의 의견 · 입지/규모 대안 재검토 (사업 보류)</button>
@@ -1031,7 +1106,8 @@ function checkCampaignEnd() {
   if (status.environmentScore < 3) why.push('환경 부담이 아직 충분히 낮지 않아요');
   if (status.processScore < 3) why.push('평가계획서의 조사 이행 또는 의견의 근거가 부족했어요');
   const reasonHtml = why.length ? '<div style="font-size:0.9rem; color:#ffcf9a; margin-bottom:14px; line-height:1.7;">아쉬운 점: ' + why.join(' · ') + '</div>' : '';
-  openEndingScene(endingType, title, message, summary + reasonHtml);
+  EX.info = { kind: endingType, title, message, summary: summary + reasonHtml };
+  startEndingSequence();
 }
 
 // =====================================================================
@@ -1203,7 +1279,7 @@ function mgCreature(c, k, x, y, s) {
 // =====================================================================
 // [업무 1] 대기오염물질 배출허용기준 판정 (계측기 바늘 vs 기준선)
 // =====================================================================
-function openEmissionInspectionGame() {
+function _openEmissionInspectionGame() {
   if (!activeTasks.seedingReady) {
     showDialogue('나', '오늘의 배출시설 현장 점검은 이미 마쳤어. 내일 다시 점검해 보자.');
     return;
@@ -1261,7 +1337,7 @@ function openEmissionInspectionGame() {
     recordDailyTask('배출허용기준 판정 점검 완료', `측정값과 기준을 비교해 ${NEED}건을 정확히 판정하고, 기준 초과 사업장에 개선 조치를 기록했습니다.`);
     closeModal();
     updateWeatherHUD();
-    showDialogue('나 · 배출기준 판정 완료', '측정값을 기준과 정확히 비교해 판정했어! 기준 초과 사업장에는 개선 조치를 내렸고, 대기오염 관리 실적이 올랐어.');
+    showDialogue('나 · 배출기준 판정 완료', '측정값을 기준과 정확히 비교해 판정했어! 기준 초과 사업장에는 개선 조치를 내렸고, 대기오염 관리 실적이 올랐어.' + factNote(siteIndexNow(), 'air'));
   }
 
   function answer(guess) {
@@ -1358,7 +1434,7 @@ function openEmissionInspectionGame() {
 // =====================================================================
 // [업무 2] 보문산 자락 사면·완충대 현장 조사 (점프킹 풍 드래그 점프)
 // =====================================================================
-function openDragClimbMinigame() {
+function _openDragClimbMinigame() {
   const idx = Math.min(2, Math.floor((day - 1) / 5));
   const f = FACTORIES[idx];
 
@@ -1501,9 +1577,11 @@ function openDragClimbMinigame() {
             pollutionRisk = Math.max(5, pollutionRisk - 3 * RISK_CUT);
             weather.ecoHealth = Math.min(100, weather.ecoHealth + 5);
             recordDailyTask('현장 사면·완충대 조사 완료', `${f.facility} 주변 상부 완충녹지 관측 지점에 도달해 표본 ${sampleCount}/3곳을 채취했습니다.`);
+            running = false;
+            closeModal();
             updateWeatherHUD();
-            const stEl = document.getElementById('drag-climb-status');
-            if (stEl) stEl.innerText = sampleCount >= 3 ? '관측 지점 도달! 표본 완비 (+2.5 평가품질)' : '관측 지점 도달! (+2 평가품질)';
+            showDialogue('나 · 사면 조사 완료', '깃발이 있는 관측 지점에 도착했어!' + (sampleCount >= 3 ? ' 표본 3곳도 모두 채취했어.' : '') + factNote(idx, 'slope'));
+            return;
           }
           break;
         }
@@ -1603,7 +1681,7 @@ const REVIEW_SETS = [
   ]
 ];
 
-function openTypingChallengeGame() {
+function _openTypingChallengeGame() {
   const idx = Math.min(2, Math.floor((day - 1) / 5));
   const set = REVIEW_SETS[idx].slice().sort(() => Math.random() - 0.5);
   const badTotal = set.filter(s => s.bad).length;
@@ -1649,7 +1727,7 @@ function openTypingChallengeGame() {
     updateWeatherHUD();
     updateAlertStrip();
     showDialogue(success ? '나 · 초안 검토 완료' : '나 · 초안 검토 종료',
-      success ? '잘못된 문장을 전부 찾아냈어! 보완 요구 의견을 달아 평가서의 신뢰도가 올라갔어.' : `오류를 ${found}/${badTotal}건 찾았어. 놓친 부분은 보완 협의에서 다시 확인해야 해.`);
+      success ? '잘못된 문장을 전부 찾아냈어! 보완 요구 의견을 달아 평가서의 신뢰도가 올라갔어.' + factNote(idx, 'review') : `오류를 ${found}/${badTotal}건 찾았어. 놓친 부분은 보완 협의에서 다시 확인해야 해.`);
   }
 
   document.querySelectorAll('.rv-line').forEach(el => {
@@ -1685,7 +1763,7 @@ function openTypingChallengeGame() {
 // =====================================================================
 // [업무 4] 야간 보호종 현장 조사 — 손전등 불빛으로 보호종만 기록하기
 // =====================================================================
-function openHabitatShieldArcadeGame() {
+function _openHabitatShieldArcadeGame() {
   const idx = Math.min(2, Math.floor((day - 1) / 5));
   if (ecologyGameCompleted[idx]) {
     showDialogue('나', '이 부지의 야간 보호종 조사는 이미 마쳤어.');
@@ -1766,7 +1844,7 @@ function openHabitatShieldArcadeGame() {
     recordDailyTask('야간 보호종 현장 조사 완료', `습지 일대에서 법정보호종 ${NEED}개체를 확인·기록했습니다. (일반종 오기록 ${mistakes}회)`);
     closeModal();
     updateWeatherHUD();
-    showDialogue('나 · 보호종 조사 완료', '보호종 4개체를 모두 기록했어! 서식지 보전 대책과 공사 시기 조정의 근거 자료가 확보됐어.');
+    showDialogue('나 · 보호종 조사 완료', '보호종 4개체를 모두 기록했어! 서식지 보전 대책과 공사 시기 조정의 근거 자료가 확보됐어.' + factNote(idx, 'habitat'));
   }
 
   let prevT = performance.now();
@@ -1826,7 +1904,7 @@ function openHabitatShieldArcadeGame() {
 // =====================================================================
 // [업무 5] 최대소음도(Lmax) 측정 — 기준을 넘는 소음 피크를 측정 창에서 포착
 // =====================================================================
-function openNoisePeakTimingGame() {
+function _openNoisePeakTimingGame() {
   const idx = Math.min(2, Math.floor((day - 1) / 5));
   if (noiseGameCompleted[idx]) {
     showDialogue('나', '이 부지의 최대소음도 측정은 이미 완료했어.');
@@ -1878,7 +1956,7 @@ function openNoisePeakTimingGame() {
     recordDailyTask('최대소음도(Lmax) 측정 완료', `기준을 넘는 소음 피크 ${NEED}회를 측정해 방음 대책의 근거 자료를 확보했습니다.`);
     closeModal();
     updateWeatherHUD();
-    showDialogue('나 · 소음 측정 완료', '기준을 넘는 최대소음도를 3번 측정했어! 방음벽과 운행시간 조정의 근거가 생겼어.');
+    showDialogue('나 · 소음 측정 완료', '기준을 넘는 최대소음도를 3번 측정했어! 방음벽과 운행시간 조정의 근거가 생겼어.' + factNote(idx, 'noise'));
   }
 
   function capture() {
@@ -1955,7 +2033,7 @@ function openNoisePeakTimingGame() {
 // =====================================================================
 // [업무 6] 완충·저감시설 배치 — 문제 유형에 맞는 시설을 알맞은 구역에
 // =====================================================================
-function openMitigationPlacementGame() {
+function _openMitigationPlacementGame() {
   const idx = Math.min(2, Math.floor((day - 1) / 5));
   if (mitigationGameCompleted[idx]) {
     showDialogue('나', '이 부지의 완충·저감시설 배치는 이미 마쳤어.');
@@ -2030,7 +2108,7 @@ function openMitigationPlacementGame() {
     recordDailyTask('완충·저감시설 공간 배치 완료', `문제 유형에 맞춰 ${done.join(', ')} 에 저감시설을 배치했습니다.`);
     closeModal();
     updateWeatherHUD();
-    showDialogue('나 · 시설 배치 완료', '구역별 문제에 딱 맞는 저감시설을 배치했어! 영향 저감 효과가 높아졌어.');
+    showDialogue('나 · 시설 배치 완료', '구역별 문제에 딱 맞는 저감시설을 배치했어! 영향 저감 효과가 높아졌어.' + factNote(idx, 'mitig'));
   };
 
   function hazard(kind, x, y, T) {
@@ -2113,7 +2191,7 @@ function openMitigationPlacementGame() {
 // =====================================================================
 // [업무 7] 풍향·대기확산 예측 — 바람이 '불어오는' 방향을 읽고 오염 기둥이 향할 구역 맞히기
 // =====================================================================
-function openWindPlumeDefenseGame() {
+function _openWindPlumeDefenseGame() {
   const idx = Math.min(2, Math.floor((day - 1) / 5));
   if (windGameCompleted[idx]) {
     showDialogue('나', '이 부지의 대기확산 예측은 이미 마쳤어.');
@@ -2159,7 +2237,7 @@ function openWindPlumeDefenseGame() {
     recordDailyTask('풍향·대기확산 예측 완료', `풍향 자료를 읽고 오염 기둥의 이동 방향과 영향 구역을 ${NEED}회 정확히 예측했습니다.`);
     closeModal();
     updateWeatherHUD();
-    showDialogue('나 · 확산 예측 완료', '풍향을 정확히 읽고 영향 구역을 예측했어! 어디에 측정망과 저감시설을 둘지 근거가 생겼어.');
+    showDialogue('나 · 확산 예측 완료', '풍향을 정확히 읽고 영향 구역을 예측했어! 어디에 측정망과 저감시설을 둘지 근거가 생겼어.' + factNote(idx, 'wind'));
   }
 
   cv.onpointermove = (e) => {
@@ -2246,7 +2324,7 @@ function openWindPlumeDefenseGame() {
 // =====================================================================
 // [업무 8] 주민 민원 전화 — 마을 주민 세 명의 말풍선 중 알맞은 근거 고르기 (제한시간 + 그럴듯한 오답)
 // =====================================================================
-function openAuditPhoneModal() {
+function _openAuditPhoneModal() {
   const audit = (activeTasks.phoneRinging && activeTasks.currentAudit)
     ? activeTasks.currentAudit
     : AUDIT_SCENARIOS[(day + Math.floor(gameMinutes / 60)) % AUDIT_SCENARIOS.length];
@@ -2371,7 +2449,7 @@ function pickSpeakerBubble(sp, audit) {
   closeModal();
   updateWeatherHUD();
   updateAlertStrip();
-  showDialogue(sp.correct ? `나 · ${sp.name} 근거 채택` : `나 · ${sp.name} 발언 검토`, msg);
+  showDialogue(sp.correct ? `나 · ${sp.name} 근거 채택` : `나 · ${sp.name} 발언 검토`, msg + (sp.correct ? factNote(siteIndexNow(), 'civil') : ''));
 }
 
 // =====================================================================
@@ -2379,7 +2457,7 @@ function pickSpeakerBubble(sp, audit) {
 // =====================================================================
 function openEndingScene(kind, title, message, summaryHtml) {
   openModal(`
-    <div class="modal-header"><span class="modal-title">${title}</span></div>
+    <div class="modal-header"><span class="modal-title">${title}</span><button class="close-btn" onclick="closeModal()">닫기</button></div>
     <canvas id="endCanvas" class="mg" width="720" height="400" style="cursor:default;"></canvas>
     <div style="text-align:center; padding:16px 8px 0;">
       <div style="font-size:1.05rem; line-height:1.85; color:#f0ece1; margin-bottom:14px;">${message}</div>
@@ -2539,6 +2617,434 @@ function openEndingScene(kind, title, message, summaryHtml) {
   requestAnimationFrame(frame);
 
   activeMinigameCleanup = () => { running = false; };
+}
+
+// =====================================================================
+//  미니게임 사용 설명서 (처음 들어갈 때 한 번 표시)
+// =====================================================================
+const tutorialSeen = {};
+const TUTORIALS = {
+  emission: {
+    icon: '📟', title: '배출허용기준 판정',
+    goal: '굴뚝 계측기의 바늘이 <strong>붉은 기준선을 넘었는지</strong> 판단해서 <strong>5번</strong> 맞히세요.',
+    how: ['계측기 바늘이 가리키는 값(측정값)과 <strong>흰 기준선</strong>(허용기준)을 비교해요.', '넘었으면 <strong>[기준 초과]</strong>(→ 키), 넘지 않았으면 <strong>[적합]</strong>(← 키)을 눌러요.', '문제마다 <strong>7초</strong>의 제한시간이 있고, 틀리거나 시간이 지나면 하트가 줄어요. 하트가 3개 모두 사라지면 다시 도전해요.'],
+    tip: '뒤로 갈수록 기준에 아슬아슬한 값이 나와요. 숫자(측정값/기준)를 꼭 읽어 보세요.',
+    gain: '이 부지에 들어설 시설과 비슷한 시설의 <strong>배출 특성(대기질)</strong>'
+  },
+  drag: {
+    icon: '⛰️', title: '사면·완충대 현장 조사',
+    goal: '<strong>깃발이 있는 맨 위 발판</strong>에 도착하면 조사가 바로 끝나요.',
+    how: ['조사원을 <strong>누른 채 뒤로 끌었다가 놓으면</strong> 반대 방향으로 점프해요.', '끄는 길이가 <strong>세기</strong>, 끄는 방향의 반대쪽이 <strong>각도</strong>예요. 노란 점선이 이동 궤적을 미리 보여 줘요.', '길 위의 <strong>⭐ 조사 지점 3곳</strong>을 지나가면 표본을 채취해 보너스 점수를 받아요.'],
+    tip: '한 번에 높이 오르려 하지 말고 한 칸씩 올라가세요. 떨어져도 아래 발판에 착지해요.',
+    gain: '부지 사면과 <strong>완충녹지 현황</strong>'
+  },
+  review: {
+    icon: '📝', title: '평가서 초안 검토',
+    goal: '사업자가 낸 평가서에서 <strong>잘못된 문장을 모두 찾아</strong> 반려 도장을 찍으세요.',
+    how: ['문장을 읽고 이상한 문장을 <strong>클릭</strong>하면 <strong>반려</strong> 도장이 찍혀요.', '멀쩡한 문장을 누르면 시간이 <strong>3초</strong> 줄어요. 전체 제한시간은 <strong>40초</strong>예요.', '오류를 모두 찾아야 평가계획서의 이 항목이 완료돼요.'],
+    tip: '"영향 없음", "조사 생략", "대안 비교 안 함"처럼 근거 없이 단정하는 문장을 의심해 보세요.',
+    gain: '평가서에서 <strong>보완이 필요한 부분</strong>'
+  },
+  habitat: {
+    icon: '🌙', title: '야간 보호종 현장 조사',
+    goal: '어두운 습지에서 <strong>법정보호종 4마리</strong>를 찾아 기록하세요.',
+    how: ['마우스를 움직이면 <strong>손전등 불빛</strong>이 따라와요. 불빛 안에서만 동물이 보여요.', '동물은 잠깐 나타났다 사라져요. <strong>맹꽁이·수달·수리부엉이</strong>를 클릭해 기록하세요.', '<strong>오리·비둘기·쥐</strong>는 일반종이에요. 클릭하면 오기록이 돼요.'],
+    tip: '풀숲과 물가를 천천히 훑으며 비춰 보세요.',
+    gain: '부지 일대의 <strong>서식 보호종</strong>'
+  },
+  noise: {
+    icon: '🔊', title: '최대소음도(Lmax) 측정',
+    goal: '<strong>기준선을 넘는 소음 피크</strong>를 <strong>3번</strong> 측정하세요.',
+    how: ['화물차가 지나가면 소음 파형에 <strong>피크</strong>가 생겨요.', '붉은 기준선(예시 65dB) 위로 솟은 피크가 <strong>노란 측정 창</strong>에 들어왔을 때 <strong>[측정!]</strong> 버튼이나 <strong>Space</strong>를 눌러요.', '기준 이하의 낮은 피크는 평가 대상이 아니니 누르지 마세요.'],
+    tip: '피크 정점이 창의 한가운데 올 때가 가장 정확해요.',
+    gain: '주거지·학교 주변 <strong>소음 영향</strong>'
+  },
+  mitigation: {
+    icon: '🧱', title: '완충·저감시설 배치',
+    goal: '구역별 문제에 맞는 저감시설을 <strong>3곳</strong>에 설치하세요.',
+    how: ['위쪽에서 <strong>시설(완충녹지·투수저류시설·방음벽)</strong>을 고른 뒤 구역을 클릭해 설치해요.', '구역마다 떠다니는 <strong>먼지·소음·빗물 표시</strong>가 그 구역의 문제 유형이에요.', '설치한 곳을 다시 클릭하면 철거돼요. 3곳을 채우고 <strong>[배치안 적용]</strong>을 누르세요.'],
+    tip: '소음은 방음벽, 빗물은 투수·저류시설, 먼지는 완충녹지가 잘 맞아요.',
+    gain: '이 부지에서 <strong>저감이 가능한 정도</strong>'
+  },
+  wind: {
+    icon: '💨', title: '풍향·대기확산 예측',
+    goal: '오염 기둥이 흘러갈 <strong>주거 구역</strong>을 <strong>3번</strong> 맞히세요.',
+    how: ['화면 왼쪽 위에 오늘의 <strong>풍향</strong>이 나와요.', '풍향은 바람이 <strong>불어오는</strong> 방향이에요. 북풍이면 북쪽에서 남쪽으로 불어가요.', '배출구를 둘러싼 8개 구역 중 <strong>오염물질이 향할 구역</strong>을 클릭하세요. 틀리면 하트가 줄어요.'],
+    tip: '반대 방향으로 흘러간다는 점만 기억하면 쉬워요.',
+    gain: '주거지로 향하는 <strong>대기오염 확산 경향</strong>'
+  },
+  phone: {
+    icon: '☎️', title: '주민 민원 전화',
+    goal: '주민 3명의 말풍선 중 <strong>평가에 반영할 근거</strong>가 되는 말을 고르세요.',
+    how: ['말풍선이나 주민을 <strong>클릭</strong>해서 고르세요. 제한시간은 <strong>30초</strong>예요.', '시간이 지나면 민원인이 전화를 끊고 위험도가 올라가요.', '모두 그럴듯하게 들려요. <strong>측정·예측·조사 계획</strong>이 담긴 말이 근거가 돼요.'],
+    tip: '"다른 곳은 괜찮았다", "평균은 기준 이내다", "그냥 막자"처럼 근거 없이 단정하는 말은 부족한 근거예요.',
+    gain: '이 부지에 대한 <strong>주민 의견과 쟁점</strong>'
+  },
+  sensor: {
+    icon: '📡', title: '측정장비 교정',
+    goal: '오류가 난 <strong>측정 노드 4개</strong>를 모두 교정하세요.',
+    how: ['⚠️가 뜬 노드를 하나씩 <strong>클릭</strong>하면 교정돼요.', '4개가 모두 ✅가 되면 완료돼요.'],
+    tip: '미세먼지가 낀 날 자주 생겨요. 측정 자료가 틀리면 평가도 틀려지니 빨리 고치세요.',
+    gain: '측정 자료의 <strong>신뢰도 회복</strong>'
+  }
+};
+
+function showTutorial(id, startFn) {
+  const t = TUTORIALS[id];
+  openModal(`
+    <div class="modal-header"><span class="modal-title">${t.icon} ${t.title} · 사용 설명서</span><button class="close-btn" onclick="closeModal()">닫기</button></div>
+    <div class="dossier-box">
+      <div class="check-item" style="display:block;"><div>🎯 목표</div><div style="font-size:0.92rem; font-weight:400; margin-top:6px; line-height:1.6;">${t.goal}</div></div>
+      <div class="check-item" style="display:block;"><div>🕹️ 조작법</div><ol style="font-size:0.92rem; font-weight:400; margin:6px 0 0 20px; line-height:1.7;">${t.how.map(h => `<li>${h}</li>`).join('')}</ol></div>
+      <div class="check-item" style="display:block;"><div>💡 팁</div><div style="font-size:0.92rem; font-weight:400; margin-top:6px; line-height:1.6;">${t.tip}</div></div>
+      <div class="check-item" style="display:block;"><div>📌 이 조사로 알 수 있는 정보</div><div style="font-size:0.92rem; font-weight:400; margin-top:6px; line-height:1.6;">${t.gain}을(를) 알게 돼요. 이 정보가 부지의 <strong>협의 의견</strong>을 정하는 근거가 돼요.</div></div>
+    </div>
+    <div style="text-align:center; margin-top:18px;"><button class="action-btn btn-yes" id="tut-start">시작하기</button></div>
+  `);
+  document.getElementById('tut-start').onclick = () => { tutorialSeen[id] = true; startFn(); };
+}
+
+function withTutorial(id, fn) {
+  return function () { if (!tutorialSeen[id]) showTutorial(id, fn); else fn(); };
+}
+
+const openEmissionInspectionGame = withTutorial('emission', _openEmissionInspectionGame);
+const openDragClimbMinigame = withTutorial('drag', _openDragClimbMinigame);
+const openTypingChallengeGame = withTutorial('review', _openTypingChallengeGame);
+const openHabitatShieldArcadeGame = withTutorial('habitat', _openHabitatShieldArcadeGame);
+const openNoisePeakTimingGame = withTutorial('noise', _openNoisePeakTimingGame);
+const openMitigationPlacementGame = withTutorial('mitigation', _openMitigationPlacementGame);
+const openWindPlumeDefenseGame = withTutorial('wind', _openWindPlumeDefenseGame);
+const openAuditPhoneModal = withTutorial('phone', _openAuditPhoneModal);
+function openSensorRepairMinigame() {
+  if (!activeTasks.sensorDirty) { showDialogue('나', '사업지 경계와 인근 주거지역의 대기질·소음 자료를 수집하고 있어.'); return; }
+  if (!tutorialSeen.sensor) showTutorial('sensor', _openSensorRepairMinigame); else _openSensorRepairMinigame();
+}
+
+// =====================================================================
+//  엔딩: 검은 화면 → 사무실 밖으로 나가 변한 대전을 드래그로 둘러보기
+// =====================================================================
+const EX = { cam: 0, vel: 0, dragging: false, lastX: 0, camMax: 0, walkT: 0, dir: 1, layers: null, fac: [], people: [], key: '', lastCap: '', ready: false, typing: null, info: null, towerX: 0, bridgeX: 0, started: false };
+const EX_LOOK = {
+  assessor: { hs: 'helmet', shirt: '#e07a2f', shirt2: '#c4651f', pants: '#35384f', vest: '#f2c14e' },
+  v1: { hair: '#d8d8e0', hs: 'bun', shirt: '#8a5a9a', shirt2: '#74487f', pants: '#3b3550', cane: true },
+  v2: { hair: '#4a2c20', hs: 'long', shirt: '#d98aa0', shirt2: '#bd6f86', pants: '#3d3a52', bag: '#a8603c' },
+  v3: { hair: '#3a2a1a', hs: 'cap', cap: '#2b6cb0', shirt: '#4b9a6b', shirt2: '#3a7e56', pants: '#2b2d42' }
+};
+const DECISION_NAME = { standard: '협의 동의', conditional: '조건부 동의', reject: '부동의 · 공원으로 보전' };
+
+function startEndingSequence() {
+  closeModal();
+  isPaused = true;
+  scene = 'ENDBLACK';
+  const ov = document.getElementById('end-black');
+  const line = document.getElementById('end-line');
+  const tap = document.getElementById('end-tap');
+  ov.style.transition = 'none'; ov.style.opacity = '1'; ov.style.display = 'flex';
+  tap.style.visibility = 'hidden'; line.innerText = '';
+  EX.ready = false; EX.started = false;
+  const txt = '사무실 밖으로 나가 보자…';
+  let i = 0;
+  if (EX.typing) clearInterval(EX.typing);
+  EX.typing = setInterval(() => {
+    i++;
+    line.innerText = txt.slice(0, i);
+    if (i >= txt.length) { clearInterval(EX.typing); EX.typing = null; tap.style.visibility = 'visible'; EX.ready = true; }
+  }, 130);
+}
+
+function beginExplore() {
+  if (EX.started) return;
+  const line = document.getElementById('end-line');
+  const tap = document.getElementById('end-tap');
+  if (!EX.ready) {
+    if (EX.typing) { clearInterval(EX.typing); EX.typing = null; }
+    line.innerText = '사무실 밖으로 나가 보자…'; tap.style.visibility = 'visible'; EX.ready = true;
+    return;
+  }
+  EX.started = true;
+  buildExploreWorld();
+  EX.cam = 0; EX.vel = 0;
+  scene = 'EXPLORE';
+  document.getElementById('explore-ui').style.display = 'block';
+  document.getElementById('explore-hint').style.display = 'block';
+  const ov = document.getElementById('end-black');
+  ov.style.transition = 'opacity 1.8s ease'; ov.style.opacity = '0';
+  setTimeout(() => { ov.style.display = 'none'; }, 1900);
+}
+
+function openExploreResult() {
+  if (!EX.info) return;
+  openEndingScene(EX.info.kind, EX.info.title, EX.info.message, EX.info.summary);
+}
+
+function exBands(w, y1, stops, step) {
+  const n = Math.max(1, Math.ceil(y1 / step));
+  for (let i = 0; i < n; i++) pr(0, i * step, w, step, colorAt(stops, n === 1 ? 0 : i / (n - 1)));
+}
+
+function exTree(x, by, h, kind, P) {
+  if (kind === 'desert') {
+    pr(x, by - h, 2, h, '#5b3a22');
+    pr(x - 3, by - h + 4, 4, 1, '#5b3a22'); pr(x + 2, by - h + 8, 4, 1, '#5b3a22'); pr(x - 2, by - h + 12, 3, 1, '#5b3a22');
+  } else {
+    pr(x, by - h * 0.45, 2, h * 0.45, '#5b3a22');
+    pixDisc(x + 1, by - h * 0.62, Math.round(h * 0.38), P.tree);
+    pixDisc(x, by - h * 0.72, Math.round(h * 0.2), P.treeHi);
+  }
+}
+
+function exFacility(x, by, decision, kind, P, r) {
+  if (decision === 'reject' || !decision) {
+    if (kind === 'desert') {
+      pr(x + 6, by - 20, 2, 20, '#5b3a22'); pr(x + 2, by - 14, 5, 1, '#5b3a22'); pr(x + 8, by - 10, 5, 1, '#5b3a22');
+      pr(x + 30, by - 3, 36, 3, '#a8845a');
+    } else {
+      exTree(x + 8, by, 30, kind, P); exTree(x + 58, by, 26, kind, P);
+      pr(x + 24, by - 9, 20, 2, '#8a5a2b'); pr(x + 24, by - 7, 2, 7, '#5b3a22'); pr(x + 42, by - 7, 2, 7, '#5b3a22');
+      pr(x + 20, by + 2, 30, 4, '#3d7fb5'); pr(x + 22, by + 2, 26, 1, '#7fb0d8');
+      for (let k = 0; k < 10; k++) pr(x + 4 + k * 7, by - 2 - (k % 3), 2, 2, k % 2 ? '#ffd166' : '#ff9ab8');
+    }
+    return [];
+  }
+  const cond = decision === 'conditional';
+  box(x, by - 34, 72, 34, cond ? '#4a5a78' : '#3a3f58');
+  for (let wx = x + 6; wx < x + 66; wx += 12) { pr(wx, by - 28, 6, 5, '#ffd36b'); pr(wx, by - 16, 6, 5, '#6f80a6'); }
+  pr(x + 30, by - 10, 10, 10, '#1a1c28');
+  chimney(x + 8, by - 60, 8, 28);
+  chimney(x + 50, by - 54, 8, 22);
+  if (cond) {
+    for (let k = 0; k < 4; k++) exTree(x + 4 + k * 20, by + 2, 20, kind, P);
+    pr(x + 78, by - 22, 2, 22, '#c9ccd8'); pr(x + 76, by - 26, 6, 5, '#52b788');
+  }
+  pr(x - 8, by - 22, 2, 22, '#5b3a22'); pr(x - 14, by - 30, 16, 9, INK); pr(x - 13, by - 29, 14, 7, '#e6dcc5');
+  return [[x + 12, by - 60], [x + 54, by - 54]];
+}
+
+function buildExploreWorld() {
+  const kind = endingType || 'partial';
+  const W3 = Math.round(lw * 3), camMax = W3 - lw;
+  EX.camMax = camMax; EX.kind = kind; EX.key = lw + 'x' + lh;
+  const P = {
+    green:   { sky: 'day',  far: '#7fa6c4', farHi: '#a8c8de', grass: '#5a8a4a', grassHi: '#7bb060', water: '#4a7a84', waterHi: '#9cc4cc', tree: '#2a5a34', treeHi: '#4f9a52', tower: '#e6eaf0', towerSh: '#9aa6b8', path: '#d8cfae', glass: '#5a86a8', glassHi: '#9cc4dc', glassDk: '#3a5a7c', arch: '#2b6fd4', archHi: '#6ab4f4', pylon: '#c0392b' },
+    partial: { sky: 'dusk', far: '#7a6a8c', farHi: '#9a88a0', grass: '#5a6a46', grassHi: '#7a8a5a', water: '#5a5a78', waterHi: '#9a8aa8', tree: '#3a5a38', treeHi: '#7a8a48', tower: '#d8d0c8', towerSh: '#a89ca0', path: '#b8a888', glass: '#6a6a88', glassHi: '#a898a8', glassDk: '#484860', arch: '#2b5fb4', archHi: '#5a94d4', pylon: '#a03a30' },
+    desert:  { sky: 'dust', far: '#b89a70', farHi: '#d0b488', grass: '#c9a468', grassHi: '#e0c488', water: '#8a6a48', waterHi: '#a8845a', tree: '#6a5a3a', treeHi: '#8a7448', tower: '#c9b490', towerSh: '#a08a6a', path: '#b89a68', glass: '#b09a78', glassHi: '#c9b490', glassDk: '#8a7656', arch: '#8a7a6a', archHi: '#a89a88', pylon: '#8a4a3a' }
+  }[kind];
+  const mk = (w) => { const cv = document.createElement('canvas'); cv.width = Math.ceil(w); cv.height = lh; return cv; };
+  const draw = (cv, fn) => { const prev = g; g = cv.getContext('2d'); fn(cv.width); g = prev; };
+  const yB = Math.round(lh * 0.6), yW = Math.round(lh * 0.78);
+  const L = { sky: mk(lw + camMax * 0.12), far: mk(lw + camMax * 0.4), mid: mk(lw + camMax * 0.7), near: mk(W3) };
+
+  draw(L.sky, (w) => {
+    exBands(w, lh * 0.72, SKY_STOPS[P.sky], 3);
+    if (kind === 'green') { drawSun(Math.round(w * 0.55), Math.round(lh * 0.2), Math.max(6, Math.round(lh * 0.07)), '#fff4c0', '#ffe28a'); }
+    else if (kind === 'partial') { drawSun(Math.round(w * 0.3), Math.round(lh * 0.5), Math.max(7, Math.round(lh * 0.08)), '#ffcf7a', '#ff9a5a'); }
+    else { drawSun(Math.round(w * 0.5), Math.round(lh * 0.22), Math.max(8, Math.round(lh * 0.09)), '#f3dca4', '#d8a860'); }
+  });
+
+  draw(L.far, (w) => {
+    const r = makeRng(5);
+    let x = 0;
+    while (x < w) {
+      const bw = 8 + Math.floor(r() * 9), bh = Math.round(lh * (0.1 + r() * 0.2)), glass = r() < 0.4;
+      pr(x, yB - bh, bw, bh + 4, glass ? P.glass : P.far);
+      pr(x, yB - bh, 2, bh + 4, P.farHi);
+      pr(x + bw - 2, yB - bh, 2, bh + 4, P.glassDk);
+      for (let wy = yB - bh + 3; wy < yB - 2; wy += 3) pr(x + 2, wy, bw - 4, 1, 'rgba(20,30,60,0.28)');
+      if (r() < 0.12) { pr(x + (bw >> 1), yB - bh - 8, 1, 8, '#c9ccd8'); pr(x + (bw >> 1), yB - bh - 9, 1, 1, '#e0505a'); }
+      x += bw + (r() < 0.3 ? 2 : 0);
+    }
+  });
+
+  EX.towerX = Math.round(lw * 1.1); EX.bridgeX = Math.round(lw * 1.7);
+  draw(L.mid, (w) => {
+    const r = makeRng(9);
+    pr(0, yB, w, Math.round(lh * 0.04), P.grass); pr(0, yB, w, 1, P.grassHi);
+    for (let xx = 0; xx < w; xx += 6 + Math.floor(r() * 8)) { if (kind === 'desert') pr(xx, yB - 5, 1, 5, '#6a5a3a'); else pixDisc(xx, yB - 2, 2 + Math.floor(r() * 2), P.tree); }
+    // 엑스포 건물
+    [[0.55, 0.5], [1.5, 0.45], [2.05, 0.4]].forEach(([fx, fw]) => {
+      const bx = Math.round(lw * fx), bwid = Math.round(lw * fw * 0.5);
+      pr(bx, yB - 9, bwid, 9, kind === 'desert' ? '#cdbb96' : '#dfe6ea');
+      pr(bx + 3, yB - 6, bwid - 6, 4, kind === 'desert' ? '#a89a74' : '#3a9a8a');
+      for (let xx = 0; xx < bwid; xx++) { const rh = Math.round(4 * Math.sin(Math.PI * xx / bwid)); pr(bx + xx, yB - 9 - rh, 1, rh + 1, kind === 'desert' ? '#cdbb96' : '#dfe6ea'); }
+    });
+    // 한빛탑
+    pxHanbit(EX.towerX, yB, Math.round(lh * 0.46), P.tower, P.towerSh, kind === 'partial');
+    // 갑천
+    for (let y = yB + Math.round(lh * 0.04); y < yW; y++) {
+      const t = (y - yB) / Math.max(1, yW - yB);
+      pr(0, y, w, 1, mixHex(P.water, kind === 'desert' ? '#6a4e34' : '#2f3d4e', t * 0.6));
+    }
+    pr(0, yB + Math.round(lh * 0.04), w, 1, '#8a8a78');
+    g.globalAlpha = 0.3; pr(EX.towerX - 2, yB + Math.round(lh * 0.05), 5, Math.round(lh * 0.1), P.tower); g.globalAlpha = 1;
+    if (kind === 'desert') { for (let i = 0; i < 140; i++) { let cx2 = Math.floor(r() * w), cy2 = yB + Math.round(lh * 0.06) + Math.floor(r() * (yW - yB - lh * 0.07)); for (let k = 0; k < 6; k++) { pr(cx2, cy2, 3, 1, '#5e4630'); cx2 += Math.floor(r() * 6) - 1; cy2 += Math.floor(r() * 3) - 1; } } }
+    // 엑스포다리
+    const bx1 = Math.round(lw * 1.25), bx2 = Math.round(lw * 2.2), deck = Math.round(lh * 0.7);
+    for (let xx = bx1; xx <= bx2; xx++) { pr(xx, deck, 1, 3, '#bdb6aa'); pr(xx, deck, 1, 1, '#e8e2d4'); pr(xx, deck - 1, 1, 1, '#8a8a92'); }
+    for (let xx = bx1 + 20; xx < bx2; xx += Math.round(lw * 0.22)) pr(xx, deck + 3, 4, yW - deck - 3, '#8a8a90');
+    const ax0 = bx1 + Math.round((bx2 - bx1) * 0.12), ax2 = bx2 - Math.round((bx2 - bx1) * 0.1), apy = Math.round(lh * 0.36), acx = (ax0 + ax2) / 2, acy = (4 * apy - deck * 2) / 2;
+    const pts = [];
+    for (let k = 0; k <= 100; k++) { const t = k / 100, u = 1 - t; pts.push([u * u * ax0 + 2 * u * t * acx + t * t * ax2, u * u * deck + 2 * u * t * acy + t * t * deck]); }
+    g.globalAlpha = 0.5;
+    for (let k = 6; k < 100; k += 5) pline(pts[k][0], pts[k][1], pts[k][0], deck, '#9aa6b8');
+    g.globalAlpha = 1;
+    const pxx = ax0 + Math.round((ax2 - ax0) * 0.18), pyy = Math.round(lh * 0.46);
+    g.globalAlpha = 0.5;
+    for (let dx = pxx + 6; dx < pxx + 60; dx += 6) pline(pxx + 1, pyy + 2, dx, deck, '#aab4c4');
+    g.globalAlpha = 1;
+    pr(pxx, pyy, 3, deck - pyy, P.pylon); pr(pxx, pyy, 1, deck - pyy, '#e0705a');
+    pts.forEach(p => { pr(p[0], p[1], 2, 2, P.arch); pr(p[0], p[1], 1, 1, P.archHi); });
+  });
+
+  EX.fac = []; EX.people = [];
+  const fxs = [Math.round(lw * 0.62), Math.round(lw * 1.7), Math.round(lw * 2.42)];
+  draw(L.near, (w) => {
+    const r = makeRng(21);
+    const by0 = Math.round(lh * 0.78), footY = Math.round(lh * 0.92);
+    pr(0, by0, w, lh - by0, P.grass); pr(0, by0, w, 2, P.grassHi);
+    for (let i = 0; i < 400; i++) pr(Math.floor(r() * w), by0 + 3 + Math.floor(r() * (lh - by0 - 3)), 2, 1, r() < 0.5 ? P.grassHi : (kind === 'desert' ? '#a88858' : '#4a7a3a'));
+    pr(0, Math.round(lh * 0.9), w, Math.round(lh * 0.06), P.path); pr(0, Math.round(lh * 0.9), w, 1, kind === 'desert' ? '#d0b078' : '#e8dfc0');
+    for (let x = 4; x < w; x += 18) pr(x, Math.round(lh * 0.93), 6, 1, kind === 'desert' ? '#a88858' : '#c8bc98');
+    // 나무와 가로등
+    for (let x = 14; x < w - 10; x += 34 + Math.floor(r() * 36)) {
+      if (fxs.some(f => x > f - 12 && x < f + 90)) continue;
+      exTree(x, Math.round(lh * 0.86), 22 + Math.floor(r() * 12), kind, P);
+    }
+    for (let x = 70; x < w; x += 120) { pr(x, Math.round(lh * 0.86) - 26, 1, 26, '#2a2e44'); pr(x - 2, Math.round(lh * 0.86) - 27, 5, 2, kind === 'desert' ? '#8a7a5a' : '#ffe9a8'); }
+    if (kind !== 'desert') for (let i = 0; i < 70; i++) pr(Math.floor(r() * w), by0 + 4 + Math.floor(r() * 16), 2, 2, r() < 0.5 ? '#ffd166' : '#ff9ab8');
+    // 시설
+    fxs.forEach((fx, i) => {
+      const chim = exFacility(fx, Math.round(lh * 0.88), facilityDecisions[i], kind, P, r);
+      EX.fac.push({ x: fx, decision: facilityDecisions[i], chim });
+    });
+    // 벤치
+    [Math.round(lw * 1.2), Math.round(lw * 2.9)].forEach(bx => { pr(bx, Math.round(lh * 0.86) - 6, 16, 2, '#8a5a2b'); pr(bx, Math.round(lh * 0.86) - 12, 16, 2, '#8a5a2b'); pr(bx + 1, Math.round(lh * 0.86) - 4, 2, 4, '#5b3a22'); pr(bx + 13, Math.round(lh * 0.86) - 4, 2, 4, '#5b3a22'); });
+  });
+  // 사람들 (세계 좌표)
+  const f0 = fxs[0], f1 = fxs[1], f2 = fxs[2];
+  if (kind === 'green') EX.people = [[0.2 * lw, 'v1'], [0.28 * lw, 'v2'], [0.36 * lw, 'v3'], [f0 + 96, 'v2'], [f1 + 96, 'v1'], [f2 + 96, 'v3'], [lw * 1.3, 'v2'], [lw * 1.37, 'v3']];
+  else if (kind === 'partial') EX.people = [[0.26 * lw, 'v1'], [f1 + 96, 'v3'], [lw * 1.3, 'v2']];
+  else EX.people = [[0.34 * lw, 'v1']];
+  EX.layers = L;
+  EX.P = P;
+}
+
+const exClamp = (v) => Math.max(0, Math.min(EX.camMax, v));
+canvas.addEventListener('pointerdown', (e) => {
+  if (scene !== 'EXPLORE') return;
+  EX.dragging = true; EX.lastX = e.clientX; EX.vel = 0;
+  canvas.style.cursor = 'grabbing';
+  document.getElementById('explore-hint').style.display = 'none';
+});
+window.addEventListener('pointermove', (e) => {
+  if (scene !== 'EXPLORE' || !EX.dragging) return;
+  const dx = (e.clientX - EX.lastX) / PS;
+  EX.lastX = e.clientX;
+  EX.cam = exClamp(EX.cam - dx);
+  EX.vel = -dx * 0.9;
+  if (Math.abs(dx) > 0.1) EX.dir = dx < 0 ? 1 : -1;
+  EX.walkT += Math.abs(dx) * 0.5;
+});
+window.addEventListener('pointerup', () => { if (scene !== 'EXPLORE') return; EX.dragging = false; canvas.style.cursor = 'grab'; });
+window.addEventListener('keydown', (e) => {
+  if (scene !== 'EXPLORE') return;
+  if (e.key === 'ArrowLeft') { EX.vel = -2.4; EX.dir = -1; }
+  if (e.key === 'ArrowRight') { EX.vel = 2.4; EX.dir = 1; }
+  document.getElementById('explore-hint').style.display = 'none';
+});
+
+function exCaption() {
+  const cx0 = lw / 2;
+  let cap = '';
+  EX.fac.forEach((f, i) => {
+    const sx = f.x + 36 - EX.cam;
+    if (Math.abs(sx - cx0) < lw * 0.22) {
+      const river = (FACTORIES[i].name.match(/\((.+)\)/) || [0, ''])[1];
+      cap = `${river} · ${FACTORIES[i].facility} — ${DECISION_NAME[f.decision] || '미결정'}`;
+    }
+  });
+  if (!cap) {
+    if (Math.abs(EX.towerX - EX.cam * 0.7 - cx0) < lw * 0.12) cap = '엑스포과학공원 · 한빛탑';
+    else if (Math.abs(EX.bridgeX - EX.cam * 0.7 - cx0) < lw * 0.25) cap = '갑천 · 엑스포다리';
+    else if (EX.cam < lw * 0.35) cap = '갑천 산책로';
+  }
+  if (cap !== EX.lastCap) {
+    const el = document.getElementById('explore-caption');
+    el.innerText = cap; el.style.opacity = cap ? '1' : '0';
+    EX.lastCap = cap;
+  }
+}
+
+function drawExploreScene() {
+  if (!EX.layers || EX.key !== lw + 'x' + lh) { const keep = EX.camMax ? EX.cam / EX.camMax : 0; buildExploreWorld(); EX.cam = keep * EX.camMax; }
+  beginFrame();
+  const T = Date.now() / 1000, kind = EX.kind, P = EX.P, L = EX.layers;
+  if (!EX.dragging) { EX.cam = exClamp(EX.cam + EX.vel); EX.vel *= 0.92; if (Math.abs(EX.vel) < 0.03) EX.vel = 0; EX.walkT += Math.abs(EX.vel) * 0.4; }
+  const cam = EX.cam;
+  g.drawImage(L.sky, -Math.round(cam * 0.12), 0);
+  if (kind === 'green') drawClouds('#ffffff', '#c9d9ea', 3, T);
+  else if (kind === 'partial') drawClouds('#e89a78', '#b8604f', 3, T);
+  g.drawImage(L.far, -Math.round(cam * 0.4), 0);
+  g.drawImage(L.mid, -Math.round(cam * 0.7), 0);
+  if (kind !== 'desert') {
+    g.globalAlpha = 0.6;
+    for (let k = 0; k < 26; k++) pr((k * 53 + T * (6 + (k % 3) * 4)) % lw, lh * 0.64 + (k * 7) % Math.round(lh * 0.13), 2, 1, kind === 'green' ? '#ffffff' : '#ffd9a8');
+    g.globalAlpha = 1;
+  }
+  g.drawImage(L.near, -Math.round(cam), 0);
+
+  // 굴뚝 연기
+  EX.fac.forEach((f, fi) => {
+    if (f.decision === 'reject' || !f.decision) return;
+    f.chim.forEach((c, ci) => {
+      const sx = c[0] - cam;
+      if (sx < -30 || sx > lw + 30) return;
+      for (let k = 0; k < 6; k++) {
+        const prog = (T * 0.35 + k / 6 + ci * 0.3 + fi * 0.17) % 1;
+        const sz = 5 + prog * 14;
+        g.globalAlpha = (f.decision === 'conditional' ? 0.22 : (kind === 'desert' ? 0.7 : 0.55)) * (1 - prog);
+        pr(sx + 4 + prog * 22 - sz / 2, c[1] - prog * 52 - sz / 2, sz, sz, f.decision === 'conditional' ? '#c9ccd8' : (kind === 'desert' ? '#2a252c' : '#6a625c'));
+      }
+      g.globalAlpha = 1;
+    });
+  });
+
+  // 사람들
+  const footTop = Math.round(lh * 0.92) - 22;
+  EX.people.forEach(([wx, k], i) => {
+    const sx = Math.round(wx - cam);
+    if (sx < -20 || sx > lw + 20) return;
+    const bob = kind === 'green' ? (Math.sin(T * 4 + i * 1.3) > 0.55 ? -2 : 0) : 0;
+    pr(sx, footTop + 22, 12, 2, 'rgba(0,0,0,0.3)');
+    mgPerson(g, sx, footTop + bob + (kind === 'desert' ? 2 : 0), 1, Object.assign({}, EX_LOOK[k], { talk: kind === 'green' && Math.floor(T * 3 + i) % 2 === 0 }));
+  });
+  // 주인공 (평가원, 화면 가운데에서 걷는다)
+  const walking = EX.dragging ? Math.abs(EX.vel) > 0.05 || true : Math.abs(EX.vel) > 0.2;
+  const step = walking && Math.sin(EX.walkT * 2) > 0 ? -1 : 0;
+  pr(Math.round(lw / 2) - 6, footTop + 22, 12, 2, 'rgba(0,0,0,0.3)');
+  mgPerson(g, Math.round(lw / 2) - 6, footTop + step, 1, EX_LOOK.assessor);
+
+  // 분위기 효과
+  if (kind === 'green') {
+    for (let i = 0; i < 5; i++) {
+      const bx = ((T * 18 + i * 120) % (lw + 60)) - 30, by = lh * 0.16 + i * 9 + Math.sin(T * 2 + i) * 4, f = Math.floor(T * 6 + i) % 2;
+      pr(bx, by, 3, 1, INK); pr(bx + 3, by - (f ? 1 : -1), 3, 1, INK); pr(bx - 3, by - (f ? 1 : -1), 3, 1, INK);
+    }
+    drawPetals();
+  } else if (kind === 'partial') {
+    g.globalAlpha = 0.12;
+    for (let i = 0; i < 10; i++) pr((i * 71 + T * 6) % lw, lh * 0.3 + (i * 29) % Math.round(lh * 0.4), 30, 6, '#b8aab0');
+    g.globalAlpha = 1;
+  } else {
+    g.fillStyle = 'rgba(210,160,80,0.16)'; g.fillRect(0, 0, lw, lh);
+    g.globalAlpha = 0.6;
+    for (let i = 0; i < 70; i++) pr(((i * 37 + T * (60 + (i % 5) * 14)) % (lw + 20)) - 10, (i * 23) % lh, 2 + (i % 2), 1, '#efd69a');
+    g.globalAlpha = 1;
+    const tx = (T * 24) % (lw + 40) - 20;
+    pixDisc(tx, lh * 0.95 - Math.abs(Math.sin(T * 5)) * 3, 4, '#8a6a40'); pixDisc(tx, lh * 0.95 - Math.abs(Math.sin(T * 5)) * 3, 2, '#b08a58');
+  }
+  presentBuffer(false);
+  exCaption();
 }
 
 const INK = '#16111f';
@@ -3483,6 +3989,10 @@ function gameLoop(timestamp) {
 
   if (scene === 'TITLE' || scene === 'ZOOMING') {
     drawTitleBackground();
+  } else if (scene === 'EXPLORE') {
+    drawExploreScene();
+  } else if (scene === 'ENDBLACK') {
+    // 검은 화면
   } else if (scene === 'OFFICE' || scene === 'ENDING') {
     drawOfficeScene();
 
