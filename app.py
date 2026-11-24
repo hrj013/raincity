@@ -33,7 +33,7 @@ game_html = r"""
 <meta charset="UTF-8">
 <title>내일의 도시</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Cinzel:wght@600;800&family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@300;400;600;700;800&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Jua&family=Press+Start+2P&family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;700&display=swap');
 
   :root {
     --ink: #0a0d24;
@@ -52,7 +52,7 @@ game_html = r"""
   body, html {
     width: 100%; height: 100%; overflow: hidden;
     background-color: #070a1c;
-    font-family: 'Noto Sans KR', sans-serif;
+    font-family: 'Jua', 'Noto Sans KR', sans-serif;
     color: #f0ece1;
   }
 
@@ -91,27 +91,35 @@ game_html = r"""
   }
   #title-overlay::before {
     content: ''; position: absolute; inset: 0; z-index: -1;
-    background: radial-gradient(ellipse 42% 30% at 50% 50%, rgba(6, 8, 28, 0.78) 0%, rgba(6, 8, 28, 0.45) 55%, rgba(6, 8, 28, 0) 100%);
+    background: radial-gradient(ellipse 58% 42% at 50% 50%, rgba(6, 8, 28, 0.7) 0%, rgba(6, 8, 28, 0.4) 55%, rgba(6, 8, 28, 0) 100%);
     pointer-events: none;
   }
   #title-overlay.zooming { transform: scale(4.5) translate(5%, -5%); opacity: 0; pointer-events: none; }
 
   .title-eng {
-    font-family: 'Press Start 2P', monospace; font-size: clamp(0.55rem, 1.3vw, 0.9rem); letter-spacing: 0.3em;
-    color: #9ab0e8; margin-bottom: 18px; text-shadow: 2px 2px 0 #0a0d24;
+    font-family: 'Press Start 2P', monospace; font-size: clamp(0.6rem, 1.5vw, 1rem); letter-spacing: 0.4em;
+    color: #9ab0e8; margin-bottom: 10px; text-shadow: 2px 2px 0 #0a0d24;
   }
   .title-logo {
-    font-family: 'Noto Sans KR', sans-serif; font-size: clamp(2.6rem, 8vw, 5.4rem); font-weight: 800; letter-spacing: 0.1em;
-    color: #ffe9a8; text-shadow: 4px 4px 0 #b4533a, 8px 8px 0 #0a0d24; margin-bottom: 24px;
+    position: relative; isolation: isolate; font-family: 'Black Han Sans', 'Do Hyeon', sans-serif;
+    font-size: clamp(3.8rem, min(14vw, 24vh), 10rem); line-height: 1.05; letter-spacing: 0.05em; margin-bottom: 18px;
+    color: transparent; background: linear-gradient(180deg, #fffbe0 0%, #ffe27a 38%, #ffb03a 70%, #f0702a 100%);
+    -webkit-background-clip: text; background-clip: text; animation: logo-bob 3s ease-in-out infinite;
   }
+  .title-logo::before {
+    content: attr(data-t); position: absolute; left: 0; top: 0; z-index: -1; color: #14123a; -webkit-text-stroke: 0.2em #14123a;
+    text-shadow: 0 0.06em 0 #14123a, 0 0.12em 0 #a4412a, 0 0.18em 0 #0a0d24, 0 0.26em 0.2em rgba(0, 0, 0, 0.5);
+  }
+  @keyframes logo-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
   .title-sub {
-    font-weight: 600; font-size: 1.1rem; letter-spacing: 0.22em; color: #d6e4ff;
-    margin-bottom: 45px; text-shadow: 2px 2px 0 #0a0d24;
+    font-family: 'Do Hyeon', 'Jua', sans-serif; font-size: clamp(1.1rem, 2.4vw, 1.9rem); letter-spacing: 0.28em; color: #e6eeff;
+    margin-bottom: 44px; text-shadow: 3px 3px 0 #0a0d24; padding: 6px 28px;
+    background: linear-gradient(90deg, rgba(10,13,36,0), rgba(10,13,36,0.7) 20%, rgba(10,13,36,0.7) 80%, rgba(10,13,36,0));
   }
 
   .start-btn {
-    font-family: 'Press Start 2P', 'Cinzel', monospace; font-size: 1.05rem; letter-spacing: 0.15em;
-    padding: 16px 44px; background: var(--gold); color: #1a1030; border: none; border-radius: 0; cursor: pointer;
+    font-family: 'Press Start 2P', 'Do Hyeon', sans-serif; font-size: clamp(1.1rem, 2vw, 1.6rem); letter-spacing: 0.15em;
+    padding: 20px 64px; background: var(--gold); color: #1a1030; border: none; border-radius: 0; cursor: pointer;
     transition: transform 0.08s steps(2), box-shadow 0.08s steps(2);
     box-shadow: -4px 0 0 0 var(--ink), 4px 0 0 0 var(--ink), 0 -4px 0 0 var(--ink), 0 4px 0 0 var(--ink), 0 10px 0 0 var(--gold-dk), 0 10px 0 4px var(--ink);
   }
@@ -243,6 +251,12 @@ game_html = r"""
     font-size: 0.86rem; font-weight: 600; z-index: 18; display: none; transform: translate(-50%, -140%); white-space: nowrap;
     box-shadow: 0 0 0 3px var(--edge), 0 0 0 6px var(--ink);
   }
+  .modal-title, .speaker-tag, .clock-day, .clock-time, .action-btn, .close-btn, .alert-pill, .speed-btn, .badge-status, .check-item strong, .choice-btn, .rv-line.hit::after {
+    font-family: 'Do Hyeon', 'Jua', sans-serif; letter-spacing: 0.02em;
+  }
+  html { font-size: 17px; }
+  .modal-title { font-size: 1.45rem; }
+  .dialogue-text { font-size: 1.15rem; }
 </style>
 </head>
 <body>
@@ -252,7 +266,7 @@ game_html = r"""
 
   <div id="title-overlay">
     <div class="title-eng">TOMORROW'S CITY</div>
-    <div class="title-logo">내일의 도시</div>
+    <div class="title-logo" data-t="내일의 도시">내일의 도시</div>
     <div class="title-sub">대전의 밤, 지속 가능한 내일을 평가하다</div>
     <button class="start-btn" onclick="startGame()">START</button>
   </div>
@@ -284,6 +298,7 @@ game_html = r"""
 </div>
 
 <script>
+if (document.fonts && document.fonts.load) ['18px "Jua"', '18px "Do Hyeon"', '18px "Black Han Sans"'].forEach(f => document.fonts.load(f));
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
@@ -1308,7 +1323,7 @@ function openEmissionInspectionGame() {
       }
       // 기준선
       for (let rr = 40; rr <= GR + 12; rr += 5) mgR(cx, GCX + Math.cos(limA) * rr - 3, GCY - Math.sin(limA) * rr - 3, 6, 6, '#ffffff');
-      cx.fillStyle = '#ffe9a8'; cx.font = '700 13px "Noto Sans KR", sans-serif'; cx.textAlign = 'center';
+      cx.fillStyle = '#ffe9a8'; cx.font = '700 13px "Jua", "Noto Sans KR", sans-serif'; cx.textAlign = 'center';
       cx.fillText(`기준 ${reading.limit}`, GCX + Math.cos(limA) * (GR + 34), GCY - Math.sin(limA) * (GR + 24));
       cx.fillStyle = '#9ab0e8'; cx.fillText('0', GCX - GR + 8, GCY + 18);
       // 바늘
@@ -1318,22 +1333,22 @@ function openEmissionInspectionGame() {
       for (let i = 0; i < GR - 22; i += 4) mgR(cx, GCX + Math.cos(na) * i - 3, GCY - Math.sin(na) * i - 3, 6, 6, '#ffd166');
       mgDisc(cx, GCX, GCY, 12, '#f2c14e', 4);
       // 정보창
-      cx.fillStyle = '#f4f1e6'; cx.font = '800 19px "Noto Sans KR", sans-serif'; cx.textAlign = 'center';
+      cx.fillStyle = '#f4f1e6'; cx.font = '800 19px "Jua", "Noto Sans KR", sans-serif'; cx.textAlign = 'center';
       cx.fillText(`${reading.gas}  측정값 ${reading.value}  /  기준 ${reading.limit}`, 465, 96);
       mgR(cx, 262, 108, 406, 10, MG_INK);
       mgR(cx, 264, 110, 402 * Math.max(0, left / 7), 6, left < 2 ? '#e0505a' : '#f2c14e');
     }
     for (let i = 0; i < 3; i++) mgHeart(cx, 252 + i * 28, 132, 4, i < lives);
-    cx.fillStyle = '#9ab0e8'; cx.font = '700 13px "Noto Sans KR", sans-serif'; cx.textAlign = 'right';
+    cx.fillStyle = '#9ab0e8'; cx.font = '700 13px "Jua", "Noto Sans KR", sans-serif'; cx.textAlign = 'right';
     cx.fillText(`조치 ${ok}/${NEED}`, 676, 30);
     if (flashT > 0) {
       flashT -= dt;
-      cx.fillStyle = flashGood ? '#7bf0b0' : '#ff7b7b'; cx.font = '800 34px "Noto Sans KR", sans-serif'; cx.textAlign = 'center';
+      cx.fillStyle = flashGood ? '#7bf0b0' : '#ff7b7b'; cx.font = '800 34px "Jua", "Noto Sans KR", sans-serif'; cx.textAlign = 'center';
       cx.fillText(flashTxt, 465, 190);
     }
     if (over) {
       cx.fillStyle = 'rgba(5,8,28,0.78)'; cx.fillRect(0, 0, W, H);
-      cx.fillStyle = '#ffd166'; cx.font = '800 26px "Noto Sans KR", sans-serif'; cx.textAlign = 'center';
+      cx.fillStyle = '#ffd166'; cx.font = '800 26px "Jua", "Noto Sans KR", sans-serif'; cx.textAlign = 'center';
       cx.fillText('점검 실패! 클릭해서 다시 도전', W / 2, H / 2);
     }
     requestAnimationFrame(frame);
@@ -1534,7 +1549,7 @@ function openDragClimbMinigame() {
           mgR(dctx, cx0 + vel.vx * tS - 2, cy0 + vel.vy * tS + 0.5 * GRAVITY * tS * tS - 2, 4, 4, '#6ad0c8');
         }
         for (let i = 1; i <= 6; i++) mgR(dctx, cx0 + (dragCurr.x - cx0) * i / 6 - 2, cy0 + (dragCurr.y - cy0) * i / 6 - 2, 4, 4, '#ffd166');
-        dctx.fillStyle = '#ffe9a8'; dctx.font = '700 12px "Noto Sans KR", sans-serif'; dctx.textAlign = 'left';
+        dctx.fillStyle = '#ffe9a8'; dctx.font = '700 12px "Jua", "Noto Sans KR", sans-serif'; dctx.textAlign = 'left';
         dctx.fillText(`출력 ${vel.powerPct}%`, cx0 + 12, cy0 - 14);
       }
     }
@@ -1699,10 +1714,6 @@ function openHabitatShieldArcadeGame() {
   mgSky(b, W, 170, { x: 590, y: 42, r: 22 });
   mgSkyline(b, W, 170, 21, '#141a44', '#f3c76a', 0.55);
   const rm = makeRng(5);
-  for (let x = 0; x < W; x += 4) {
-    const h = Math.round(34 + 22 * Math.sin(x * 0.012 + 1) + 12 * Math.sin(x * 0.04));
-    mgR(b, x, 170 - h, 4, h, '#1d2560'); mgR(b, x, 170 - h, 4, 2, '#3a4a90');
-  }
   mgSkyline(b, W, 176, 21, '#101640', '#f3c76a', 0.4);
   mgR(b, 0, 176, W, 44, '#1d2f66');
   for (let i = 0; i < 70; i++) mgR(b, Math.floor(rm() * W / 4) * 4, 178 + Math.floor(rm() * 40 / 4) * 4, 8, 2, '#4a66b0');
@@ -1801,7 +1812,7 @@ function openHabitatShieldArcadeGame() {
 
     // HUD
     mgR(cx, 8, 8, 208, 26, 'rgba(5,8,28,0.8)');
-    cx.fillStyle = '#ffe9a8'; cx.font = '800 14px "Noto Sans KR", sans-serif'; cx.textAlign = 'left';
+    cx.fillStyle = '#ffe9a8'; cx.font = '800 14px "Jua", "Noto Sans KR", sans-serif'; cx.textAlign = 'left';
     cx.fillText(`📸 보호종 기록 ${found}/${NEED}`, 16, 27);
     if (msgT > 0) {
       msgT -= dt;
@@ -1847,10 +1858,10 @@ function openNoisePeakTimingGame() {
   for (let x = 0; x < W; x += 35) mgR(b, x, 0, 1, 205, '#18275c');
   for (let db = 40; db <= 85; db += 5) {
     mgR(b, 0, Y(db), W, 1, '#18275c');
-    b.fillStyle = '#6f80b8'; b.font = '700 11px "Noto Sans KR", sans-serif'; b.fillText(db + '', 4, Y(db) - 2);
+    b.fillStyle = '#6f80b8'; b.font = '700 11px "Jua", "Noto Sans KR", sans-serif'; b.fillText(db + '', 4, Y(db) - 2);
   }
   for (let x = 0; x < W; x += 10) mgR(b, x, Y(STD), 6, 2, '#e0505a');
-  b.fillStyle = '#ff9a9a'; b.font = '800 12px "Noto Sans KR", sans-serif'; b.fillText('환경기준(예시) 65dB', W - 150, Y(STD) - 4);
+  b.fillStyle = '#ff9a9a'; b.font = '800 12px "Jua", "Noto Sans KR", sans-serif'; b.fillText('환경기준(예시) 65dB', W - 150, Y(STD) - 4);
   mgR(b, 0, 214, W, 36, '#1a1f3c'); mgR(b, 0, 214, W, 3, '#3a456e');
   for (let x = 6; x < W; x += 36) mgR(b, x, 236, 16, 3, '#d9cda4');
 
@@ -1928,13 +1939,13 @@ function openNoisePeakTimingGame() {
     mgR(cx, WINX - 18, 0, 2, 205, '#ffd166'); mgR(cx, WINX + 16, 0, 2, 205, '#ffd166');
     // 현재 레벨 표시
     mgR(cx, W - 140, 8, 130, 28, MG_INK);
-    cx.fillStyle = '#7bf0b0'; cx.font = '800 15px "Noto Sans KR", sans-serif'; cx.textAlign = 'center';
+    cx.fillStyle = '#7bf0b0'; cx.font = '800 15px "Jua", "Noto Sans KR", sans-serif'; cx.textAlign = 'center';
     cx.fillText(`현재 ${level(WINX).toFixed(1)} dB`, W - 75, 28);
-    cx.textAlign = 'left'; cx.fillStyle = '#ffe9a8'; cx.font = '800 12px "Noto Sans KR", sans-serif';
+    cx.textAlign = 'left'; cx.fillStyle = '#ffe9a8'; cx.font = '800 12px "Jua", "Noto Sans KR", sans-serif';
     cx.fillText('측정 창', WINX - 18, 16);
     if (msgT > 0) {
       msgT -= dt;
-      cx.fillStyle = '#ffd166'; cx.font = '800 22px "Noto Sans KR", sans-serif'; cx.textAlign = 'center';
+      cx.fillStyle = '#ffd166'; cx.font = '800 22px "Jua", "Noto Sans KR", sans-serif'; cx.textAlign = 'center';
       cx.fillText(msg, 350, 60);
     }
     requestAnimationFrame(frame);
@@ -2088,12 +2099,12 @@ function openMitigationPlacementGame() {
         mgR(cx, x + 14, y + 116, PW - 28, 24, MG_INK); mgR(cx, x + 16, y + 118, PW - 32, 20, '#3d7fb5');
         for (let k = 0; k < 5; k++) mgR(cx, x + 24 + k * 26, y + 108, 2, 14, '#4f9a52');
       }
-      cx.fillStyle = '#ffe9a8'; cx.font = '800 14px "Noto Sans KR", sans-serif'; cx.textAlign = 'center';
+      cx.fillStyle = '#ffe9a8'; cx.font = '800 14px "Jua", "Noto Sans KR", sans-serif'; cx.textAlign = 'center';
       cx.fillText(s.name, x + PW / 2, y + 190);
-      cx.fillStyle = '#c9d3f5'; cx.font = '600 12px "Noto Sans KR", sans-serif';
+      cx.fillStyle = '#c9d3f5'; cx.font = '600 12px "Jua", "Noto Sans KR", sans-serif';
       mgWrap(cx, s.issue, PW - 16).forEach((ln, li) => cx.fillText(ln, x + PW / 2, y + 208 + li * 15));
       if (badFlash[i] > 0) badFlash[i] -= dt;
-      if (placed[i]) { cx.fillStyle = '#95d5b2'; cx.font = '800 12px "Noto Sans KR", sans-serif'; cx.fillText('설치됨', x + PW / 2, y + 14); }
+      if (placed[i]) { cx.fillStyle = '#95d5b2'; cx.font = '800 12px "Jua", "Noto Sans KR", sans-serif'; cx.fillText('설치됨', x + PW / 2, y + 14); }
     });
     requestAnimationFrame(frame);
   }
@@ -2192,7 +2203,7 @@ function openWindPlumeDefenseGame() {
       if (flash.k === k && flash.t > 0) mgR(cx, z.x - 44, z.y - 30, 88, 64, 'rgba(224,80,90,0.45)');
       mgHouse(cx, z.x - 38, z.y - 16, 3, '#8a6a4a', '#a8603c');
       mgHouse(cx, z.x - 6, z.y - 8, 3, '#7a8ab4', '#5a6a9a');
-      cx.fillStyle = hot ? '#ffe9a8' : '#c9d3f5'; cx.font = '800 13px "Noto Sans KR", sans-serif'; cx.textAlign = 'center';
+      cx.fillStyle = hot ? '#ffe9a8' : '#c9d3f5'; cx.font = '800 13px "Jua", "Noto Sans KR", sans-serif'; cx.textAlign = 'center';
       cx.fillText(z.n + ' 구역', z.x, z.y + 38);
     });
     if (flash.t > 0) flash.t -= dt;
@@ -2222,9 +2233,9 @@ function openWindPlumeDefenseGame() {
 
     // 바람 정보 패널
     mgR(cx, 8, 8, 232, 56, MG_INK); mgR(cx, 10, 10, 228, 52, '#101847');
-    cx.fillStyle = '#ffe9a8'; cx.font = '800 19px "Noto Sans KR", sans-serif'; cx.textAlign = 'left';
+    cx.fillStyle = '#ffe9a8'; cx.font = '800 19px "Jua", "Noto Sans KR", sans-serif'; cx.textAlign = 'left';
     cx.fillText(`🌬️ ${DIRS[from]}풍  ${windSpd}m/s`, 20, 34);
-    cx.fillStyle = '#9ab0e8'; cx.font = '700 12px "Noto Sans KR", sans-serif';
+    cx.fillStyle = '#9ab0e8'; cx.font = '700 12px "Jua", "Noto Sans KR", sans-serif';
     cx.fillText(`(${DIRS[from]}쪽에서 불어오는 바람)`, 20, 54);
     for (let i = 0; i < 3; i++) mgHeart(cx, W - 96 + i * 28, 12, 4, i < lives);
 
@@ -2257,7 +2268,7 @@ function openAuditPhoneModal() {
 
   const cv = document.getElementById('callCanvas'), cx = cv.getContext('2d'), W = cv.width, H = cv.height;
   const COLW = W / 3, GROUND = 318, SP_Y = 186, S = 6;
-  cx.font = '700 14px "Noto Sans KR", sans-serif';
+  cx.font = '700 14px "Jua", "Noto Sans KR", sans-serif';
   const lay = cards.map(sp => ({ sp, lines: mgWrap(cx, sp.bubble, COLW - 52) }));
   const maxLines = Math.max(...lay.map(l => l.lines.length));
   const BH = maxLines * 19 + 24;
@@ -2266,10 +2277,6 @@ function openAuditPhoneModal() {
   const bg = document.createElement('canvas'); bg.width = W; bg.height = H;
   const b = bg.getContext('2d');
   mgSky(b, W, 250, { x: 664, y: 40, r: 16 });
-  for (let x = 0; x < W; x += 4) {
-    const h = Math.round(46 + 20 * Math.sin(x * 0.011 + 2) + 10 * Math.sin(x * 0.037));
-    mgR(b, x, 250 - h, 4, h, '#1d2560'); mgR(b, x, 250 - h, 4, 2, '#3a4a90');
-  }
   mgHanbit(b, 640, 250, '#9aa6cc', 0.8);
   mgSkyline(b, W, 262, 14, '#141a44', '#f3c76a', 0.9);
   mgR(b, 0, 262, W, H - 262, '#1a1f3c'); mgR(b, 0, GROUND - 6, W, 5, '#3a456e'); mgR(b, 0, 262, W, 6, '#2a3270');
@@ -2319,7 +2326,7 @@ function openAuditPhoneModal() {
       cx.globalAlpha = dim ? 0.45 : 1;
       mgR(cx, mid - 36, GROUND - 4, 72, 6, 'rgba(0,0,0,0.4)');
       mgPerson(cx, mid - 6 * S, SP_Y + jump + (isHover ? -4 : 0), S, Object.assign({}, l.sp.look, { talk: chosen < 0 && Math.floor(T * 4 + i * 3) % 3 === 0 }));
-      cx.font = '800 13px "Noto Sans KR", sans-serif'; cx.textAlign = 'center';
+      cx.font = '800 13px "Jua", "Noto Sans KR", sans-serif'; cx.textAlign = 'center';
       const nw = cx.measureText(l.sp.name).width + 22;
       mgR(cx, mid - nw / 2 - 3, GROUND + 8, nw + 6, 26, MG_INK); mgR(cx, mid - nw / 2, GROUND + 11, nw, 20, isHover || isChosen ? '#f2c14e' : '#26357f');
       cx.fillStyle = isHover || isChosen ? '#1a1030' : '#dbe6ff'; cx.fillText(l.sp.name, mid, GROUND + 26);
@@ -2327,11 +2334,11 @@ function openAuditPhoneModal() {
       if (isHover) { fill = '#fff8e3'; line = '#f2c14e'; }
       if (isChosen) { fill = l.sp.correct ? '#cfeedd' : '#f6d4d4'; line = l.sp.correct ? '#2d6a4f' : '#b3262e'; }
       mgBubble(cx, x0 + 14, 12 + (isHover ? -2 : 0), COLW - 28, BH, fill, line, mid);
-      cx.fillStyle = '#221d17'; cx.font = '700 14px "Noto Sans KR", sans-serif'; cx.textAlign = 'left';
+      cx.fillStyle = '#221d17'; cx.font = '700 14px "Jua", "Noto Sans KR", sans-serif'; cx.textAlign = 'left';
       l.lines.forEach((ln, li) => cx.fillText(ln, x0 + 26, 12 + (isHover ? -2 : 0) + 24 + li * 19));
       if (isChosen) {
         mgR(cx, x0 + 18, 4, 64, 20, l.sp.correct ? '#2d6a4f' : '#b3262e');
-        cx.fillStyle = '#fff'; cx.font = '800 12px "Noto Sans KR", sans-serif'; cx.textAlign = 'center';
+        cx.fillStyle = '#fff'; cx.font = '800 12px "Jua", "Noto Sans KR", sans-serif'; cx.textAlign = 'center';
         cx.fillText(l.sp.correct ? '✔ 채택' : '✘ 부족', x0 + 50, 19);
       }
       cx.globalAlpha = 1;
@@ -2342,7 +2349,7 @@ function openAuditPhoneModal() {
     if (chosen < 0 && ring) { mgR(cx, 50, 352, 3, 8, '#ffd166'); mgR(cx, 58, 348, 3, 14, '#ffd166'); }
     mgR(cx, 90, 356, 614, 14, MG_INK);
     mgR(cx, 92, 358, 610 * (left / LIMIT), 10, left < 8 ? '#e0505a' : '#f2c14e');
-    cx.fillStyle = '#ffe9a8'; cx.font = '800 12px "Noto Sans KR", sans-serif'; cx.textAlign = 'left';
+    cx.fillStyle = '#ffe9a8'; cx.font = '800 12px "Jua", "Noto Sans KR", sans-serif'; cx.textAlign = 'left';
     cx.fillText(`통화 가능 ${Math.ceil(left)}초`, 96, 349);
     requestAnimationFrame(frame);
   }
@@ -2409,11 +2416,6 @@ function openEndingScene(kind, title, message, summaryHtml) {
   } else {
     b.globalAlpha = 0.22; mgDisc(b, 150, 76, 78, '#fff0c0'); b.globalAlpha = 0.3; mgDisc(b, 150, 76, 52, '#fff0c0'); b.globalAlpha = 1; mgDisc(b, 150, 76, 30, '#fff4c8');
   }
-  // 보문산 능선
-  for (let x = 0; x < W; x += 4) {
-    const h = Math.round(44 + 22 * Math.sin(x * 0.012 + 1) + 10 * Math.sin(x * 0.04));
-    mgR(b, x, 258 - h, 4, h + 6, PAL.ridge);
-  }
   mgSkyline(b, W, 264, 33, PAL.sky, PAL.win, 0.8);
   // 한빛탑
   mgHanbit(b, 626, 266, PAL.tower, 1.1);
@@ -2468,7 +2470,7 @@ function openEndingScene(kind, title, message, summaryHtml) {
         mgR(cx, x + 4, baseY - 30, 6, 24, '#5b3a22'); mgR(cx, x, baseY - 46, 22, 20, MG_INK); mgR(cx, x + 2, baseY - 44, 18, 16, '#2f6b3a'); mgR(cx, x + 4, baseY - 44, 8, 6, '#4f9a52');
         for (let k = 0; k < 6; k++) mgR(cx, x + 28 + k * 6, baseY - 6 - (k % 2) * 2, 3, 3, k % 2 ? '#ffd166' : '#ff9ab8');
         mgR(cx, x + 30, baseY - 30, 30, 12, MG_INK); mgR(cx, x + 32, baseY - 28, 26, 8, '#8a6a4a');
-        cx.fillStyle = '#fff4c0'; cx.font = '800 9px "Noto Sans KR", sans-serif'; cx.textAlign = 'center'; cx.fillText('보전', x + 45, baseY - 21);
+        cx.fillStyle = '#fff4c0'; cx.font = '800 9px "Jua", "Noto Sans KR", sans-serif'; cx.textAlign = 'center'; cx.fillText('보전', x + 45, baseY - 21);
       } else {
         mgR(cx, x + 8, baseY - 22, 4, 20, '#5b3a22'); mgR(cx, x + 4, baseY - 16, 6, 2, '#5b3a22');
         mgR(cx, x + 24, baseY - 4, 36, 4, '#3a2f26');
@@ -2834,33 +2836,6 @@ function drawCityLayer(variant, green) {
       ? { far: '#7f8fb8', hill: '#2f5a3a', hillHi: '#4a7a4a', grass: '#5a8a4a', grassHi: '#7bb060', water: '#4a6a64', waterHi: '#86aaa6', glass: '#5a86a8', glassHi: '#9cc4dc', glassDk: '#3a5a7c', expo: '#dfe6ea', tree: '#2a5a34', fl: 'rgba(20,40,70,0.35)' }
       : { far: '#7f8a9e', hill: '#3f5a48', hillHi: '#5a7258', grass: '#6a8a58', grassHi: '#82a068', water: '#4a5a58', waterHi: '#7a9a9a', glass: '#5f7e98', glassHi: '#98b4c4', glassDk: '#3f5870', expo: '#d4dade', tree: '#35523c', fl: 'rgba(20,40,70,0.35)' });
   const lights = [];
-
-  // 원경 능선
-  for (let xx = 0; xx < lw; xx++) {
-    const mt = Math.round(yB - lh * 0.2 - Math.abs(Math.sin(xx * 0.03 + 0.5)) * lh * 0.05);
-    pr(xx, mt, 1, yB - mt, C.far);
-  }
-  // 좌측 숲 언덕 (보문산 자락)
-  const hcx = lw * 0.15, hhw = lw * 0.3, hH = lh * 0.15;
-  for (let xx = 0; xx < lw * 0.46; xx++) {
-    const t = (xx - hcx) / hhw;
-    if (Math.abs(t) >= 1) continue;
-    const hh = Math.round(hH * Math.pow(1 - t * t, 0.9) + Math.sin(xx * 0.3) * 1.2);
-    pr(xx, yB - hh, 1, hh, C.hill);
-    pr(xx, yB - hh, 1, 1, C.hillHi);
-  }
-  for (let i = 0; i < 300; i++) {
-    const x = Math.floor(r() * lw * 0.44), y = yB - 1 - Math.floor(r() * lh * 0.12);
-    const t = (x - hcx) / hhw;
-    const lim = yB - Math.round(hH * Math.pow(Math.max(0, 1 - t * t), 0.9));
-    if (y > lim + 1) pr(x, y, 2, 1, r() < 0.5 ? C.hillHi : (desert ? '#7a6444' : '#244a2f'));
-  }
-  // 우측 낮은 언덕
-  for (let xx = Math.round(lw * 0.84); xx < lw; xx++) {
-    const t = (xx - lw * 0.98) / (lw * 0.16);
-    const hh = Math.round(lh * 0.08 * Math.max(0, 1 - t * t));
-    if (hh > 0) { pr(xx, yB - hh, 1, hh, C.hill); pr(xx, yB - hh, 1, 1, C.hillHi); }
-  }
 
   // 엑스포 컨벤션 건물 (낮은 곡선 지붕)
   const ex0 = Math.round(lw * 0.14), ex1 = Math.round(lw * 0.5), exw = ex1 - ex0;
@@ -3371,12 +3346,6 @@ function drawTitleCity() {
     { x: 0.59, w: 0.055, h: 0.32 }, { x: 0.67, w: 0.045, h: 0.25 }, { x: 0.75, w: 0.055, h: 0.38 },
     { x: 0.84, w: 0.04, h: 0.22 }
   ];
-  // 보문산 능선
-  for (let x = 0; x < lw; x++) {
-    const y = Math.round(lh * 0.56 - Math.abs(Math.sin(x * 0.03 + 0.4)) * lh * 0.1 - Math.sin(x * 0.011) * lh * 0.04);
-    pr(x, y, 1, lh * 0.8 - y, '#161d4e');
-    pr(x, y, 1, 1, '#2f3a82');
-  }
   for (let x = 0; x < lw; x++) {
     const y = Math.round(lh * (0.69 + 0.035 * Math.sin(x / lw * 8 + 0.4) + 0.025 * Math.sin(x / lw * 17)));
     pr(x, y, 1, lh - y, '#171c3c');
